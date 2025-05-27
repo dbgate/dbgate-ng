@@ -1,5 +1,5 @@
 # DbGate - new generation
-This project is a POC of [DbGate](https://github.com//dbgate/dbgate) **partial rewrite**.
+This project is a POC of [DbGate](https://github.com//dbgate/dbgate) **partial rewrite**.  
 It is now in analysis state, it is not sure, whether this will be realized
 
 ## Why?
@@ -36,3 +36,6 @@ It is now in analysis state, it is not sure, whether this will be realized
 - Really use solid.js instead of Svelte?
 - Really use Tailwind CSS? Or make own CSS classes?
 - Open-source repo, premium repo - could be used eg. git submodules instead of diflow merging?
+- Use process isolation for database connections?
+  - It brings bigger complexity
+  - It is very safe, event with buggy database drivers, especially when using mutli-user web app
