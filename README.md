@@ -53,3 +53,6 @@ It is now in analysis state, it is not sure, whether this will be realized
 The last rewrite was chaning frontend fromework (ReactJS => Svelte), it took approx. 3 months, 1-2 MD per week
 
 The first version of DbGate was written with .NET Core backend, so the first rewrite was changing backend.
+
+## Your feedback is welcome
+Please use [discussion](https://github.com/dbgate/dbgate-ng/discussions) if you have any comments on this
