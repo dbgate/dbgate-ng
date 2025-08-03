@@ -14,6 +14,7 @@
 
   --dim-visible-toolbar: 0; /* set from JS */
   --dim-visible-titlebar: 0; /* set from JS */
+  --dim-visible-tabs-databases: 0; /* set from JS */
 
   --dim-toolbar-height: 30px;
   --dim-toolstrip-height: 28px;

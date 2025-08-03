@@ -5,7 +5,7 @@ import TabContent from "./TabContent";
 const TabsContainer: Component = () => {
   return (
     <div class="w-full h-full">
-      <div class="absolute top-0 left-0 right-0 height-[var(--dim-tabs-panel-height)]">
+      <div class="absolute top-0 left-0 right-0 h-[var(--dim-tabs-panel-height)]">
         <TabsPanel />
       </div>
       <div class="absolute bottom-0 left-0 right-0 top-[var(--dim-tabs-panel-height)]">

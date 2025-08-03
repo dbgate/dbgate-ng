@@ -5,9 +5,9 @@ import { Key } from "@solid-primitives/keyed";
 
 const TabsPanel: Component = () => {
   return (
-    <div>
+    <div class='flex theme-face-3 h-full w-full items-center'>
       <For each={openedTabs} >
-        {(tab) => <div>{tab.title}</div>}
+        {(tab) => <div class='px-2 text-sm border-r theme-border last:border-none'>{tab.title}</div>}
       </For>
     </div>
   );
