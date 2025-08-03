@@ -76,7 +76,7 @@ const widgets = [
 
 const WidgetIconPanel: Component = () => {
   return (
-    <div class="w-full h-full flex flex-col items-center justify-start pt-2 theme-widget-panel">
+    <div class="w-full h-full flex flex-col items-center justify-start theme-widget-panel">
       <For each={widgets}>
         {(widget) => (
           <div

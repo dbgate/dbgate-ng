@@ -11,7 +11,7 @@ import TabsContainer from "./tabpanel/TabsContainer";
 import WidgetIconPanel from "./widgets/WidgetIconPanel";
 import WidgetContainer from "./widgets/WidgetContainer";
 import StatusBar from "./widgets/StatusBar";
-import { currentThemeClass } from "./appstate";
+import { currentThemeClass, selectedWidget } from "./appstate";
 
 const Screen: Component = () => {
   return (
@@ -28,8 +28,18 @@ const Screen: Component = () => {
       <div class="fixed left-[var(--dim-content-left)] top-0 right-0 bottom-[var(--dim-statusbar-height)]">
         <TabsContainer />
       </div>
+
+      <Show when={selectedWidget()}>
+        <div
+          class="fixed top-0 left-[var(--dim-main-splitter-left)] bottom-[var(--dim-statusbar-height)] horizontal-split-handle"
+        />
+      </Show>
     </div>
   );
 };
+
+          // use:splitterDrag={"clientX"}
+          // on:resizeSplitter={(e) => leftPanelWidth.update((x) => x + e.detail)}
+
 
 export default Screen;

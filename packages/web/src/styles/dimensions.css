@@ -24,6 +24,9 @@
   );
 
   --dim-large-form-margin: 20px;
+  --dim-main-splitter-left: calc(
+    var(--dim-widget-icon-size) + var(--dim-left-panel-width)
+  );
 }
 
 /* @layer utilities {
