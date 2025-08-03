@@ -2,8 +2,8 @@ import { Show, For, createEffect, createMemo, createSignal, onMount } from "soli
 import type { Component } from "solid-js";
 import TabsContainer from "./tabpanel/TabsContainer";
 import WidgetIconPanel from "./widgets/WidgetIconPanel";
+import WidgetContainer from "./widgets/WidgetContainer";
 
-const WidgetContainer = () => <div class="w-full h-full p-3 bg-gray-100">WidgetContainer</div>;
 const StatusBar = () => <div class="w-full h-full px-3 flex items-center bg-sky-500 text-white text-xs">StatusBar</div>;
 
 
