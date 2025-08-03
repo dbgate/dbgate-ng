@@ -10,6 +10,11 @@ export const [currentTheme, setCurrentTheme] = createStoredSignal<string>(
   null
 );
 
+export const [leftPanelWidth, setLeftPanelWidth] = createStoredSignal<number>(
+  "leftPanelWidth",
+  300
+);
+
 const darkModeMediaQuery = window.matchMedia
   ? window.matchMedia("(prefers-color-scheme: dark)")
   : null;
@@ -28,3 +33,4 @@ export const currentThemeClass = () => {
 };
 
 subscribeCssVariable(selectedWidget, x => (x ? 1 : 0), '--dim-visible-left-panel');
+subscribeCssVariable(leftPanelWidth, x => `${x}px`, '--dim-left-panel-width');

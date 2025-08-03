@@ -24,7 +24,7 @@ export function subscribeCssVariable(signal, transform, cssVariable) {
   createEffect(() => {
     // Runs whenever `accent()` changes
     document.documentElement.style.setProperty(
-      "--dim-visible-left-panel",
+      cssVariable,
       transform(signal())
     );
   });
