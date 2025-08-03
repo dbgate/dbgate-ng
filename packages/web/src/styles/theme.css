@@ -1,6 +1,6 @@
 @plugin "./plugins/genpalette.js"  {
-  mainbg: "white black";
-  mainfg: "black white";
+  face: "white #808080";
+  pen: "black #808080";
 }
 
 .theme-statusbar {
