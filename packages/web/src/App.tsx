@@ -1,5 +1,5 @@
 import type { Component } from "solid-js";
-import Screen from "./Screen2";
+import Screen from "./Screen";
 
 const App: Component = () => {
   return <Screen />;

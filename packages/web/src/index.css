@@ -1,4 +1,6 @@
 @import 'tailwindcss';
 
+@import '../node_modules/@mdi/font/css/materialdesignicons.css';
+
 @import './dimensions.css';
 
