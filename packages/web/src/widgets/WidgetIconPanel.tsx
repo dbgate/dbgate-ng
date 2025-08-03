@@ -82,7 +82,7 @@ const WidgetIconPanel: Component = () => {
   const handleAddTab = () => {
     dbgateLocalDb.tabs.add({
       tabid: crypto.randomUUID(),
-      title: "New Tab",
+      title: "Query #",
       icon: "img sql-file",
       props: {},
       tabComponent: "QueryTab",

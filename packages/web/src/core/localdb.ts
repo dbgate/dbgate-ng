@@ -32,6 +32,7 @@ class DbGateLocalDb extends Dexie {
 
 export const dbgateLocalDb = new DbGateLocalDb();
 
-export const openedTabs = createDexieArrayQuery(() =>
-  dbgateLocalDb.tabs.toArray()
+export const openedTabs = createDexieArrayQuery(
+  () => dbgateLocalDb.tabs.toArray(),
+  "tabid"
 );

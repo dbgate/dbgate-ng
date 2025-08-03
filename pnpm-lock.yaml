@@ -13,6 +13,9 @@ importers:
       '@mdi/font':
         specifier: ^7.4.47
         version: 7.4.47
+      '@solid-primitives/keyed':
+        specifier: ^1.5.2
+        version: 1.5.2(solid-js@1.9.7)
       dexie:
         specifier: ^4.0.11
         version: 4.0.11
@@ -398,6 +401,11 @@ packages:
     resolution: {integrity: sha512-CvUo2ixeIQGtF6WvuB87XWqPQkoFAFqW+HUo/WzHwuHDvIwZCtjdWXoYCcr06iKGydiqTclC4jU/TNObC/xKZg==}
     cpu: [x64]
     os: [win32]
+
+  '@solid-primitives/keyed@1.5.2':
+    resolution: {integrity: sha512-BgoEdqPw48URnI+L5sZIHdF4ua4Las1eWEBBPaoSFs42kkhnHue+rwCBPL2Z9ebOyQ75sUhUfOETdJfmv0D6Kg==}
+    peerDependencies:
+      solid-js: ^1.6.12
 
   '@tailwindcss/node@4.1.11':
     resolution: {integrity: sha512-yzhzuGRmv5QyU9qLNg4GTlYI6STedBWRE7NjxP45CsFYYq9taI0zJXZBMqIC/c8fViNLhmrbpSFS57EoxUmD6Q==}
@@ -1124,6 +1132,10 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.46.2':
     optional: true
+
+  '@solid-primitives/keyed@1.5.2(solid-js@1.9.7)':
+    dependencies:
+      solid-js: 1.9.7
 
   '@tailwindcss/node@4.1.11':
     dependencies:

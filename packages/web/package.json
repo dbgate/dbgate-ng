@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
+    "@solid-primitives/keyed": "^1.5.2",
     "dexie": "^4.0.11",
     "solid-js": "^1.9.5"
   }
