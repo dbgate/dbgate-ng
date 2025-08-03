@@ -1,6 +1,7 @@
 import { Match, Switch, type Component } from "solid-js";
 import { selectedWidget } from "../appstate";
 import DatabaseWidget from "./DatabaseWidget";
+import ThemePaletteWidget from "./ThemePaletteWidget";
 
 const WidgetContainer: Component = () => {
   return (
@@ -8,6 +9,9 @@ const WidgetContainer: Component = () => {
       <Switch>
         <Match when={selectedWidget() === "database"}>
           <DatabaseWidget />
+        </Match>
+        <Match when={selectedWidget() === "theme-palette"}>
+          <ThemePaletteWidget />
         </Match>
       </Switch>
     </div>

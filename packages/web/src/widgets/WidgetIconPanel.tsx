@@ -59,6 +59,11 @@ const widgets = [
     title: "Premium promo",
     isPremiumPromo: true,
   },
+  {
+    name: "theme-palette",
+    title: "Theme Palette",
+    icon: "mdi mdi-palette",
+  },
   // {
   //   icon: 'icon settings',
   //   name: 'settings',
