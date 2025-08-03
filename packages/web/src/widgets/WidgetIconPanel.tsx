@@ -84,7 +84,11 @@ const WidgetIconPanel: Component = () => {
             classList={{
               "theme-widget-icon-active": selectedWidget() === widget.name,
             }}
-            onClick={() => setSelectedWidget(widget.name)}
+            onClick={() =>
+              setSelectedWidget((old) =>
+                old == widget.name ? null : widget.name
+              )
+            }
           >
             <FontIcon icon={widget.icon} title={widget.title} />
           </div>

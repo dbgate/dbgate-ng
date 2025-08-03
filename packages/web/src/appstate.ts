@@ -1,5 +1,5 @@
-import { createSignal } from "solid-js";
-import { createStoredSignal } from "./utility/signalutl";
+import { createEffect, createSignal } from "solid-js";
+import { createStoredSignal, subscribeCssVariable } from "./utility/signaltools";
 
 export const [selectedWidget, setSelectedWidget] = createStoredSignal<
   string | null
@@ -26,3 +26,5 @@ export const currentThemeDefaulted = () => {
 export const currentThemeClass = () => {
   return `when-theme-${currentThemeDefaulted()}`;
 };
+
+subscribeCssVariable(selectedWidget, x => (x ? 1 : 0), '--dim-visible-left-panel');
