@@ -1,6 +1,50 @@
-@plugin "./plugins/genpalette.js"  {
+/* @plugin "./plugins/genpalette.js"  {
   face: "white #808080";
   pen: "black #808080";
+} */
+
+.theme-pen-0 {
+  color: black;
+}
+.theme-pen-1 {
+  color: var(--color-gray-950);
+}
+.theme-pen-2 {
+  color: var(--color-gray-900);
+}
+.theme-pen-3 {
+  color: var(--color-gray-800);
+}
+.theme-pen-4 {
+  color: var(--color-gray-700);
+}
+.theme-pen-5 {
+  color: var(--color-gray-600);
+}
+.theme-pen-6 {
+  color: var(--color-gray-500);
+}
+
+.theme-face-0 {
+  background-color: white;
+}
+.theme-face-1 {
+  background-color: var(--color-gray-50);
+}
+.theme-face-2 {
+  background-color: var(--color-gray-100);
+}
+.theme-face-3 {
+  background-color: var(--color-gray-200);
+}
+.theme-face-4 {
+  background-color: var(--color-gray-300);
+}
+.theme-face-5 {
+  background-color: var(--color-gray-400);
+}
+.theme-face-6 {
+  background-color: var(--color-gray-500);
 }
 
 .theme-statusbar {

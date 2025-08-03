@@ -4,7 +4,7 @@ import DatabaseWidget from "./DatabaseWidget";
 
 const WidgetContainer: Component = () => {
   return (
-    <div class="w-full h-full p-3 bg-face-100">
+    <div class="w-full h-full p-3 theme-face-1 theme-pen-1">
       <Switch>
         <Match when={selectedWidget() === "database"}>
           <DatabaseWidget />
