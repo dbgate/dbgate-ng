@@ -1,5 +1,5 @@
 import { createEffect, createSignal } from "solid-js";
-import { createStoredSignal, subscribeCssVariable } from "./utility/signaltools";
+import { createStoredSignal, subscribeCssVariable } from "../utility/signaltools";
 
 export const [selectedWidget, setSelectedWidget] = createStoredSignal<
   string | null

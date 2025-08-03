@@ -1,5 +1,5 @@
 import { Match, Switch, type Component } from "solid-js";
-import { selectedWidget } from "../appstate";
+import { selectedWidget } from "../core/appstate";
 import DatabaseWidget from "./DatabaseWidget";
 import ThemePaletteWidget from "./ThemePaletteWidget";
 

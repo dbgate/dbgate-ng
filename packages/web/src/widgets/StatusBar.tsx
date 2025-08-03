@@ -1,5 +1,5 @@
 import { Component } from "solid-js";
-import { currentTheme, setCurrentTheme } from "../appstate";
+import { currentTheme, setCurrentTheme } from "../core/appstate";
 
 const StatusBar: Component = () => {
   return (

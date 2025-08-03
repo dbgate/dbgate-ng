@@ -1,6 +1,6 @@
 import { For, type Component } from "solid-js";
 import FontIcon from "../elements/FontIcon";
-import { selectedWidget, setSelectedWidget } from "../appstate";
+import { selectedWidget, setSelectedWidget } from "../core/appstate";
 
 const widgets = [
   // getCurrentConfig().storageDatabase && {
