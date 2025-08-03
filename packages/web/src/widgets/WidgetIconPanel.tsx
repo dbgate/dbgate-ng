@@ -1,5 +1,6 @@
 import { For, type Component } from "solid-js";
 import FontIcon from "../elements/FontIcon";
+import { selectedWidget, setSelectedWidget } from "../appstate";
 
 const widgets = [
   // getCurrentConfig().storageDatabase && {
@@ -70,10 +71,16 @@ const widgets = [
 
 const WidgetIconPanel: Component = () => {
   return (
-    <div class="w-full h-full flex flex-col items-center justify-start pt-2 bg-gray-800 text-gray-300">
+    <div class="w-full h-full flex flex-col items-center justify-start pt-2 bg-gray-800 text-gray-400">
       <For each={widgets}>
         {(widget) => (
-          <div class='text-3xl my-1'>
+          <div
+            class="text-3xl py-1 cursor-pointer transition-colors duration-150 hover:text-white w-full text-center border-l-2 border-r-2 border-transparent"
+            classList={{
+              "bg-gray-600 text-white border-l-white": selectedWidget() === widget.name,
+            }}
+            onClick={() => setSelectedWidget(widget.name)}
+          >
             <FontIcon icon={widget.icon} title={widget.title} />
           </div>
         )}
