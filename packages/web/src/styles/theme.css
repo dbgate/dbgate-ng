@@ -1,4 +1,24 @@
-@plugin "tailwindcss-palette-generator" {
-  mainbg: #FFFFFF;
-  mainfg: #000000;
+@plugin "./plugins/genpalette.js"  {
+  mainbg: "white black";
+  mainfg: "black white";
+}
+
+.theme-statusbar {
+  background-color: oklch(68.5% 0.169 237.323);
+  color: white;
+}
+
+.theme-widget-panel {
+  background-color: var(--color-gray-800);
+}
+.theme-widget-icon {
+  color: var(--color-gray-500);
+}
+.theme-widget-icon:hover {
+  color: white;
+}
+.theme-widget-icon-active {
+  background-color: var(--color-gray-600);
+  color: white;
+  border-left-color: white;
 }
