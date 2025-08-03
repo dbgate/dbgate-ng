@@ -1,14 +1,16 @@
 import type { Component } from "solid-js";
+import TabsPanel from "./TabsPanel";
+import TabContent from "./TabContent";
 
 const TabsContainer: Component = () => {
   return (
-    <div class="theme-face-0 w-full h-full">
-      <div class="theme-pen-0">pen0</div>
-      <div class="theme-pen-1">pen1</div>
-      <div class="theme-pen-2">pen2</div>
-      <div class="theme-pen-3">pen3</div>
-      <div class="theme-pen-4">pen4</div>
-      <div class="theme-pen-5">pen5</div>
+    <div class="w-full h-full">
+      <div class="absolute top-0 left-0 right-0 height-[var(--dim-tabs-panel-height)]">
+        <TabsPanel />
+      </div>
+      <div class="absolute bottom-0 left-0 right-0 top-[var(--dim-tabs-panel-height)]">
+        <TabContent />
+      </div>
     </div>
   );
 };

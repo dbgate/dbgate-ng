@@ -1,13 +1,16 @@
-import { Component, JSX } from "solid-js";
+import { Component, For, JSX } from "solid-js";
+import { openedTabs } from "../core/localdb";
 
-interface TabsPanelProps {
-  activeTab: number;
-  tabs: { label: string; content: JSX.Element }[];
-  onTabChange?: (index: number) => void;
-}
 
-const TabsPanel: Component<TabsPanelProps> = (props) => {
-  return <div>TABSPANEL</div>;
+const TabsPanel: Component = () => {
+  return (
+    <div>
+      <For each={openedTabs}>
+        {(tab) => <div>{tab.title}</div>}
+      </For>
+    </div>
+  );
 };
 
 export default TabsPanel;
+

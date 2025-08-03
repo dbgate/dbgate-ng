@@ -1,6 +1,7 @@
 import { For, type Component } from "solid-js";
 import FontIcon from "../elements/FontIcon";
 import { selectedWidget, setSelectedWidget } from "../core/appstate";
+import { dbgateLocalDb } from "../core/localdb";
 
 const widgets = [
   // getCurrentConfig().storageDatabase && {
@@ -75,12 +76,25 @@ const widgets = [
 ];
 
 const WidgetIconPanel: Component = () => {
+  const widgetIcon =
+    "text-3xl py-1 cursor-pointer transition-colors duration-150 w-full text-center border-l-2 border-r-2 border-transparent theme-widget-icon";
+
+  const handleAddTab = () => {
+    dbgateLocalDb.tabs.add({
+      tabid: crypto.randomUUID(),
+      title: "New Tab",
+      icon: "img sql-file",
+      props: {},
+      tabComponent: "QueryTab",
+    });
+  };
+
   return (
     <div class="w-full h-full flex flex-col items-center justify-start theme-widget-panel">
       <For each={widgets}>
         {(widget) => (
           <div
-            class="text-3xl py-1 cursor-pointer transition-colors duration-150 w-full text-center border-l-2 border-r-2 border-transparent theme-widget-icon"
+            class={widgetIcon}
             classList={{
               "theme-widget-icon-active": selectedWidget() === widget.name,
             }}
@@ -94,6 +108,9 @@ const WidgetIconPanel: Component = () => {
           </div>
         )}
       </For>
+      <div class={widgetIcon} onClick={handleAddTab}>
+        <FontIcon icon="icon add" />
+      </div>
     </div>
   );
 };
