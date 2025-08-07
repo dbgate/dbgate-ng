@@ -8,11 +8,14 @@
     ]
   },
   "scripts": {
-    "dev:web": "pnpm -r --filter dbgate-web dev",
-    "dev:app": "pnpm -r --filter dbgate dev",
+    "dev:web": "concurrently \"pnpm ts:watch\"  \"pnpm -r --filter dbgate-web dev\"",
+    "dev:app": "concurrently \"pnpm ts:watch\"  \"pnpm -r --filter dbgate dev\"",
     "ts:watch": "tsc -b -w"
   },
   "devDependencies": {
     "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "concurrently": "^9.2.0"
   }
 }
