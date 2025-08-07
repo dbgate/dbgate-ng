@@ -20,7 +20,9 @@
   ],
   "scripts": {
     "build": "tsc",
-    "start": "tsc --watch"
+    "start": "tsc --watch",
+    "lint": "biome check",
+    "format": "pnpm -r format"
   },
   "files": [
     "lib"
@@ -34,3 +36,4 @@
     "lodash": "^4.17.21"
   }
 }
+

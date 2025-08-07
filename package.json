@@ -10,9 +10,16 @@
   "scripts": {
     "dev:web": "concurrently \"pnpm ts:watch\"  \"pnpm -r --filter dbgate-web dev\" \"pnpm -r --filter dbgate-api dev\"",
     "dev:app": "concurrently \"pnpm ts:watch\"  \"pnpm -r --filter dbgate dev\"",
-    "ts:watch": "tsc -b -w"
+    "ts:watch": "tsc -b -w",
+    "lint": "biome check .",
+    "lint:quite": "biome check --log-level=error --diagnostic-level=error .",
+    "lint:fix": "biome check --write .",
+    "lint:fix-unsafe": "biome check --write --unsafe .",
+    "format": "biome format --write .",
+    "format:check": "biome format --write ."
   },
   "devDependencies": {
+    "@biomejs/biome": "2.1.4",
     "typescript": "^5.9.2"
   },
   "dependencies": {

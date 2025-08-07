@@ -9,7 +9,9 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "clean": "rimraf dist",
-    "test": "echo \"No tests specified\" && exit 0"
+    "test": "echo \"No tests specified\" && exit 0",
+    "lint": "biome check",
+    "format": "pnpm -r format"
   },
   "license": "MIT",
   "devDependencies": {

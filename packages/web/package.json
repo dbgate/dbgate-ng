@@ -7,7 +7,9 @@
     "start": "vite",
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "lint": "biome check",
+    "lint:fix": "biome check --fix"
   },
   "license": "MIT",
   "devDependencies": {

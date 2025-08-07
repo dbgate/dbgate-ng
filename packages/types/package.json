@@ -4,7 +4,9 @@
   "homepage": "https://dbgate.org/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dbgate/dbgate.git"
+    "url": "https://github.com/dbgate/dbgate.git",
+    "lint": "biome check",
+    "format": "pnpm -r format"
   },
   "author": "Jan Prochazka",
   "license": "GPL-3.0",
@@ -15,3 +17,4 @@
   "main": "",
   "typeScriptVersion": "2.8"
 }
+

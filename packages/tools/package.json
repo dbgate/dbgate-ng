@@ -19,7 +19,9 @@
     "start": "tsc --watch",
     "prepublishOnly": "yarn build",
     "test": "jest",
-    "test:ci": "jest --json --outputFile=result.json --testLocationInResults"
+    "test:ci": "jest --json --outputFile=result.json --testLocationInResults",
+    "lint": "biome check",
+    "format": "pnpm -r format"
   },
   "files": [
     "lib"
