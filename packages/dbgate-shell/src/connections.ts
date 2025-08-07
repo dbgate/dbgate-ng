@@ -1,7 +1,6 @@
 // Connections management functionality for DBGate Shell
-import * as crypto from 'crypto';
+import crypto from 'crypto';
 import { Connection, ConnectionConfig, EnvironmentConnectionConfig, ConnectionTestResult } from './types';
-import { ConnectionManagerInterface } from './interfaces';
 
 /**
  * Parse connections from environment variables
@@ -141,9 +140,8 @@ export function getSupportedEngines(): string[] {
 
 /**
  * Connection manager class for managing multiple connections
- * Implements the interface generated from API contracts for type safety
  */
-export class ConnectionManager implements ConnectionManagerInterface {
+export class ConnectionManager {
   private connections: Connection[] = [];
 
   constructor(initialConnections: Connection[] = []) {
@@ -214,79 +212,5 @@ export class ConnectionManager implements ConnectionManagerInterface {
    */
   clear(): void {
     this.connections = [];
-  }
-
-  // Interface methods from ConnectionManagerInterface
-  
-  /**
-   * List all connections (API contract method)
-   */
-  async list(params: {}): Promise<Connection[]> {
-    return this.getAll();
-  }
-
-  /**
-   * Get specific connection (API contract method)
-   */
-  async get(params: { conid: string }): Promise<Connection> {
-    const connection = this.getById(params.conid);
-    if (!connection) {
-      throw new Error(`Connection not found: ${params.conid}`);
-    }
-    return connection;
-  }
-
-  /**
-   * Test connection (API contract method)
-   */
-  async test(params: { values: Partial<Connection> }): Promise<{ msgtype: "connected" | "error"; message?: string }> {
-    return await testConnection(params.values);
-  }
-
-  /**
-   * Save connection (API contract method)
-   */
-  async save(params: { values: Partial<Connection> }): Promise<Connection> {
-    const connection: Connection = {
-      _id: crypto.randomUUID(),
-      conid: params.values.conid || `conn_${crypto.randomUUID()}`,
-      server: params.values.server || '',
-      engine: params.values.engine || '',
-      ...params.values
-    };
-    
-    if (params.values.conid && this.getById(params.values.conid)) {
-      // Update existing connection
-      this.update(params.values.conid, params.values);
-      return this.getById(params.values.conid)!;
-    } else {
-      // Add new connection
-      this.add(connection);
-      return connection;
-    }
-  }
-
-  /**
-   * Delete connection (API contract method)
-   */
-  async delete(params: { conid: string }): Promise<boolean> {
-    return this.remove(params.conid);
-  }
-
-  /**
-   * Create new SQLite database (API contract method)
-   */
-  async newSqliteDatabase(params: { file: string }): Promise<Connection> {
-    const connection: Connection = {
-      _id: crypto.randomUUID(),
-      conid: `sqlite_${crypto.randomUUID()}`,
-      server: params.file,
-      engine: 'sqlite',
-      displayName: `SQLite - ${params.file}`,
-      database: params.file
-    };
-    
-    this.add(connection);
-    return connection;
   }
 }
