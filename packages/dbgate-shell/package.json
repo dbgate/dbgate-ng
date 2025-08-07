@@ -1,0 +1,23 @@
+{
+  "name": "dbgate-shell",
+  "version": "0.0.0",
+  "description": "Core TypeScript library for DBGate functionality without Express dependencies",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rimraf dist",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
+  }
+}
