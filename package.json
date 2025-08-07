@@ -9,6 +9,10 @@
   },
   "scripts": {
     "dev:web": "pnpm -r --filter dbgate-web dev",
-    "dev:app": "pnpm -r --filter dbgate dev"
+    "dev:app": "pnpm -r --filter dbgate dev",
+    "ts:watch": "tsc -b -w"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
   }
 }

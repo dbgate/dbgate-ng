@@ -21,6 +21,8 @@
     "@mdi/font": "^7.4.47",
     "@solid-primitives/keyed": "^1.5.2",
     "dexie": "^4.0.11",
+    "json-stable-stringify": "^1.3.0",
+    "lodash": "^4.17.21",
     "solid-js": "^1.9.5"
   }
 }
