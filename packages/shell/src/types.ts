@@ -1,7 +1,7 @@
 // Core types for DBGate Shell
 // Re-export types from the API types package for convenience
 
-export type { Connection } from '../../types/api/connections-api';
+export type { Connection } from "../../types/api/connections-api";
 
 // Shell-specific types
 export interface ConnectionConfig {
@@ -25,7 +25,7 @@ export interface EnvironmentConnectionConfig {
 }
 
 export interface ConnectionTestResult {
-  msgtype: 'connected' | 'error';
+  msgtype: "connected" | "error";
   message?: string;
 }
 

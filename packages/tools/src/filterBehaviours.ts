@@ -1,4 +1,4 @@
-import { FilterBehaviour } from 'dbgate-types';
+import type { FilterBehaviour } from "dbgate-types";
 
 export const numberFilterBehaviour: FilterBehaviour = {
   supportEquals: true,

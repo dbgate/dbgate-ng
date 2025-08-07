@@ -1,10 +1,13 @@
-const path = require('path');
-const { jsldir, archivedir, resolveArchiveFolder } = require('./directories');
+const path = require("node:path");
+const { jsldir, archivedir, resolveArchiveFolder } = require("./directories");
 
 function getJslFileName(jslid) {
   const archiveMatch = jslid.match(/^archive:\/\/([^/]+)\/(.*)$/);
   if (archiveMatch) {
-    return path.join(resolveArchiveFolder(archiveMatch[1]), `${archiveMatch[2]}.jsonl`);
+    return path.join(
+      resolveArchiveFolder(archiveMatch[1]),
+      `${archiveMatch[2]}.jsonl`
+    );
   }
   const fileMatch = jslid.match(/^file:\/\/(.*)$/);
   if (fileMatch) {

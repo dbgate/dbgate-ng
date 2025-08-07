@@ -1,10 +1,10 @@
-const generateDeploySql = require('./generateDeploySql');
-const executeQuery = require('./executeQuery');
-const { ScriptDrivedDeployer } = require('dbgate-datalib');
-const { connectUtility } = require('../utility/connectUtility');
-const requireEngineDriver = require('../utility/requireEngineDriver');
-const loadModelFolder = require('../utility/loadModelFolder');
-const crypto = require('crypto');
+const generateDeploySql = require("./generateDeploySql");
+const executeQuery = require("./executeQuery");
+const { ScriptDrivedDeployer } = require("dbgate-datalib");
+const { connectUtility } = require("../utility/connectUtility");
+const requireEngineDriver = require("../utility/requireEngineDriver");
+const loadModelFolder = require("../utility/loadModelFolder");
+const crypto = require("node:crypto");
 
 /**
  * Deploys database model stored in modelFolder (table as yamls) to database
@@ -31,19 +31,24 @@ async function deployDb({
   loadedDbModel,
   modelTransforms,
   dbdiffOptionsExtra,
-  ignoreNameRegex = '',
+  ignoreNameRegex = "",
   targetSchema = null,
   maxMissingTablesRatio = undefined,
   useTransaction,
 }) {
   if (!driver) driver = requireEngineDriver(connection);
-  const dbhan = systemConnection || (await connectUtility(driver, connection, 'read'));
+  const dbhan =
+    systemConnection || (await connectUtility(driver, connection, "read"));
 
   try {
     const scriptDeployer = new ScriptDrivedDeployer(
       dbhan,
       driver,
-      Array.isArray(loadedDbModel) ? loadedDbModel : modelFolder ? await loadModelFolder(modelFolder) : [],
+      Array.isArray(loadedDbModel)
+        ? loadedDbModel
+        : modelFolder
+          ? await loadModelFolder(modelFolder)
+          : [],
       crypto
     );
     await scriptDeployer.runPre();

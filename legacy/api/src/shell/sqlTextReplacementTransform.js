@@ -8,7 +8,7 @@ function replaceInText(text, replacements) {
 
 function replaceInCollection(collection, replacements) {
   if (!collection) return collection;
-  return collection.map(item => {
+  return collection.map((item) => {
     if (item.createSql) {
       return {
         ...item,
@@ -19,7 +19,7 @@ function replaceInCollection(collection, replacements) {
   });
 }
 
-const sqlTextReplacementTransform = replacements => database => {
+const sqlTextReplacementTransform = (replacements) => (database) => {
   return {
     ...database,
     views: replaceInCollection(database.views, replacements),

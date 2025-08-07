@@ -1,16 +1,16 @@
 export const strmid = crypto.randomUUID();
 
 export async function apiCall(
-  route: string,
-  args: {} = undefined,
-  options: { skipDisableChecks: boolean } = undefined
+  _route: string,
+  _args: {} = undefined,
+  _options: { skipDisableChecks: boolean } = undefined
 ) {}
 
-const apiHandlers = new WeakMap();
+const _apiHandlers = new WeakMap();
 
-export function apiOn(event: string, handler: Function) {}
+export function apiOn(_event: string, _handler: Function) {}
 
-export function apiOff(event: string, handler: Function) {}
+export function apiOff(_event: string, _handler: Function) {}
 
 export function transformApiArgs(args) {
   return args;

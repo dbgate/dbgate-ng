@@ -1,9 +1,9 @@
-const fs = require('fs-extra');
-const requireEngineDriver = require('../utility/requireEngineDriver');
-const { connectUtility } = require('../utility/connectUtility');
-const { getLogger, getLimitedQuery } = require('dbgate-tools');
+const fs = require("fs-extra");
+const requireEngineDriver = require("../utility/requireEngineDriver");
+const { connectUtility } = require("../utility/connectUtility");
+const { getLogger, getLimitedQuery } = require("dbgate-tools");
 
-const logger = getLogger('execQuery');
+const logger = getLogger("execQuery");
 
 /**
  * Executes SQL query
@@ -32,11 +32,12 @@ async function executeQuery({
   }
 
   if (!driver) driver = requireEngineDriver(connection);
-  const dbhan = systemConnection || (await connectUtility(driver, connection, 'script'));
+  const dbhan =
+    systemConnection || (await connectUtility(driver, connection, "script"));
 
   if (sqlFile) {
     logger.debug(`DBGM-00049 Loading SQL file ${sqlFile}`);
-    sql = await fs.readFile(sqlFile, { encoding: 'utf-8' });
+    sql = await fs.readFile(sqlFile, { encoding: "utf-8" });
   }
 
   try {

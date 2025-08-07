@@ -1,11 +1,11 @@
-import pinomin, { Logger, type LogConfig } from 'pinomin';
+import pinomin, { type LogConfig, type Logger } from "pinomin";
 
 let _logConfig: LogConfig;
 let _name: string = null;
 
 const defaultLogConfig: LogConfig = {
   base: { pid: global?.process?.pid },
-  targets: [{ type: 'console', level: 'info' }],
+  targets: [{ type: "console", level: "info" }],
 };
 
 export function setLogConfig(value: LogConfig) {
@@ -23,7 +23,7 @@ export function getLogger(caller?: string): Logger {
       if (caller) {
         const props = { caller };
         if (_name) {
-          props['name'] = _name;
+          props.name = _name;
         }
         return {
           ...config,

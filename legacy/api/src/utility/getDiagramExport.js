@@ -5,7 +5,7 @@ const getDiagramExport = (html, css, themeType, themeClassName, watermark) => {
         ${watermark}
       </div>
   `
-    : '';
+    : "";
   return `<html>
   <meta charset='utf-8'>
   
@@ -55,7 +55,7 @@ const getDiagramExport = (html, css, themeType, themeClassName, watermark) => {
       </script>
   </head>
   
-  <body class='${themeType == 'dark' ? 'theme-type-dark' : 'theme-type-light'} ${themeClassName}' style='user-select:none; cursor:pointer'>
+  <body class='${themeType === "dark" ? "theme-type-dark" : "theme-type-light"} ${themeClassName}' style='user-select:none; cursor:pointer'>
       ${html}
       ${watermarkHtml}
   </body>

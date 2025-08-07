@@ -76,12 +76,12 @@ export type Plugins_AuthTypes_Request = {
   response: string[];
 };
 
-export type Plugins_Request = 
+export type Plugins_Request =
   | Plugins_Script_Request
   | Plugins_Search_Request
   | Plugins_Info_Request
-  | Plugins_Installed_Request 
-  | Plugins_Install_Request 
+  | Plugins_Installed_Request
+  | Plugins_Install_Request
   | Plugins_Uninstall_Request
   | Plugins_Upgrade_Request
   | Plugins_Command_Request

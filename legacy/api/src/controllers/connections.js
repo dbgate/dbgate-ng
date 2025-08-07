@@ -1,47 +1,58 @@
-const path = require('path');
-const { fork } = require('child_process');
-const _ = require('lodash');
-const fs = require('fs-extra');
-const crypto = require('crypto');
+const path = require("node:path");
+const { fork } = require("node:child_process");
+const _ = require("lodash");
+const fs = require("fs-extra");
+const crypto = require("node:crypto");
 
-const { datadir, filesdir } = require('../utility/directories');
-const socket = require('../utility/socket');
-const { encryptConnection, maskConnection } = require('../utility/crypting');
-const { handleProcessCommunication } = require('../utility/processComm');
-const { pickSafeConnectionInfo } = require('../utility/crypting');
-const JsonLinesDatabase = require('../utility/JsonLinesDatabase');
+const { datadir, filesdir } = require("../utility/directories");
+const socket = require("../utility/socket");
+const { encryptConnection, maskConnection } = require("../utility/crypting");
+const { handleProcessCommunication } = require("../utility/processComm");
+const { pickSafeConnectionInfo } = require("../utility/crypting");
+const JsonLinesDatabase = require("../utility/JsonLinesDatabase");
 
-const processArgs = require('../utility/processArgs');
-const { safeJsonParse, getLogger, extractErrorLogData } = require('dbgate-tools');
-const platformInfo = require('../utility/platformInfo');
-const { connectionHasPermission, testConnectionPermission } = require('../utility/hasPermission');
-const pipeForkLogs = require('../utility/pipeForkLogs');
-const requireEngineDriver = require('../utility/requireEngineDriver');
-const { getAuthProviderById } = require('../auth/authProvider');
-const { startTokenChecking } = require('../utility/authProxy');
+const processArgs = require("../utility/processArgs");
+const {
+  safeJsonParse,
+  getLogger,
+  extractErrorLogData,
+} = require("dbgate-tools");
+const platformInfo = require("../utility/platformInfo");
+const {
+  connectionHasPermission,
+  testConnectionPermission,
+} = require("../utility/hasPermission");
+const pipeForkLogs = require("../utility/pipeForkLogs");
+const requireEngineDriver = require("../utility/requireEngineDriver");
+const { getAuthProviderById } = require("../auth/authProvider");
+const { startTokenChecking } = require("../utility/authProxy");
 
-const logger = getLogger('connections');
+const logger = getLogger("connections");
 
-let volatileConnections = {};
+const volatileConnections = {};
 
 function getNamedArgs() {
   const res = {};
   for (let i = 0; i < process.argv.length; i++) {
     const name = process.argv[i];
-    if (name.startsWith('--')) {
+    if (name.startsWith("--")) {
       let value = process.argv[i + 1];
-      if (value && value.startsWith('--')) value = null;
+      if (value?.startsWith("--")) value = null;
       res[name.substring(2)] = value == null ? true : value;
       i++;
     } else {
-      if (name.endsWith('.db') || name.endsWith('.sqlite') || name.endsWith('.sqlite3')) {
+      if (
+        name.endsWith(".db") ||
+        name.endsWith(".sqlite") ||
+        name.endsWith(".sqlite3")
+      ) {
         res.databaseFile = name;
-        res.engine = 'sqlite@dbgate-plugin-sqlite';
+        res.engine = "sqlite@dbgate-plugin-sqlite";
       }
 
-      if (name.endsWith('.duckdb')) {
+      if (name.endsWith(".duckdb")) {
         res.databaseFile = name;
-        res.engine = 'duckdb@dbgate-plugin-duckdb';
+        res.engine = "duckdb@dbgate-plugin-duckdb";
       }
     }
   }
@@ -50,62 +61,78 @@ function getNamedArgs() {
 
 function getDatabaseFileLabel(databaseFile) {
   if (!databaseFile) return databaseFile;
-  const m = databaseFile.match(/[\/]([^\/]+)$/);
+  const m = databaseFile.match(/[/]([^/]+)$/);
   if (m) return m[1];
   return databaseFile;
 }
 
 function getPortalCollections() {
   if (process.env.CONNECTIONS) {
-    const connections = _.compact(process.env.CONNECTIONS.split(',')).map(id => ({
-      _id: id,
-      engine: process.env[`ENGINE_${id}`],
-      server: process.env[`SERVER_${id}`],
-      user: process.env[`USER_${id}`],
-      password: process.env[`PASSWORD_${id}`],
-      passwordMode: process.env[`PASSWORD_MODE_${id}`],
-      port: process.env[`PORT_${id}`],
-      databaseUrl: process.env[`URL_${id}`],
-      useDatabaseUrl: !!process.env[`URL_${id}`],
-      databaseFile: process.env[`FILE_${id}`]?.replace(
-        '%%E2E_TEST_DATA_DIRECTORY%%',
-        path.join(path.dirname(path.dirname(__dirname)), 'e2e-tests', 'tmpdata')
-      ),
-      socketPath: process.env[`SOCKET_PATH_${id}`],
-      serviceName: process.env[`SERVICE_NAME_${id}`],
-      authType: process.env[`AUTH_TYPE_${id}`] || (process.env[`SOCKET_PATH_${id}`] ? 'socket' : undefined),
-      defaultDatabase:
-        process.env[`DATABASE_${id}`] ||
-        (process.env[`FILE_${id}`] ? getDatabaseFileLabel(process.env[`FILE_${id}`]) : null),
-      singleDatabase: !!process.env[`DATABASE_${id}`] || !!process.env[`FILE_${id}`],
-      displayName: process.env[`LABEL_${id}`],
-      isReadOnly: process.env[`READONLY_${id}`],
-      databases: process.env[`DBCONFIG_${id}`] ? safeJsonParse(process.env[`DBCONFIG_${id}`]) : null,
-      allowedDatabases: process.env[`ALLOWED_DATABASES_${id}`]?.replace(/\|/g, '\n'),
-      allowedDatabasesRegex: process.env[`ALLOWED_DATABASES_REGEX_${id}`],
-      parent: process.env[`PARENT_${id}`] || undefined,
-      useSeparateSchemas: !!process.env[`USE_SEPARATE_SCHEMAS_${id}`],
-      localDataCenter: process.env[`LOCAL_DATA_CENTER_${id}`],
+    const connections = _.compact(process.env.CONNECTIONS.split(",")).map(
+      (id) => ({
+        _id: id,
+        engine: process.env[`ENGINE_${id}`],
+        server: process.env[`SERVER_${id}`],
+        user: process.env[`USER_${id}`],
+        password: process.env[`PASSWORD_${id}`],
+        passwordMode: process.env[`PASSWORD_MODE_${id}`],
+        port: process.env[`PORT_${id}`],
+        databaseUrl: process.env[`URL_${id}`],
+        useDatabaseUrl: !!process.env[`URL_${id}`],
+        databaseFile: process.env[`FILE_${id}`]?.replace(
+          "%%E2E_TEST_DATA_DIRECTORY%%",
+          path.join(
+            path.dirname(path.dirname(__dirname)),
+            "e2e-tests",
+            "tmpdata"
+          )
+        ),
+        socketPath: process.env[`SOCKET_PATH_${id}`],
+        serviceName: process.env[`SERVICE_NAME_${id}`],
+        authType:
+          process.env[`AUTH_TYPE_${id}`] ||
+          (process.env[`SOCKET_PATH_${id}`] ? "socket" : undefined),
+        defaultDatabase:
+          process.env[`DATABASE_${id}`] ||
+          (process.env[`FILE_${id}`]
+            ? getDatabaseFileLabel(process.env[`FILE_${id}`])
+            : null),
+        singleDatabase:
+          !!process.env[`DATABASE_${id}`] || !!process.env[`FILE_${id}`],
+        displayName: process.env[`LABEL_${id}`],
+        isReadOnly: process.env[`READONLY_${id}`],
+        databases: process.env[`DBCONFIG_${id}`]
+          ? safeJsonParse(process.env[`DBCONFIG_${id}`])
+          : null,
+        allowedDatabases: process.env[`ALLOWED_DATABASES_${id}`]?.replace(
+          /\|/g,
+          "\n"
+        ),
+        allowedDatabasesRegex: process.env[`ALLOWED_DATABASES_REGEX_${id}`],
+        parent: process.env[`PARENT_${id}`] || undefined,
+        useSeparateSchemas: !!process.env[`USE_SEPARATE_SCHEMAS_${id}`],
+        localDataCenter: process.env[`LOCAL_DATA_CENTER_${id}`],
 
-      // SSH tunnel
-      useSshTunnel: process.env[`USE_SSH_${id}`],
-      sshHost: process.env[`SSH_HOST_${id}`],
-      sshPort: process.env[`SSH_PORT_${id}`],
-      sshMode: process.env[`SSH_MODE_${id}`],
-      sshLogin: process.env[`SSH_LOGIN_${id}`],
-      sshPassword: process.env[`SSH_PASSWORD_${id}`],
-      sshKeyfile: process.env[`SSH_KEY_FILE_${id}`],
-      sshKeyfilePassword: process.env[`SSH_KEY_FILE_PASSWORD_${id}`],
+        // SSH tunnel
+        useSshTunnel: process.env[`USE_SSH_${id}`],
+        sshHost: process.env[`SSH_HOST_${id}`],
+        sshPort: process.env[`SSH_PORT_${id}`],
+        sshMode: process.env[`SSH_MODE_${id}`],
+        sshLogin: process.env[`SSH_LOGIN_${id}`],
+        sshPassword: process.env[`SSH_PASSWORD_${id}`],
+        sshKeyfile: process.env[`SSH_KEY_FILE_${id}`],
+        sshKeyfilePassword: process.env[`SSH_KEY_FILE_PASSWORD_${id}`],
 
-      // SSL
-      useSsl: process.env[`USE_SSL_${id}`],
-      sslCaFile: process.env[`SSL_CA_FILE_${id}`],
-      sslCertFile: process.env[`SSL_CERT_FILE_${id}`],
-      sslCertFilePassword: process.env[`SSL_CERT_FILE_PASSWORD_${id}`],
-      sslKeyFile: process.env[`SSL_KEY_FILE_${id}`],
-      sslRejectUnauthorized: process.env[`SSL_REJECT_UNAUTHORIZED_${id}`],
-      trustServerCertificate: process.env[`SSL_TRUST_CERTIFICATE_${id}`],
-    }));
+        // SSL
+        useSsl: process.env[`USE_SSL_${id}`],
+        sslCaFile: process.env[`SSL_CA_FILE_${id}`],
+        sslCertFile: process.env[`SSL_CERT_FILE_${id}`],
+        sslCertFilePassword: process.env[`SSL_CERT_FILE_PASSWORD_${id}`],
+        sslKeyFile: process.env[`SSL_KEY_FILE_${id}`],
+        sslRejectUnauthorized: process.env[`SSL_REJECT_UNAUTHORIZED_${id}`],
+        trustServerCertificate: process.env[`SSL_TRUST_CERTIFICATE_${id}`],
+      })
+    );
 
     for (const conn of connections) {
       for (const prop in process.env) {
@@ -116,12 +143,15 @@ function getPortalCollections() {
       }
     }
 
-    logger.info({ connections: connections.map(pickSafeConnectionInfo) }, 'DBGM-00005 Using connections from ENV variables');
-    const noengine = connections.filter(x => !x.engine);
+    logger.info(
+      { connections: connections.map(pickSafeConnectionInfo) },
+      "DBGM-00005 Using connections from ENV variables"
+    );
+    const noengine = connections.filter((x) => !x.engine);
     if (noengine.length > 0) {
       logger.warn(
-        { connections: noengine.map(x => x._id) },
-        'DBGM-00006 Invalid CONNECTIONS configuration, missing ENGINE for connection ID'
+        { connections: noengine.map((x) => x._id) },
+        "DBGM-00006 Invalid CONNECTIONS configuration, missing ENGINE for connection ID"
       );
     }
     return connections;
@@ -131,7 +161,7 @@ function getPortalCollections() {
   if (args.databaseFile) {
     return [
       {
-        _id: 'argv',
+        _id: "argv",
         databaseFile: args.databaseFile,
         singleDatabase: true,
         defaultDatabase: getDatabaseFileLabel(args.databaseFile),
@@ -142,7 +172,7 @@ function getPortalCollections() {
   if (args.databaseUrl) {
     return [
       {
-        _id: 'argv',
+        _id: "argv",
         useDatabaseUrl: true,
         ...args,
       },
@@ -151,7 +181,7 @@ function getPortalCollections() {
   if (args.server) {
     return [
       {
-        _id: 'argv',
+        _id: "argv",
         ...args,
       },
     ];
@@ -165,14 +195,16 @@ const portalConnections = getPortalCollections();
 function getSingleDbConnection() {
   if (process.env.SINGLE_CONNECTION && process.env.SINGLE_DATABASE) {
     // @ts-ignore
-    const connection = portalConnections.find(x => x._id == process.env.SINGLE_CONNECTION);
+    const connection = portalConnections.find(
+      (x) => x._id === process.env.SINGLE_CONNECTION
+    );
     return {
       connection,
       name: process.env.SINGLE_DATABASE,
     };
   }
   // @ts-ignore
-  const arg0 = (portalConnections || []).find(x => x._id == 'argv');
+  const arg0 = (portalConnections || []).find((x) => x._id === "argv");
   if (arg0) {
     // @ts-ignore
     if (arg0.singleDatabase) {
@@ -190,13 +222,15 @@ function getSingleConnection() {
   if (getSingleDbConnection()) return null;
   if (process.env.SINGLE_CONNECTION) {
     // @ts-ignore
-    const connection = portalConnections.find(x => x._id == process.env.SINGLE_CONNECTION);
+    const connection = portalConnections.find(
+      (x) => x._id === process.env.SINGLE_CONNECTION
+    );
     if (connection) {
       return connection;
     }
   }
   // @ts-ignore
-  const arg0 = (portalConnections || []).find(x => x._id == 'argv');
+  const arg0 = (portalConnections || []).find((x) => x._id === "argv");
   if (arg0) {
     return arg0;
   }
@@ -218,7 +252,12 @@ module.exports = {
     if (!portalConnections) {
       // @ts-ignore
       this.datastore = new JsonLinesDatabase(
-        path.join(dir, processArgs.runE2eTests ? 'connections-e2etests.jsonl' : 'connections.jsonl')
+        path.join(
+          dir,
+          processArgs.runE2eTests
+            ? "connections-e2etests.jsonl"
+            : "connections.jsonl"
+        )
       );
     }
     await this.checkUnsavedConnectionsLimit();
@@ -226,7 +265,7 @@ module.exports = {
 
   list_meta: true,
   async list(_params, req) {
-    const storage = require('./storage');
+    const storage = require("./storage");
 
     const storageConnections = await storage.connections(req);
     if (storageConnections) {
@@ -234,47 +273,51 @@ module.exports = {
     }
     if (portalConnections) {
       if (platformInfo.allowShellConnection) return portalConnections;
-      return portalConnections.map(maskConnection).filter(x => connectionHasPermission(x, req));
+      return portalConnections
+        .map(maskConnection)
+        .filter((x) => connectionHasPermission(x, req));
     }
-    return (await this.datastore.find()).filter(x => connectionHasPermission(x, req));
+    return (await this.datastore.find()).filter((x) =>
+      connectionHasPermission(x, req)
+    );
   },
 
   async getUsedEngines() {
-    const storage = require('./storage');
+    const storage = require("./storage");
 
     const storageEngines = await storage.getUsedEngines();
     if (storageEngines) {
       return storageEngines;
     }
     if (portalConnections) {
-      return _.uniq(_.compact(portalConnections.map(x => x.engine)));
+      return _.uniq(_.compact(portalConnections.map((x) => x.engine)));
     }
-    return _.uniq((await this.datastore.find()).map(x => x.engine));
+    return _.uniq((await this.datastore.find()).map((x) => x.engine));
   },
 
   test_meta: true,
   test({ connection, requestDbList = false }) {
     const subprocess = fork(
-      global['API_PACKAGE'] || process.argv[1],
+      global.API_PACKAGE || process.argv[1],
       [
-        '--is-forked-api',
-        '--start-process',
-        'connectProcess',
+        "--is-forked-api",
+        "--start-process",
+        "connectProcess",
         ...processArgs.getPassArgs(),
         // ...process.argv.slice(3),
       ],
       {
-        stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+        stdio: ["ignore", "pipe", "pipe", "ipc"],
       }
     );
     pipeForkLogs(subprocess);
     subprocess.send({ ...connection, requestDbList });
-    return new Promise(resolve => {
-      subprocess.on('message', resp => {
+    return new Promise((resolve) => {
+      subprocess.on("message", (resp) => {
         if (handleProcessCommunication(resp, subprocess)) return;
         // @ts-ignore
         const { msgtype } = resp;
-        if (msgtype == 'connected' || msgtype == 'error') {
+        if (msgtype === "connected" || msgtype === "error") {
           resolve(resp);
         }
       });
@@ -282,7 +325,13 @@ module.exports = {
   },
 
   saveVolatile_meta: true,
-  async saveVolatile({ conid, user = undefined, password = undefined, accessToken = undefined, test = false }) {
+  async saveVolatile({
+    conid,
+    user = undefined,
+    password = undefined,
+    accessToken = undefined,
+    test = false,
+  }) {
     const old = await this.getCore({ conid });
     const res = {
       ...old,
@@ -293,17 +342,17 @@ module.exports = {
       unsaved: true,
       useRedirectDbLogin: false,
     };
-    if (old.passwordMode == 'askUser') {
+    if (old.passwordMode === "askUser") {
       res.user = user;
     }
 
     if (test) {
       const testRes = await this.test({ connection: res });
-      if (testRes.msgtype == 'connected') {
+      if (testRes.msgtype === "connected") {
         volatileConnections[res._id] = res;
         return {
           ...res,
-          msgtype: 'connected',
+          msgtype: "connected",
         };
       }
       return testRes;
@@ -323,8 +372,8 @@ module.exports = {
     } else {
       res = await this.datastore.insert(encrypted);
     }
-    socket.emitChanged('connection-list-changed');
-    socket.emitChanged('used-apps-changed');
+    socket.emitChanged("connection-list-changed");
+    socket.emitChanged("used-apps-changed");
     if (this._closeAll) {
       this._closeAll(connection._id);
     }
@@ -335,15 +384,18 @@ module.exports = {
   },
 
   importFromArray(list) {
-    this.datastore.transformAll(connections => {
-      const mapped = connections.map(x => {
-        const found = list.find(y => y._id == x._id);
+    this.datastore.transformAll((connections) => {
+      const mapped = connections.map((x) => {
+        const found = list.find((y) => y._id === x._id);
         if (found) return found;
         return x;
       });
-      return [...mapped, ...list.filter(x => !connections.find(y => y._id == x._id))];
+      return [
+        ...mapped,
+        ...list.filter((x) => !connections.find((y) => y._id === x._id)),
+      ];
     });
-    socket.emitChanged('connection-list-changed');
+    socket.emitChanged("connection-list-changed");
   },
 
   async checkUnsavedConnectionsLimit() {
@@ -351,8 +403,8 @@ module.exports = {
       return;
     }
     const MAX_UNSAVED_CONNECTIONS = 5;
-    await this.datastore.transformAll(connections => {
-      const count = connections.filter(x => x.unsaved).length;
+    await this.datastore.transformAll((connections) => {
+      const count = connections.filter((x) => x.unsaved).length;
       if (count > MAX_UNSAVED_CONNECTIONS) {
         const res = [];
         let unsavedToSkip = count - MAX_UNSAVED_CONNECTIONS;
@@ -377,15 +429,17 @@ module.exports = {
     if (portalConnections) return;
     testConnectionPermission(_id, req);
     const res = await this.datastore.patch(_id, values);
-    socket.emitChanged('connection-list-changed');
+    socket.emitChanged("connection-list-changed");
     return res;
   },
 
   batchChangeFolder_meta: true,
-  async batchChangeFolder({ folder, newFolder }, req) {
+  async batchChangeFolder({ folder, newFolder }, _req) {
     // const updated = await this.datastore.find(x => x.parent == folder);
-    const res = await this.datastore.updateAll(x => (x.parent == folder ? { ...x, parent: newFolder } : x));
-    socket.emitChanged('connection-list-changed');
+    const res = await this.datastore.updateAll((x) =>
+      x.parent === folder ? { ...x, parent: newFolder } : x
+    );
+    socket.emitChanged("connection-list-changed");
     return res;
   },
 
@@ -394,15 +448,17 @@ module.exports = {
     if (portalConnections) return;
     testConnectionPermission(conid, req);
     const conn = await this.datastore.get(conid);
-    let databases = (conn && conn.databases) || [];
-    if (databases.find(x => x.name == database)) {
-      databases = databases.map(x => (x.name == database ? { ...x, ...values } : x));
+    let databases = conn?.databases || [];
+    if (databases.find((x) => x.name === database)) {
+      databases = databases.map((x) =>
+        x.name === database ? { ...x, ...values } : x
+      );
     } else {
       databases = [...databases, { name: database, ...values }];
     }
     const res = await this.datastore.patch(conid, { databases });
-    socket.emitChanged('connection-list-changed');
-    socket.emitChanged('used-apps-changed');
+    socket.emitChanged("connection-list-changed");
+    socket.emitChanged("used-apps-changed");
     // socket.emitChanged(`db-apps-changed-${conid}-${database}`);
     return res;
   },
@@ -412,7 +468,7 @@ module.exports = {
     if (portalConnections) return;
     testConnectionPermission(connection, req);
     const res = await this.datastore.remove(connection._id);
-    socket.emitChanged('connection-list-changed');
+    socket.emitChanged("connection-list-changed");
     return res;
   },
 
@@ -423,14 +479,17 @@ module.exports = {
       return volatile;
     }
 
-    const cloudMatch = conid.match(/^cloud\:\/\/(.+)\/(.+)$/);
+    const cloudMatch = conid.match(/^cloud:\/\/(.+)\/(.+)$/);
     if (cloudMatch) {
-      const { loadCachedCloudConnection } = require('../utility/cloudIntf');
-      const conn = await loadCachedCloudConnection(cloudMatch[1], cloudMatch[2]);
+      const { loadCachedCloudConnection } = require("../utility/cloudIntf");
+      const conn = await loadCachedCloudConnection(
+        cloudMatch[1],
+        cloudMatch[2]
+      );
       return conn;
     }
 
-    const storage = require('./storage');
+    const storage = require("./storage");
 
     const storageConnection = await storage.getConnection({ conid });
     if (storageConnection) {
@@ -438,8 +497,10 @@ module.exports = {
     }
 
     if (portalConnections) {
-      const res = portalConnections.find(x => x._id == conid) || null;
-      return mask && !platformInfo.allowShellConnection ? maskConnection(res) : res;
+      const res = portalConnections.find((x) => x._id === conid) || null;
+      return mask && !platformInfo.allowShellConnection
+        ? maskConnection(res)
+        : res;
     }
     const res = await this.datastore.get(conid);
     return res || null;
@@ -447,9 +508,9 @@ module.exports = {
 
   get_meta: true,
   async get({ conid }, req) {
-    if (conid == '__model') {
+    if (conid === "__model") {
       return {
-        _id: '__model',
+        _id: "__model",
       };
     }
     testConnectionPermission(conid, req);
@@ -458,13 +519,13 @@ module.exports = {
 
   newSqliteDatabase_meta: true,
   async newSqliteDatabase({ file }) {
-    const sqliteDir = path.join(filesdir(), 'sqlite');
+    const sqliteDir = path.join(filesdir(), "sqlite");
     if (!(await fs.exists(sqliteDir))) {
       await fs.mkdir(sqliteDir);
     }
     const databaseFile = path.join(sqliteDir, `${file}.sqlite`);
     const res = await this.save({
-      engine: 'sqlite@dbgate-plugin-sqlite',
+      engine: "sqlite@dbgate-plugin-sqlite",
       databaseFile,
       singleDatabase: true,
       defaultDatabase: `${file}.sqlite`,
@@ -474,13 +535,13 @@ module.exports = {
 
   newDuckdbDatabase_meta: true,
   async newDuckdbDatabase({ file }) {
-    const duckdbDir = path.join(filesdir(), 'duckdb');
+    const duckdbDir = path.join(filesdir(), "duckdb");
     if (!(await fs.exists(duckdbDir))) {
       await fs.mkdir(duckdbDir);
     }
     const databaseFile = path.join(duckdbDir, `${file}.duckdb`);
     const res = await this.save({
-      engine: 'duckdb@dbgate-plugin-duckdb',
+      engine: "duckdb@dbgate-plugin-duckdb",
       databaseFile,
       singleDatabase: true,
       defaultDatabase: `${file}.duckdb`,
@@ -490,7 +551,7 @@ module.exports = {
 
   dbloginWeb_meta: {
     raw: true,
-    method: 'get',
+    method: "get",
   },
   async dbloginWeb(req, res) {
     const { conid, state, redirectUri } = req.query;
@@ -499,7 +560,7 @@ module.exports = {
     const authResp = await driver.getRedirectAuthUrl(connection, {
       redirectUri,
       state,
-      client: 'web',
+      client: "web",
     });
     res.redirect(authResp.url);
   },
@@ -510,11 +571,14 @@ module.exports = {
     const driver = requireEngineDriver(connection);
     const resp = await driver.getRedirectAuthUrl(connection, {
       state,
-      client: 'app',
+      client: "app",
     });
-    startTokenChecking(resp.sid, async token => {
+    startTokenChecking(resp.sid, async (token) => {
       const volatile = await this.saveVolatile({ conid, accessToken: token });
-      socket.emit('got-volatile-token', { savedConId: conid, volatileConId: volatile._id });
+      socket.emit("got-volatile-token", {
+        savedConId: conid,
+        volatileConId: volatile._id,
+      });
     });
     return resp;
   },
@@ -524,13 +588,24 @@ module.exports = {
     try {
       const connection = await this.getCore({ conid });
       const driver = requireEngineDriver(connection);
-      const accessToken = await driver.getAuthTokenFromCode(connection, { sid, code, redirectUri });
+      const accessToken = await driver.getAuthTokenFromCode(connection, {
+        sid,
+        code,
+        redirectUri,
+      });
       const volatile = await this.saveVolatile({ conid, accessToken });
       // console.log('******************************** WE HAVE ACCESS TOKEN', accessToken);
-      socket.emit('got-volatile-token', { strmid, savedConId: conid, volatileConId: volatile._id });
+      socket.emit("got-volatile-token", {
+        strmid,
+        savedConId: conid,
+        volatileConId: volatile._id,
+      });
       return { success: true };
     } catch (err) {
-      logger.error(extractErrorLogData(err), 'DBGM-00100 Error getting DB token');
+      logger.error(
+        extractErrorLogData(err),
+        "DBGM-00100 Error getting DB token"
+      );
       return { error: err.message };
     }
   },
@@ -540,13 +615,25 @@ module.exports = {
     try {
       const connection = await this.getCore({ conid });
       const driver = requireEngineDriver(connection);
-      const accessToken = await driver.getAuthTokenFromCode(connection, { code, redirectUri, sid });
+      const accessToken = await driver.getAuthTokenFromCode(connection, {
+        code,
+        redirectUri,
+        sid,
+      });
       const volatile = await this.saveVolatile({ conid, accessToken });
       const authProvider = getAuthProviderById(amoid);
-      const resp = await authProvider.login(null, null, { conid: volatile._id }, req);
+      const resp = await authProvider.login(
+        null,
+        null,
+        { conid: volatile._id },
+        req
+      );
       return resp;
     } catch (err) {
-      logger.error(extractErrorLogData(err), 'DBGM-00101 Error getting DB token');
+      logger.error(
+        extractErrorLogData(err),
+        "DBGM-00101 Error getting DB token"
+      );
       return { error: err.message };
     }
   },
@@ -554,16 +641,31 @@ module.exports = {
   dbloginAuth_meta: true,
   async dbloginAuth({ amoid, conid, user, password }, req) {
     if (user || password) {
-      const saveResp = await this.saveVolatile({ conid, user, password, test: true });
-      if (saveResp.msgtype == 'connected') {
-        const loginResp = await getAuthProviderById(amoid).login(user, password, { conid: saveResp._id }, req);
+      const saveResp = await this.saveVolatile({
+        conid,
+        user,
+        password,
+        test: true,
+      });
+      if (saveResp.msgtype === "connected") {
+        const loginResp = await getAuthProviderById(amoid).login(
+          user,
+          password,
+          { conid: saveResp._id },
+          req
+        );
         return loginResp;
       }
       return saveResp;
     }
 
     // user and password is stored in connection, volatile connection is not needed
-    const loginResp = await getAuthProviderById(amoid).login(null, null, { conid }, req);
+    const loginResp = await getAuthProviderById(amoid).login(
+      null,
+      null,
+      { conid },
+      req
+    );
     return loginResp;
   },
 

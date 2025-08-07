@@ -1,4 +1,4 @@
-const stream = require('stream');
+const stream = require("node:stream");
 
 class CollectorWriterStream extends stream.Writable {
   constructor(options) {
@@ -7,7 +7,7 @@ class CollectorWriterStream extends stream.Writable {
     this.structure = null;
     this.runid = options.runid;
   }
-  _write(chunk, enc, next) {
+  _write(chunk, _enc, next) {
     if (!this.structure) this.structure = chunk;
     else this.rows.push(chunk);
     next();
@@ -15,7 +15,7 @@ class CollectorWriterStream extends stream.Writable {
 
   _final(callback) {
     process.send({
-      msgtype: 'dataResult',
+      msgtype: "dataResult",
       runid: this.runid,
       dataResult: { rows: this.rows, structure: this.structure },
     });

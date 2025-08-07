@@ -1,12 +1,19 @@
 // Connections management functionality for DBGate Shell
-import crypto from 'crypto';
-import { Connection, ConnectionConfig, EnvironmentConnectionConfig, ConnectionTestResult } from './types';
+import crypto from "node:crypto";
+import type {
+  Connection,
+  ConnectionConfig,
+  ConnectionTestResult,
+  EnvironmentConnectionConfig,
+} from "./types";
 
 /**
  * Parse connections from environment variables
  * Format: CONNECTION_1_SERVER=localhost, CONNECTION_1_ENGINE=mysql, etc.
  */
-export function parseConnectionsFromEnv(env: EnvironmentConnectionConfig = process.env): Connection[] {
+export function parseConnectionsFromEnv(
+  env: EnvironmentConnectionConfig = process.env
+): Connection[] {
   const connections: Connection[] = [];
   const envKeys = Object.keys(env);
   const connectionNumbers = new Set<string>();
@@ -37,11 +44,9 @@ export function parseConnectionsFromEnv(env: EnvironmentConnectionConfig = proce
           : undefined,
         database: env[`CONNECTION_${num}_DATABASE`],
         displayName:
-          env[`CONNECTION_${num}_DISPLAY_NAME`] ||
-          `${engine} - ${server}`,
+          env[`CONNECTION_${num}_DISPLAY_NAME`] || `${engine} - ${server}`,
         authType: env[`CONNECTION_${num}_AUTH_TYPE`],
-        useDatabaseUrl:
-          env[`CONNECTION_${num}_USE_DATABASE_URL`] === "true",
+        useDatabaseUrl: env[`CONNECTION_${num}_USE_DATABASE_URL`] === "true",
         databaseUrl: env[`CONNECTION_${num}_DATABASE_URL`],
         ssl: env[`CONNECTION_${num}_SSL`] === "true",
         isReadOnly: env[`CONNECTION_${num}_READ_ONLY`] === "true",
@@ -58,55 +63,63 @@ export function parseConnectionsFromEnv(env: EnvironmentConnectionConfig = proce
 /**
  * Find a connection by its connection ID
  */
-export function findConnectionById(connections: Connection[], conid: string): Connection | undefined {
+export function findConnectionById(
+  connections: Connection[],
+  conid: string
+): Connection | undefined {
   return connections.find((c) => c.conid === conid);
 }
 
 /**
  * Validate connection configuration
  */
-export function validateConnection(config: Partial<ConnectionConfig>): { isValid: boolean; errors: string[] } {
+export function validateConnection(config: Partial<ConnectionConfig>): {
+  isValid: boolean;
+  errors: string[];
+} {
   const errors: string[] = [];
 
   if (!config.server) {
-    errors.push('Server is required');
+    errors.push("Server is required");
   }
 
   if (!config.engine) {
-    errors.push('Engine is required');
+    errors.push("Engine is required");
   }
 
   // Validate port if provided
   if (config.port !== undefined) {
-    if (isNaN(config.port) || config.port < 1 || config.port > 65535) {
-      errors.push('Port must be a valid number between 1 and 65535');
+    if (Number.isNaN(config.port) || config.port < 1 || config.port > 65535) {
+      errors.push("Port must be a valid number between 1 and 65535");
     }
   }
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 }
 
 /**
  * Test a connection (simplified implementation)
  */
-export async function testConnection(config: Partial<ConnectionConfig>): Promise<ConnectionTestResult> {
+export async function testConnection(
+  config: Partial<ConnectionConfig>
+): Promise<ConnectionTestResult> {
   const validation = validateConnection(config);
-  
+
   if (!validation.isValid) {
     return {
-      msgtype: 'error',
-      message: validation.errors.join(', ')
+      msgtype: "error",
+      message: validation.errors.join(", "),
     };
   }
 
   // For now, just simulate a successful connection test
   // In a real implementation, this would attempt to connect to the database
   return {
-    msgtype: 'connected',
-    message: 'Connection test successful'
+    msgtype: "connected",
+    message: "Connection test successful",
   };
 }
 
@@ -116,8 +129,8 @@ export async function testConnection(config: Partial<ConnectionConfig>): Promise
 export function maskConnection(connection: Connection): Connection {
   return {
     ...connection,
-    password: connection.password ? '***' : undefined,
-    databaseUrl: connection.databaseUrl ? '***' : undefined,
+    password: connection.password ? "***" : undefined,
+    databaseUrl: connection.databaseUrl ? "***" : undefined,
   };
 }
 
@@ -126,15 +139,15 @@ export function maskConnection(connection: Connection): Connection {
  */
 export function getSupportedEngines(): string[] {
   return [
-    'mysql',
-    'postgresql',
-    'sqlite',
-    'mssql',
-    'oracle',
-    'mongodb',
-    'redis',
-    'cockroachdb',
-    'clickhouse'
+    "mysql",
+    "postgresql",
+    "sqlite",
+    "mssql",
+    "oracle",
+    "mongodb",
+    "redis",
+    "cockroachdb",
+    "clickhouse",
   ];
 }
 
@@ -180,7 +193,7 @@ export class ConnectionManager {
    * Remove a connection by ID
    */
   remove(conid: string): boolean {
-    const index = this.connections.findIndex(c => c.conid === conid);
+    const index = this.connections.findIndex((c) => c.conid === conid);
     if (index !== -1) {
       this.connections.splice(index, 1);
       return true;
@@ -192,7 +205,7 @@ export class ConnectionManager {
    * Update a connection
    */
   update(conid: string, updates: Partial<Connection>): boolean {
-    const index = this.connections.findIndex(c => c.conid === conid);
+    const index = this.connections.findIndex((c) => c.conid === conid);
     if (index !== -1) {
       this.connections[index] = { ...this.connections[index], ...updates };
       return true;

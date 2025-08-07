@@ -1,87 +1,91 @@
-import type { SqlDumper } from 'dbgate-types';
-import { Condition, BinaryCondition } from './types';
-import { dumpSqlExpression } from './dumpSqlExpression';
-import { dumpSqlSelect } from './dumpSqlCommand';
+import type { SqlDumper } from "dbgate-types";
+import { dumpSqlSelect } from "./dumpSqlCommand";
+import { dumpSqlExpression } from "./dumpSqlExpression";
+import type { Condition } from "./types";
 
 export function dumpSqlCondition(dmp: SqlDumper, condition: Condition) {
   switch (condition.conditionType) {
-    case 'binary':
+    case "binary":
       dumpSqlExpression(dmp, condition.left);
-      dmp.put(' %s ', condition.operator);
+      dmp.put(" %s ", condition.operator);
       dumpSqlExpression(dmp, condition.right);
       break;
-    case 'isNull':
+    case "isNull":
       dumpSqlExpression(dmp, condition.expr);
-      dmp.put(' ^is ^null');
+      dmp.put(" ^is ^null");
       break;
-    case 'isNotNull':
+    case "isNotNull":
       dumpSqlExpression(dmp, condition.expr);
-      dmp.put(' ^is ^not ^null');
+      dmp.put(" ^is ^not ^null");
       break;
-    case 'isEmpty':
-      dmp.put('^trim(');
+    case "isEmpty":
+      dmp.put("^trim(");
       dumpSqlExpression(dmp, condition.expr);
       dmp.put(") = ''");
       break;
-    case 'isNotEmpty':
-      dmp.put('^trim(');
+    case "isNotEmpty":
+      dmp.put("^trim(");
       dumpSqlExpression(dmp, condition.expr);
       dmp.put(") <> ''");
       break;
-    case 'and':
-    case 'or':
-      dmp.putCollection(` ^${condition.conditionType} `, condition.conditions, cond => {
-        dmp.putRaw('(');
-        dumpSqlCondition(dmp, cond);
-        dmp.putRaw(')');
-      });
+    case "and":
+    case "or":
+      dmp.putCollection(
+        ` ^${condition.conditionType} `,
+        condition.conditions,
+        (cond) => {
+          dmp.putRaw("(");
+          dumpSqlCondition(dmp, cond);
+          dmp.putRaw(")");
+        }
+      );
       break;
-    case 'like':
+    case "like":
       dumpSqlExpression(dmp, condition.left);
-      dmp.put(dmp.dialect.ilike ? ' ^ilike ' : ' ^like ');
+      dmp.put(dmp.dialect.ilike ? " ^ilike " : " ^like ");
       dumpSqlExpression(dmp, condition.right);
       break;
-    case 'notLike':
+    case "notLike":
       dumpSqlExpression(dmp, condition.left);
-      dmp.put(' ^not ^like ');
+      dmp.put(" ^not ^like ");
       dumpSqlExpression(dmp, condition.right);
       break;
-    case 'not':
-      dmp.put('^not (');
+    case "not":
+      dmp.put("^not (");
       dumpSqlCondition(dmp, condition.condition);
-      dmp.put(')');
+      dmp.put(")");
       break;
-    case 'exists':
-      dmp.put('^exists (');
+    case "exists":
+      dmp.put("^exists (");
       dumpSqlSelect(dmp, condition.subQuery);
-      dmp.put(')');
+      dmp.put(")");
       break;
-    case 'notExists':
-      dmp.put('^not ^exists (');
+    case "notExists":
+      dmp.put("^not ^exists (");
       dumpSqlSelect(dmp, condition.subQuery);
-      dmp.put(')');
+      dmp.put(")");
       break;
-    case 'between':
+    case "between":
       dumpSqlExpression(dmp, condition.expr);
-      dmp.put(' ^between ');
+      dmp.put(" ^between ");
       dumpSqlExpression(dmp, condition.left);
-      dmp.put(' ^and ');
+      dmp.put(" ^and ");
       dumpSqlExpression(dmp, condition.right);
       break;
-    case 'expression':
+    case "expression":
       dumpSqlExpression(dmp, condition.expr);
       break;
-    case 'in':
+    case "in":
       dumpSqlExpression(dmp, condition.expr);
-      dmp.put(' ^in (%,v)', condition.values);
+      dmp.put(" ^in (%,v)", condition.values);
       break;
-    case 'notIn':
+    case "notIn":
       dumpSqlExpression(dmp, condition.expr);
-      dmp.put(' ^not ^in (%,v)', condition.values);
+      dmp.put(" ^not ^in (%,v)", condition.values);
       break;
-    case 'rawTemplate':
+    case "rawTemplate": {
       let was = false;
-      for (const item of condition.templateSql.split('$$')) {
+      for (const item of condition.templateSql.split("$$")) {
         if (was) {
           dumpSqlExpression(dmp, condition.expr);
         }
@@ -89,5 +93,6 @@ export function dumpSqlCondition(dmp: SqlDumper, condition: Condition) {
         was = true;
       }
       break;
+    }
   }
 }

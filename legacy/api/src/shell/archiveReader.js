@@ -1,9 +1,9 @@
-const path = require('path');
-const { archivedir, resolveArchiveFolder } = require('../utility/directories');
-const jsonLinesReader = require('./jsonLinesReader');
+const path = require("node:path");
+const { archivedir, resolveArchiveFolder } = require("../utility/directories");
+const jsonLinesReader = require("./jsonLinesReader");
 
 function archiveReader({ folderName, fileName, ...other }) {
-  const jsonlFile = folderName.endsWith('.zip')
+  const jsonlFile = folderName.endsWith(".zip")
     ? `zip://archive:${folderName}//${fileName}.jsonl`
     : path.join(resolveArchiveFolder(folderName), `${fileName}.jsonl`);
   const res = jsonLinesReader({ fileName: jsonlFile, ...other });

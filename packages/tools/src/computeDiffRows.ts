@@ -1,41 +1,46 @@
+import type {
+  DatabaseInfo,
+  EngineDriver,
+  SqlObjectInfo,
+  TableInfo,
+} from "dbgate-types";
+import _ from "lodash";
+import { type AlterOperation, runAlterOperation } from "./alterPlan";
 import {
-  DbDiffOptions,
-  testEqualColumns,
-  testEqualTables,
-  testEqualSqlObjects,
   createAlterDatabasePlan,
-} from './diffTools';
-import type { DatabaseInfo, EngineDriver, NamedObjectInfo, SqlObjectInfo, TableInfo } from 'dbgate-types';
-import _ from 'lodash';
-import { extendDatabaseInfo } from './structureTools';
-import { AlterOperation, runAlterOperation } from './alterPlan';
+  type DbDiffOptions,
+  testEqualColumns,
+  testEqualSqlObjects,
+  testEqualTables,
+} from "./diffTools";
+import { extendDatabaseInfo } from "./structureTools";
 
 export function computeDiffRowsCore(sourceList, targetList, testEqual) {
   const res = [];
   for (const obj of sourceList) {
-    const paired = targetList.find(x => x.pairingId == obj.pairingId);
+    const paired = targetList.find((x) => x.pairingId === obj.pairingId);
     if (paired) {
       const isEqual = testEqual(obj, paired);
       res.push({
         source: obj,
         target: paired,
-        state: isEqual ? 'equal' : 'changed',
+        state: isEqual ? "equal" : "changed",
         __isChanged: !isEqual,
       });
     } else {
       res.push({
         source: obj,
-        state: 'added',
+        state: "added",
         __isAdded: true,
       });
     }
   }
   for (const obj of targetList) {
-    const paired = sourceList.find(x => x.pairingId == obj.pairingId);
+    const paired = sourceList.find((x) => x.pairingId === obj.pairingId);
     if (!paired) {
       res.push({
         target: obj,
-        state: 'removed',
+        state: "removed",
         __isDeleted: true,
       });
     }
@@ -47,33 +52,33 @@ export function computeDiffRowsCore(sourceList, targetList, testEqual) {
 export const DbDiffCompareDefs = {
   tables: {
     test: testEqualTables,
-    name: 'Table',
-    plural: 'Tables',
-    icon: 'img table',
+    name: "Table",
+    plural: "Tables",
+    icon: "img table",
   },
   views: {
     test: testEqualSqlObjects,
-    name: 'View',
-    plural: 'Views',
-    icon: 'img view',
+    name: "View",
+    plural: "Views",
+    icon: "img view",
   },
   matviews: {
     test: testEqualSqlObjects,
-    name: 'Materialized view',
-    plural: 'Materialized views',
-    icon: 'img view',
+    name: "Materialized view",
+    plural: "Materialized views",
+    icon: "img view",
   },
   procedures: {
     test: testEqualSqlObjects,
-    name: 'Procedure',
-    plural: 'Procedures',
-    icon: 'img procedure',
+    name: "Procedure",
+    plural: "Procedures",
+    icon: "img procedure",
   },
   functions: {
     test: testEqualSqlObjects,
-    name: 'Function',
-    plural: 'Functions',
-    icon: 'img function',
+    name: "Function",
+    plural: "Functions",
+    icon: "img function",
   },
 };
 
@@ -86,13 +91,21 @@ export function computeDbDiffRows(
   if (!sourceDb || !targetDb || !driver) return [];
 
   const res = [];
-  for (const objectTypeField of ['tables', 'views', 'procedures', 'matviews', 'functions']) {
+  for (const objectTypeField of [
+    "tables",
+    "views",
+    "procedures",
+    "matviews",
+    "functions",
+  ]) {
     const defs = DbDiffCompareDefs[objectTypeField];
     res.push(
       ..._.sortBy(
-        computeDiffRowsCore(sourceDb[objectTypeField], targetDb[objectTypeField], (a, b) =>
-          defs.test(a, b, opts, sourceDb, targetDb, driver)
-        ).map(row => ({
+        computeDiffRowsCore(
+          sourceDb[objectTypeField],
+          targetDb[objectTypeField],
+          (a, b) => defs.test(a, b, opts, sourceDb, targetDb, driver)
+        ).map((row) => ({
           ...row,
           sourceSchemaName: row?.source?.schemaName,
           sourcePureName: row?.source?.pureName,
@@ -105,7 +118,7 @@ export function computeDbDiffRows(
           }`,
           objectTypeField,
         })),
-        'identifier'
+        "identifier"
       )
     );
   }
@@ -119,9 +132,11 @@ export function computeTableDiffColumns(
   driver: EngineDriver
 ) {
   if (!driver) return [];
-  return computeDiffRowsCore(sourceTable?.columns || [], targetTable?.columns || [], (a, b) =>
-    testEqualColumns(a, b, true, true, opts)
-  ).map(row => ({
+  return computeDiffRowsCore(
+    sourceTable?.columns || [],
+    targetTable?.columns || [],
+    (a, b) => testEqualColumns(a, b, true, true, opts)
+  ).map((row) => ({
     ...row,
     sourceColumnName: row?.source?.columnName,
     targetColumnName: row?.target?.columnName,
@@ -141,7 +156,10 @@ export interface DiffOperationItemDisplay {
   identifier?: string;
 }
 
-export function getOperationDisplay(operation: AlterOperation, driver: EngineDriver): DiffOperationItemDisplay {
+export function getOperationDisplay(
+  operation: AlterOperation,
+  driver: EngineDriver
+): DiffOperationItemDisplay {
   const op = operation as any;
   const name =
     op?.newName ??
@@ -177,21 +195,35 @@ export function computeObjectDiffOperations(
 ): DiffOperationItemDisplay[] {
   if (!driver) return [];
   const srcdb = sourceObject
-    ? extendDatabaseInfo({ [sourceObject.objectTypeField]: [sourceObject] } as unknown as DatabaseInfo)
+    ? extendDatabaseInfo({
+        [sourceObject.objectTypeField]: [sourceObject],
+      } as unknown as DatabaseInfo)
     : extendDatabaseInfo({} as unknown as DatabaseInfo);
   const dstdb = targetObject
-    ? extendDatabaseInfo({ [targetObject.objectTypeField]: [targetObject] } as unknown as DatabaseInfo)
+    ? extendDatabaseInfo({
+        [targetObject.objectTypeField]: [targetObject],
+      } as unknown as DatabaseInfo)
     : extendDatabaseInfo({} as unknown as DatabaseInfo);
-  const plan = createAlterDatabasePlan(dstdb, srcdb, opts, targetDb, sourceDb, driver);
-  return plan.operations.map(item => getOperationDisplay(item, driver));
+  const plan = createAlterDatabasePlan(
+    dstdb,
+    srcdb,
+    opts,
+    targetDb,
+    sourceDb,
+    driver
+  );
+  return plan.operations.map((item) => getOperationDisplay(item, driver));
 }
 
-export function getCreateObjectScript(obj: TableInfo | SqlObjectInfo, driver: EngineDriver) {
-  if (!obj || !driver) return '';
-  if (obj.objectTypeField == 'tables') {
+export function getCreateObjectScript(
+  obj: TableInfo | SqlObjectInfo,
+  driver: EngineDriver
+) {
+  if (!obj || !driver) return "";
+  if (obj.objectTypeField === "tables") {
     const dmp = driver.createDumper();
     dmp.createTable(obj as TableInfo);
     return dmp.s;
   }
-  return (obj as SqlObjectInfo).createSql || '';
+  return (obj as SqlObjectInfo).createSql || "";
 }

@@ -5,6 +5,6 @@
     // { "path": "app" },
     // { "path": "packages/web" },
     { "path": "packages/sqltree" },
-    { "path": "packages/tools" },
+    { "path": "packages/tools" }
   ]
 }

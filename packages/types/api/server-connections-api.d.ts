@@ -94,14 +94,14 @@ export type ServerConnections_SummaryCommand_Request = {
   response: any;
 };
 
-export type ServerConnections_Request = 
+export type ServerConnections_Request =
   | ServerConnections_Disconnect_Request
-  | ServerConnections_ListDatabases_Request 
+  | ServerConnections_ListDatabases_Request
   | ServerConnections_Version_Request
   | ServerConnections_ServerStatus_Request
   | ServerConnections_Ping_Request
   | ServerConnections_Refresh_Request
-  | ServerConnections_CreateDatabase_Request 
+  | ServerConnections_CreateDatabase_Request
   | ServerConnections_DropDatabase_Request
   | ServerConnections_ServerSummary_Request
   | ServerConnections_SummaryCommand_Request;

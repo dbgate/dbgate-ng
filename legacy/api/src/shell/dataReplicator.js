@@ -1,23 +1,23 @@
-const stream = require('stream');
-const path = require('path');
-const { quoteFullName, fullNameToString, getLogger } = require('dbgate-tools');
-const requireEngineDriver = require('../utility/requireEngineDriver');
-const { connectUtility } = require('../utility/connectUtility');
-const logger = getLogger('datareplicator');
-const { DataReplicator } = require('dbgate-datalib');
-const { compileCompoudEvalCondition } = require('dbgate-filterparser');
-const copyStream = require('./copyStream');
-const jsonLinesReader = require('./jsonLinesReader');
-const { resolveArchiveFolder } = require('../utility/directories');
-const { evaluateCondition } = require('dbgate-sqltree');
+const stream = require("node:stream");
+const path = require("node:path");
+const { quoteFullName, fullNameToString, getLogger } = require("dbgate-tools");
+const requireEngineDriver = require("../utility/requireEngineDriver");
+const { connectUtility } = require("../utility/connectUtility");
+const _logger = getLogger("datareplicator");
+const { DataReplicator } = require("dbgate-datalib");
+const { compileCompoudEvalCondition } = require("dbgate-filterparser");
+const copyStream = require("./copyStream");
+const jsonLinesReader = require("./jsonLinesReader");
+const { resolveArchiveFolder } = require("../utility/directories");
+const { evaluateCondition } = require("dbgate-sqltree");
 
 function compileOperationFunction(enabled, condition) {
-  if (!enabled) return _row => false;
+  if (!enabled) return (_row) => false;
   const conditionCompiled = compileCompoudEvalCondition(condition);
   if (condition) {
-    return row => evaluateCondition(conditionCompiled, row);
+    return (row) => evaluateCondition(conditionCompiled, row);
   }
-  return _row => true;
+  return (_row) => true;
 }
 
 async function dataReplicator({
@@ -32,7 +32,8 @@ async function dataReplicator({
 }) {
   if (!driver) driver = requireEngineDriver(connection);
 
-  const dbhan = systemConnection || (await connectUtility(driver, connection, 'write'));
+  const dbhan =
+    systemConnection || (await connectUtility(driver, connection, "write"));
 
   try {
     if (!analysedStructure) {
@@ -41,35 +42,45 @@ async function dataReplicator({
 
     let joinPath;
 
-    if (archive?.endsWith('.zip')) {
-      joinPath = file => `zip://archive:${archive}//${file}`;
+    if (archive?.endsWith(".zip")) {
+      joinPath = (file) => `zip://archive:${archive}//${file}`;
     } else {
       const sourceDir = archive
         ? resolveArchiveFolder(archive)
-        : folder?.startsWith('archive:')
-        ? resolveArchiveFolder(folder.substring('archive:'.length))
-        : folder;
-      joinPath = file => path.join(sourceDir, file);
+        : folder?.startsWith("archive:")
+          ? resolveArchiveFolder(folder.substring("archive:".length))
+          : folder;
+      joinPath = (file) => path.join(sourceDir, file);
     }
 
     const repl = new DataReplicator(
       dbhan,
       driver,
       analysedStructure,
-      items.map(item => {
+      items.map((item) => {
         return {
           name: item.name,
           matchColumns: item.matchColumns,
-          findExisting: compileOperationFunction(item.findExisting, item.findCondition),
-          createNew: compileOperationFunction(item.createNew, item.createCondition),
-          updateExisting: compileOperationFunction(item.updateExisting, item.updateCondition),
+          findExisting: compileOperationFunction(
+            item.findExisting,
+            item.findCondition
+          ),
+          createNew: compileOperationFunction(
+            item.createNew,
+            item.createCondition
+          ),
+          updateExisting: compileOperationFunction(
+            item.updateExisting,
+            item.updateCondition
+          ),
           deleteMissing: !!item.deleteMissing,
           deleteRestrictionColumns: item.deleteRestrictionColumns ?? [],
           openStream: item.openStream
             ? item.openStream
             : item.jsonArray
-            ? () => stream.Readable.from(item.jsonArray)
-            : () => jsonLinesReader({ fileName: joinPath(`${item.name}.jsonl`) }),
+              ? () => stream.Readable.from(item.jsonArray)
+              : () =>
+                  jsonLinesReader({ fileName: joinPath(`${item.name}.jsonl`) }),
         };
       }),
       stream,
@@ -80,7 +91,7 @@ async function dataReplicator({
     await repl.run();
     if (options?.runid) {
       process.send({
-        msgtype: 'dataResult',
+        msgtype: "dataResult",
         runid: options?.runid,
         dataResult: repl.result,
       });

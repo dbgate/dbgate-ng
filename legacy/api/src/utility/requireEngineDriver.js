@@ -1,6 +1,6 @@
-const _ = require('lodash');
-const requirePlugin = require('../shell/requirePlugin');
-const { pickSafeConnectionInfo } = require('./crypting');
+const _ = require("lodash");
+const requirePlugin = require("../shell/requirePlugin");
+const { pickSafeConnectionInfo } = require("./crypting");
 
 /** @returns {import('dbgate-types').EngineDriver} */
 function requireEngineDriver(connection) {
@@ -11,13 +11,15 @@ function requireEngineDriver(connection) {
     engine = connection.engine;
   }
   if (!engine) {
-    throw new Error(`Could not get driver from connection ${JSON.stringify(pickSafeConnectionInfo(connection))}`);
+    throw new Error(
+      `Could not get driver from connection ${JSON.stringify(pickSafeConnectionInfo(connection))}`
+    );
   }
-  if (engine.includes('@')) {
-    const [shortName, packageName] = engine.split('@');
+  if (engine.includes("@")) {
+    const [_shortName, packageName] = engine.split("@");
     const plugin = requirePlugin(packageName);
     if (plugin.drivers) {
-      return plugin.drivers.find(x => x.engine == engine);
+      return plugin.drivers.find((x) => x.engine === engine);
     }
   }
   throw new Error(`Could not find engine driver ${engine}`);

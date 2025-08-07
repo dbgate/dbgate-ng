@@ -1,4 +1,4 @@
-import { ColumnInfo } from './dbinfo';
+import { ColumnInfo } from "./dbinfo";
 
 export interface SqlDialect {
   rangeSelect?: boolean;
@@ -86,10 +86,16 @@ export interface SqlDialect {
     dataType: string,
     source: { alias: string },
     alias?: string,
-    purpose: 'view' | 'filter' = 'view'
+    purpose: "view" | "filter" = "view"
   ): any;
 
-  getTableFormOptions(intent: 'newTableForm' | 'editTableForm' | 'sqlCreateTable' | 'sqlAlterTable'): {
+  getTableFormOptions(
+    intent:
+      | "newTableForm"
+      | "editTableForm"
+      | "sqlCreateTable"
+      | "sqlAlterTable"
+  ): {
     name: string;
     sqlFormatString: string;
     disabled?: boolean;

@@ -1,7 +1,7 @@
-const { handleProcessCommunication } = require('../utility/processComm');
+const { handleProcessCommunication } = require("../utility/processComm");
 
 async function initializeApiEnvironment() {
-  process.on('message', async message => {
+  process.on("message", async (message) => {
     handleProcessCommunication(message);
   });
 }

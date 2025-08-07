@@ -1,6 +1,6 @@
-const fs = require('fs-extra');
-const path = require('path');
-const { getSchemasUsedByStructure } = require('dbgate-tools');
+const fs = require("fs-extra");
+const path = require("node:path");
+const { getSchemasUsedByStructure } = require("dbgate-tools");
 
 async function exportDbModelSql(dbModel, driver, outputDir, outputFile) {
   const { tables, views, procedures, functions, triggers, matviews } = dbModel;
@@ -17,11 +17,11 @@ async function exportDbModelSql(dbModel, driver, outputDir, outputFile) {
   }
 
   async function writeLists(writeList) {
-    await writeList(views, 'views');
-    await writeList(procedures, 'procedures');
-    await writeList(functions, 'functions');
-    await writeList(triggers, 'triggers');
-    await writeList(matviews, 'matviews');
+    await writeList(views, "views");
+    await writeList(procedures, "procedures");
+    await writeList(functions, "functions");
+    await writeList(triggers, "triggers");
+    await writeList(matviews, "matviews");
   }
 
   if (outputFile) {
@@ -38,7 +38,7 @@ async function exportDbModelSql(dbModel, driver, outputDir, outputFile) {
         dmp.createForeignKey(fk);
       }
     }
-    writeLists((list, folder) => {
+    writeLists((list, _folder) => {
       for (const obj of list || []) {
         dmp.createSqlObject(obj);
       }
@@ -51,8 +51,8 @@ async function exportDbModelSql(dbModel, driver, outputDir, outputFile) {
   if (outputDir) {
     for (const table of tables || []) {
       const tablesDir = useSchemaDir
-        ? path.join(outputDir, table.schemaName ?? 'default', 'tables')
-        : path.join(outputDir, 'tables');
+        ? path.join(outputDir, table.schemaName ?? "default", "tables")
+        : path.join(outputDir, "tables");
       await ensureDir(tablesDir);
       const dmp = driver.createDumper();
       dmp.createTable({
@@ -66,7 +66,7 @@ async function exportDbModelSql(dbModel, driver, outputDir, outputFile) {
     await writeLists(async (list, folder) => {
       for (const obj of list || []) {
         const objdir = useSchemaDir
-          ? path.join(outputDir, obj.schemaName ?? 'default', folder)
+          ? path.join(outputDir, obj.schemaName ?? "default", folder)
           : path.join(outputDir, folder);
         await ensureDir(objdir);
         const dmp = driver.createDumper();

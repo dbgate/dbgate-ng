@@ -1,9 +1,9 @@
-const fs = require('fs');
-const stream = require('stream');
-const byline = require('byline');
-const { getLogger } = require('dbgate-tools');
-const download = require('./download');
-const logger = getLogger('jsonLinesReader');
+const fs = require("node:fs");
+const stream = require("node:stream");
+const byline = require("byline");
+const { getLogger } = require("dbgate-tools");
+const download = require("./download");
+const logger = getLogger("jsonLinesReader");
 
 class ParseStream extends stream.Transform {
   constructor({ limitRows }) {
@@ -12,7 +12,7 @@ class ParseStream extends stream.Transform {
     this.limitRows = limitRows;
     this.rowsWritten = 0;
   }
-  _transform(chunk, encoding, done) {
+  _transform(chunk, _encoding, done) {
     const obj = JSON.parse(chunk);
     if (!this.wasHeader) {
       if (!obj.__isStreamHeader) {
@@ -41,7 +41,11 @@ class ParseStream extends stream.Transform {
  * @param {number} options.limitRows - maximum number of rows to read
  * @returns {Promise<readerType>} - reader object
  */
-async function jsonLinesReader({ fileName, encoding = 'utf-8', limitRows = undefined }) {
+async function jsonLinesReader({
+  fileName,
+  encoding = "utf-8",
+  limitRows = undefined,
+}) {
   logger.info(`DBGM-00054 Reading file ${fileName}`);
 
   const downloadedFile = await download(fileName);

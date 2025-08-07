@@ -77,10 +77,10 @@ export type Connections_NewSqliteDatabase_Request = {
   response: Connection;
 };
 
-export type Connections_Request = 
-  | Connections_List_Request 
-  | Connections_Get_Request 
-  | Connections_Save_Request 
-  | Connections_Delete_Request 
-  | Connections_Test_Request 
+export type Connections_Request =
+  | Connections_List_Request
+  | Connections_Get_Request
+  | Connections_Save_Request
+  | Connections_Delete_Request
+  | Connections_Test_Request
   | Connections_NewSqliteDatabase_Request;

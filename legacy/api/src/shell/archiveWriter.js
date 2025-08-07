@@ -1,9 +1,9 @@
-const path = require('path');
-const fs = require('fs');
-const { archivedir, resolveArchiveFolder } = require('../utility/directories');
+const path = require("node:path");
+const fs = require("node:fs");
+const { archivedir, resolveArchiveFolder } = require("../utility/directories");
 // const socket = require('../utility/socket');
-const jsonLinesWriter = require('./jsonLinesWriter');
-const { getLogger } = require('dbgate-tools');
+const jsonLinesWriter = require("./jsonLinesWriter");
+const { getLogger } = require("dbgate-tools");
 
 const logger = getLogger();
 

@@ -1,10 +1,10 @@
-const fs = require('fs-extra');
-const path = require('path');
+const fs = require("fs-extra");
+const path = require("node:path");
 const ageSeconds = 3600;
 
 async function cleanDirectory(directory, age = undefined) {
   const files = await fs.readdir(directory);
-  const now = new Date().getTime();
+  const now = Date.now();
 
   for (const file of files) {
     const full = path.join(directory, file);

@@ -1,5 +1,5 @@
-import { ChildProcess } from 'child_process';
-import { DatabaseInfo } from './dbinfo';
+import { ChildProcess } from "node:child_process";
+import { DatabaseInfo } from "./dbinfo";
 export interface OpenedDatabaseConnection {
   conid: string;
   database: string;
@@ -38,14 +38,14 @@ export interface StoredConnection {
   displayName: string;
 }
 
-export * from './engines';
-export * from './dbinfo';
-export * from './query';
-export * from './dialect';
-export * from './dumper';
-export * from './dbtypes';
-export * from './extensions';
-export * from './alter-processor';
-export * from './appdefs';
-export * from './filter-type';
-export * from './test-engines';
+export * from "./engines";
+export * from "./dbinfo";
+export * from "./query";
+export * from "./dialect";
+export * from "./dumper";
+export * from "./dbtypes";
+export * from "./extensions";
+export * from "./alter-processor";
+export * from "./appdefs";
+export * from "./filter-type";
+export * from "./test-engines";

@@ -2,7 +2,10 @@ export class RowProgressReporter {
   counter = 0;
   timeoutHandle = null;
 
-  constructor(public progressName, public field = 'writtenRowCount') {}
+  constructor(
+    public progressName,
+    public field = "writtenRowCount"
+  ) {}
 
   add(count: number) {
     this.counter += count;
@@ -37,7 +40,7 @@ export class RowProgressReporter {
     }
 
     process.send({
-      msgtype: 'progress',
+      msgtype: "progress",
       progressName: this.progressName,
       [this.field]: this.counter,
     });

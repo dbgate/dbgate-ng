@@ -1,6 +1,6 @@
-const { getLogger, extractErrorLogData } = require('dbgate-tools');
-const childProcessChecker = require('../utility/childProcessChecker');
-const processArgs = require('../utility/processArgs');
+const { getLogger, extractErrorLogData } = require("dbgate-tools");
+const childProcessChecker = require("../utility/childProcessChecker");
+const processArgs = require("../utility/processArgs");
 const logger = getLogger();
 
 async function runScript(func) {

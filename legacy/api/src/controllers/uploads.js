@@ -1,23 +1,27 @@
-const crypto = require('crypto');
-const path = require('path');
-const { uploadsdir, getLogsFilePath, filesdir } = require('../utility/directories');
-const { getLogger, extractErrorLogData } = require('dbgate-tools');
-const logger = getLogger('uploads');
-const axios = require('axios');
-const os = require('os');
-const fs = require('fs/promises');
-const { read } = require('./queryHistory');
-const platformInfo = require('../utility/platformInfo');
-const _ = require('lodash');
-const serverConnections = require('./serverConnections');
-const config = require('./config');
-const gistSecret = require('../gistSecret');
-const currentVersion = require('../currentVersion');
-const socket = require('../utility/socket');
+const crypto = require("node:crypto");
+const path = require("node:path");
+const {
+  uploadsdir,
+  getLogsFilePath,
+  filesdir,
+} = require("../utility/directories");
+const { getLogger, extractErrorLogData } = require("dbgate-tools");
+const logger = getLogger("uploads");
+const axios = require("axios");
+const os = require("node:os");
+const fs = require("node:fs/promises");
+const { read } = require("./queryHistory");
+const platformInfo = require("../utility/platformInfo");
+const _ = require("lodash");
+const serverConnections = require("./serverConnections");
+const config = require("./config");
+const gistSecret = require("../gistSecret");
+const currentVersion = require("../currentVersion");
+const _socket = require("../utility/socket");
 
 module.exports = {
   upload_meta: {
-    method: 'post',
+    method: "post",
     raw: true,
   },
   upload(req, res) {
@@ -40,12 +44,16 @@ module.exports = {
   },
 
   get_meta: {
-    method: 'get',
+    method: "get",
     raw: true,
   },
   get(req, res) {
-    if (req.query.file.includes('..') || req.query.file.includes('/') || req.query.file.includes('\\')) {
-      res.status(400).send('Invalid file path');
+    if (
+      req.query.file.includes("..") ||
+      req.query.file.includes("/") ||
+      req.query.file.includes("\\")
+    ) {
+      res.status(400).send("Invalid file path");
       return;
     }
     res.sendFile(path.join(uploadsdir(), req.query.file));
@@ -54,24 +62,24 @@ module.exports = {
   async getGistToken() {
     const settings = await config.getSettings();
 
-    return settings['other.gistCreateToken'] || gistSecret;
+    return settings["other.gistCreateToken"] || gistSecret;
   },
 
   uploadErrorToGist_meta: true,
   async uploadErrorToGist() {
-    const logs = await fs.readFile(getLogsFilePath(), { encoding: 'utf-8' });
+    const logs = await fs.readFile(getLogsFilePath(), { encoding: "utf-8" });
     const connections = await serverConnections.getOpenedConnectionReport();
     try {
       const response = await axios.default.post(
-        'https://api.github.com/gists',
+        "https://api.github.com/gists",
         {
           description: `DbGate ${currentVersion.version} error report`,
           public: false,
           files: {
-            'logs.jsonl': {
+            "logs.jsonl": {
               content: logs,
             },
-            'os.json': {
+            "os.json": {
               content: JSON.stringify(
                 {
                   release: os.release(),
@@ -84,22 +92,22 @@ module.exports = {
                 2
               ),
             },
-            'platform.json': {
+            "platform.json": {
               content: JSON.stringify(
                 _.omit(
                   {
                     ...platformInfo,
                   },
-                  ['defaultKeyfile', 'sshAuthSock']
+                  ["defaultKeyfile", "sshAuthSock"]
                 ),
                 null,
                 2
               ),
             },
-            'connections.json': {
+            "connections.json": {
               content: JSON.stringify(connections, null, 2),
             },
-            'version.json': {
+            "version.json": {
               content: JSON.stringify(currentVersion, null, 2),
             },
           },
@@ -107,15 +115,15 @@ module.exports = {
         {
           headers: {
             Authorization: `token ${await this.getGistToken()}`,
-            'Content-Type': 'application/json',
-            Accept: 'application/vnd.github.v3+json',
+            "Content-Type": "application/json",
+            Accept: "application/vnd.github.v3+json",
           },
         }
       );
 
       return response.data;
     } catch (err) {
-      logger.error(extractErrorLogData(err), 'DBGM-00148 Error uploading gist');
+      logger.error(extractErrorLogData(err), "DBGM-00148 Error uploading gist");
 
       return {
         apiErrorMessage: err.message,
@@ -126,11 +134,11 @@ module.exports = {
 
   deleteGist_meta: true,
   async deleteGist({ url }) {
-    const response = await axios.default.delete(url, {
+    const _response = await axios.default.delete(url, {
       headers: {
         Authorization: `token ${await this.getGistToken()}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/vnd.github.v3+json',
+        "Content-Type": "application/json",
+        Accept: "application/vnd.github.v3+json",
       },
     });
     return true;

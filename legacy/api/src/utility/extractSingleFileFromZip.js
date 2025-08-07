@@ -1,7 +1,7 @@
-const yauzl = require('yauzl');
-const fs = require('fs');
-const { getLogger, extractErrorLogData } = require('dbgate-tools');
-const logger = getLogger('extractSingleFileFromZip');
+const yauzl = require("yauzl");
+const fs = require("node:fs");
+const { getLogger, extractErrorLogData } = require("dbgate-tools");
+const logger = getLogger("extractSingleFileFromZip");
 /**
  * Extracts a single file from a ZIP using yauzl.
  * Stops reading the rest of the archive once the file is found.
@@ -21,7 +21,7 @@ function extractSingleFileFromZip(zipPath, fileInZip, outputPath) {
       // Start reading the first entry
       zipFile.readEntry();
 
-      zipFile.on('entry', entry => {
+      zipFile.on("entry", (entry) => {
         // Compare the entry name to the file we want
         if (entry.fileName === fileInZip) {
           fileFound = true;
@@ -35,20 +35,25 @@ function extractSingleFileFromZip(zipPath, fileInZip, outputPath) {
             readStream.pipe(writeStream);
 
             // When the read stream ends, we can close the zipFile
-            readStream.on('end', () => {
+            readStream.on("end", () => {
               // We won't read further entries
               zipFile.close();
             });
 
             // When the file is finished writing, resolve
-            writeStream.on('finish', () => {
-              logger.info(`DBGM-00088 File "${fileInZip}" extracted to "${outputPath}".`);
+            writeStream.on("finish", () => {
+              logger.info(
+                `DBGM-00088 File "${fileInZip}" extracted to "${outputPath}".`
+              );
               resolve(true);
             });
 
             // Handle write errors
-            writeStream.on('error', writeErr => {
-              logger.error(extractErrorLogData(writeErr), `DBGM-00089 Error extracting "${fileInZip}" from "${zipPath}".`);
+            writeStream.on("error", (writeErr) => {
+              logger.error(
+                extractErrorLogData(writeErr),
+                `DBGM-00089 Error extracting "${fileInZip}" from "${zipPath}".`
+              );
               reject(writeErr);
             });
           });
@@ -59,15 +64,18 @@ function extractSingleFileFromZip(zipPath, fileInZip, outputPath) {
       });
 
       // If we reach the end without finding the file
-      zipFile.on('end', () => {
+      zipFile.on("end", () => {
         if (!fileFound) {
           resolve(false);
         }
       });
 
       // Handle general errors
-      zipFile.on('error', err => {
-        logger.error(extractErrorLogData(err), `DBGM-00172 ZIP file error in ${zipPath}.`);
+      zipFile.on("error", (err) => {
+        logger.error(
+          extractErrorLogData(err),
+          `DBGM-00172 ZIP file error in ${zipPath}.`
+        );
         reject(err);
       });
     });

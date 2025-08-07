@@ -1,9 +1,11 @@
-const _ = require('lodash');
-const fp = require('lodash/fp');
-const databaseConnections = require('./databaseConnections');
+const _ = require("lodash");
+const fp = require("lodash/fp");
+const databaseConnections = require("./databaseConnections");
 
 function pickObjectNames(array) {
-  return _.sortBy(array, x => `${x.schemaName}.${x.pureName}`).map(fp.pick(['pureName', 'schemaName']));
+  return _.sortBy(array, (x) => `${x.schemaName}.${x.pureName}`).map(
+    fp.pick(["pureName", "schemaName"])
+  );
 }
 
 module.exports = {
@@ -17,7 +19,14 @@ module.exports = {
   listObjects_meta: true,
   async listObjects({ conid, database }) {
     const opened = await databaseConnections.ensureOpened(conid, database);
-    const types = ['tables', 'collections', 'views', 'procedures', 'functions', 'triggers'];
+    const types = [
+      "tables",
+      "collections",
+      "views",
+      "procedures",
+      "functions",
+      "triggers",
+    ];
     return types.reduce(
       (res, type) => ({
         ...res,
@@ -30,18 +39,32 @@ module.exports = {
   tableInfo_meta: true,
   async tableInfo({ conid, database, schemaName, pureName }) {
     const opened = await databaseConnections.ensureOpened(conid, database);
-    const table = opened.structure.tables.find(x => x.pureName == pureName && x.schemaName == schemaName);
-    const allForeignKeys = _.flatten(opened.structure.tables.map(x => x.foreignKeys));
+    const table = opened.structure.tables.find(
+      (x) => x.pureName === pureName && x.schemaName === schemaName
+    );
+    const allForeignKeys = _.flatten(
+      opened.structure.tables.map((x) => x.foreignKeys)
+    );
     return {
       ...table,
-      dependencies: allForeignKeys.filter(x => x.refSchemaName == schemaName && x.refTableName == pureName),
+      dependencies: allForeignKeys.filter(
+        (x) => x.refSchemaName === schemaName && x.refTableName === pureName
+      ),
     };
   },
 
   sqlObjectInfo_meta: true,
-  async sqlObjectInfo({ objectTypeField, conid, database, schemaName, pureName }) {
+  async sqlObjectInfo({
+    objectTypeField,
+    conid,
+    database,
+    schemaName,
+    pureName,
+  }) {
     const opened = await databaseConnections.ensureOpened(conid, database);
-    const res = opened.structure[objectTypeField].find(x => x.pureName == pureName && x.schemaName == schemaName);
+    const res = opened.structure[objectTypeField].find(
+      (x) => x.pureName === pureName && x.schemaName === schemaName
+    );
     return res;
   },
 };

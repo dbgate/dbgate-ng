@@ -1,39 +1,43 @@
-const axios = require('axios');
-const crypto = require('crypto');
-const fs = require('fs-extra');
-const _ = require('lodash');
-const path = require('path');
-const { getLicenseHttpHeaders } = require('./authProxy');
-const { getLogger, extractErrorLogData, jsonLinesParse } = require('dbgate-tools');
-const { datadir } = require('./directories');
-const platformInfo = require('./platformInfo');
-const connections = require('../controllers/connections');
-const { isProApp } = require('./checkLicense');
-const socket = require('./socket');
-const config = require('../controllers/config');
-const simpleEncryptor = require('simple-encryptor');
-const currentVersion = require('../currentVersion');
-const { getPublicIpInfo } = require('./hardwareFingerprint');
+const axios = require("axios");
+const crypto = require("node:crypto");
+const fs = require("fs-extra");
+const _ = require("lodash");
+const path = require("node:path");
+const { getLicenseHttpHeaders } = require("./authProxy");
+const {
+  getLogger,
+  extractErrorLogData,
+  jsonLinesParse,
+} = require("dbgate-tools");
+const { datadir } = require("./directories");
+const platformInfo = require("./platformInfo");
+const connections = require("../controllers/connections");
+const { isProApp } = require("./checkLicense");
+const socket = require("./socket");
+const config = require("../controllers/config");
+const simpleEncryptor = require("simple-encryptor");
+const currentVersion = require("../currentVersion");
+const { getPublicIpInfo } = require("./hardwareFingerprint");
 
-const logger = getLogger('cloudIntf');
+const logger = getLogger("cloudIntf");
 
 let cloudFiles = null;
 
 const DBGATE_IDENTITY_URL = process.env.LOCAL_DBGATE_IDENTITY
-  ? 'http://localhost:3103'
+  ? "http://localhost:3103"
   : process.env.PROD_DBGATE_IDENTITY
-  ? 'https://identity.dbgate.io'
-  : process.env.DEVWEB || process.env.DEVMODE
-  ? 'https://identity.dbgate.udolni.net'
-  : 'https://identity.dbgate.io';
+    ? "https://identity.dbgate.io"
+    : process.env.DEVWEB || process.env.DEVMODE
+      ? "https://identity.dbgate.udolni.net"
+      : "https://identity.dbgate.io";
 
 const DBGATE_CLOUD_URL = process.env.LOCAL_DBGATE_CLOUD
-  ? 'http://localhost:3110'
+  ? "http://localhost:3110"
   : process.env.PROD_DBGATE_CLOUD
-  ? 'https://cloud.dbgate.io'
-  : process.env.DEVWEB || process.env.DEVMODE
-  ? 'https://cloud.dbgate.udolni.net'
-  : 'https://cloud.dbgate.io';
+    ? "https://cloud.dbgate.io"
+    : process.env.DEVWEB || process.env.DEVMODE
+      ? "https://cloud.dbgate.udolni.net"
+      : "https://cloud.dbgate.io";
 
 async function createDbGateIdentitySession(client, redirectUri) {
   const resp = await axios.default.post(
@@ -45,7 +49,7 @@ async function createDbGateIdentitySession(client, redirectUri) {
     {
       headers: {
         ...getLicenseHttpHeaders(),
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     }
   );
@@ -65,11 +69,14 @@ function startCloudTokenChecking(sid, callback) {
 
     try {
       // console.log(`Checking cloud token for session: ${DBGATE_IDENTITY_URL}/api/get-token/${sid}`);
-      const resp = await axios.default.get(`${DBGATE_IDENTITY_URL}/api/get-token/${sid}`, {
-        headers: {
-          ...getLicenseHttpHeaders(),
-        },
-      });
+      const resp = await axios.default.get(
+        `${DBGATE_IDENTITY_URL}/api/get-token/${sid}`,
+        {
+          headers: {
+            ...getLicenseHttpHeaders(),
+          },
+        }
+      );
       // console.log('CHECK RESP:', resp.data);
 
       if (resp.data?.email) {
@@ -77,17 +84,23 @@ function startCloudTokenChecking(sid, callback) {
         callback(resp.data);
       }
     } catch (err) {
-      logger.error(extractErrorLogData(err), 'DBGM-00164 Error checking cloud token');
+      logger.error(
+        extractErrorLogData(err),
+        "DBGM-00164 Error checking cloud token"
+      );
     }
   }, 500);
 }
 
 async function readCloudTokenHolder(sid) {
-  const resp = await axios.default.get(`${DBGATE_IDENTITY_URL}/api/get-token/${sid}`, {
-    headers: {
-      ...getLicenseHttpHeaders(),
-    },
-  });
+  const resp = await axios.default.get(
+    `${DBGATE_IDENTITY_URL}/api/get-token/${sid}`,
+    {
+      headers: {
+        ...getLicenseHttpHeaders(),
+      },
+    }
+  );
   if (resp.data?.email) {
     return resp.data;
   }
@@ -112,20 +125,26 @@ async function readCloudTestTokenHolder(email) {
 
 async function loadCloudFiles() {
   try {
-    const fileContent = await fs.readFile(path.join(datadir(), 'cloud-files.jsonl'), 'utf-8');
+    const fileContent = await fs.readFile(
+      path.join(datadir(), "cloud-files.jsonl"),
+      "utf-8"
+    );
     const parsedJson = jsonLinesParse(fileContent);
-    cloudFiles = _.sortBy(parsedJson, x => `${x.folder}/${x.title}`);
-  } catch (err) {
+    cloudFiles = _.sortBy(parsedJson, (x) => `${x.folder}/${x.title}`);
+  } catch (_err) {
     cloudFiles = [];
   }
 }
 
 async function getCloudUsedEngines() {
   try {
-    const resp = await callCloudApiGet('content-engines');
+    const resp = await callCloudApiGet("content-engines");
     return resp || [];
   } catch (err) {
-    logger.error(extractErrorLogData(err), 'DBGM-00165 Error getting cloud content list');
+    logger.error(
+      extractErrorLogData(err),
+      "DBGM-00165 Error getting cloud content list"
+    );
     return [];
   }
 }
@@ -133,50 +152,50 @@ async function getCloudUsedEngines() {
 async function collectCloudFilesSearchTags() {
   const res = [];
   if (platformInfo.isElectron) {
-    res.push('app');
+    res.push("app");
   } else {
-    res.push('web');
+    res.push("web");
   }
   if (platformInfo.isWindows) {
-    res.push('windows');
+    res.push("windows");
   }
   if (platformInfo.isMac) {
-    res.push('mac');
+    res.push("mac");
   }
   if (platformInfo.isLinux) {
-    res.push('linux');
+    res.push("linux");
   }
   if (platformInfo.isAwsUbuntuLayout) {
-    res.push('aws');
+    res.push("aws");
   }
   if (platformInfo.isAzureUbuntuLayout) {
-    res.push('azure');
+    res.push("azure");
   }
   if (platformInfo.isSnap) {
-    res.push('snap');
+    res.push("snap");
   }
   if (platformInfo.isDocker) {
-    res.push('docker');
+    res.push("docker");
   }
   if (platformInfo.isNpmDist) {
-    res.push('npm');
+    res.push("npm");
   }
   const engines = await connections.getUsedEngines();
-  const engineTags = engines.map(engine => engine.split('@')[0]);
+  const engineTags = engines.map((engine) => engine.split("@")[0]);
   res.push(...engineTags);
   const cloudEngines = await getCloudUsedEngines();
-  const cloudEngineTags = cloudEngines.map(engine => engine.split('@')[0]);
+  const cloudEngineTags = cloudEngines.map((engine) => engine.split("@")[0]);
   res.push(...cloudEngineTags);
 
   // team-premium and trials will return the same cloud files as premium - no need to check
-  res.push(isProApp() ? 'premium' : 'community');
+  res.push(isProApp() ? "premium" : "community");
 
   return _.uniq(res);
 }
 
 async function getCloudSigninHolder() {
   const settingsValue = await config.getSettings();
-  const holder = settingsValue['cloudSigninTokenHolder'];
+  const holder = settingsValue.cloudSigninTokenHolder;
   return holder;
 }
 
@@ -186,7 +205,7 @@ async function getCloudSigninHeaders(holder = null) {
   }
   if (holder) {
     return {
-      'x-cloud-login': holder.token,
+      "x-cloud-login": holder.token,
     };
   }
   return null;
@@ -195,37 +214,40 @@ async function getCloudSigninHeaders(holder = null) {
 async function updateCloudFiles(isRefresh) {
   let lastCloudFilesTags;
   try {
-    lastCloudFilesTags = await fs.readFile(path.join(datadir(), 'cloud-files-tags.txt'), 'utf-8');
-  } catch (err) {
-    lastCloudFilesTags = '';
+    lastCloudFilesTags = await fs.readFile(
+      path.join(datadir(), "cloud-files-tags.txt"),
+      "utf-8"
+    );
+  } catch (_err) {
+    lastCloudFilesTags = "";
   }
 
   const ipInfo = await getPublicIpInfo();
 
-  const tags = (await collectCloudFilesSearchTags()).join(',');
+  const tags = (await collectCloudFilesSearchTags()).join(",");
   let lastCheckedTm = 0;
-  if (tags == lastCloudFilesTags && cloudFiles.length > 0) {
-    lastCheckedTm = _.max(cloudFiles.map(x => parseInt(x.modifiedTm)));
+  if (tags === lastCloudFilesTags && cloudFiles.length > 0) {
+    lastCheckedTm = _.max(cloudFiles.map((x) => parseInt(x.modifiedTm)));
   }
 
-  logger.info({ tags, lastCheckedTm }, 'DBGM-00082 Downloading cloud files');
+  logger.info({ tags, lastCheckedTm }, "DBGM-00082 Downloading cloud files");
 
   const resp = await axios.default.get(
     `${DBGATE_CLOUD_URL}/public-cloud-updates?lastCheckedTm=${lastCheckedTm}&tags=${tags}&isRefresh=${
       isRefresh ? 1 : 0
-    }&country=${ipInfo?.country || ''}`,
+    }&country=${ipInfo?.country || ""}`,
     {
       headers: {
         ...getLicenseHttpHeaders(),
         ...(await getCloudInstanceHeaders()),
-        'x-app-version': currentVersion.version,
+        "x-app-version": currentVersion.version,
       },
     }
   );
 
   logger.info(`DBGM-00083 Downloaded ${resp.data.length} cloud files`);
 
-  const filesByPath = lastCheckedTm == 0 ? {} : _.keyBy(cloudFiles, 'path');
+  const filesByPath = lastCheckedTm === 0 ? {} : _.keyBy(cloudFiles, "path");
   for (const file of resp.data) {
     if (file.isDeleted) {
       delete filesByPath[file.path];
@@ -236,8 +258,11 @@ async function updateCloudFiles(isRefresh) {
 
   cloudFiles = Object.values(filesByPath);
 
-  await fs.writeFile(path.join(datadir(), 'cloud-files.jsonl'), cloudFiles.map(x => JSON.stringify(x)).join('\n'));
-  await fs.writeFile(path.join(datadir(), 'cloud-files-tags.txt'), tags);
+  await fs.writeFile(
+    path.join(datadir(), "cloud-files.jsonl"),
+    cloudFiles.map((x) => JSON.stringify(x)).join("\n")
+  );
+  await fs.writeFile(path.join(datadir(), "cloud-files-tags.txt"), tags);
 
   socket.emitChanged(`public-cloud-changed`);
 }
@@ -269,11 +294,18 @@ async function refreshPublicFiles(isRefresh) {
   try {
     await updateCloudFiles(isRefresh);
   } catch (err) {
-    logger.error(extractErrorLogData(err), 'DBGM-00166 Error updating cloud files');
+    logger.error(
+      extractErrorLogData(err),
+      "DBGM-00166 Error updating cloud files"
+    );
   }
 }
 
-async function callCloudApiGet(endpoint, signinHolder = null, additionalHeaders = {}) {
+async function callCloudApiGet(
+  endpoint,
+  signinHolder = null,
+  additionalHeaders = {}
+) {
   if (!signinHolder) {
     signinHolder = await getCloudSigninHolder();
   }
@@ -288,7 +320,7 @@ async function callCloudApiGet(endpoint, signinHolder = null, additionalHeaders 
       ...signinHeaders,
       ...additionalHeaders,
     },
-    validateStatus: status => status < 500,
+    validateStatus: (status) => status < 500,
   });
   const { errorMessage, isLicenseLimit, limitedLicenseLimits } = resp.data;
   if (errorMessage) {
@@ -302,13 +334,19 @@ async function callCloudApiGet(endpoint, signinHolder = null, additionalHeaders 
 }
 
 async function getCloudInstanceHeaders() {
-  if (!(await fs.exists(path.join(datadir(), 'cloud-instance.txt')))) {
+  if (!(await fs.exists(path.join(datadir(), "cloud-instance.txt")))) {
     const newInstanceId = crypto.randomUUID();
-    await fs.writeFile(path.join(datadir(), 'cloud-instance.txt'), newInstanceId);
+    await fs.writeFile(
+      path.join(datadir(), "cloud-instance.txt"),
+      newInstanceId
+    );
   }
-  const instanceId = await fs.readFile(path.join(datadir(), 'cloud-instance.txt'), 'utf-8');
+  const instanceId = await fs.readFile(
+    path.join(datadir(), "cloud-instance.txt"),
+    "utf-8"
+  );
   return {
-    'x-cloud-instance': instanceId,
+    "x-cloud-instance": instanceId,
   };
 }
 
@@ -321,13 +359,17 @@ async function callCloudApiPost(endpoint, body, signinHolder = null) {
   }
   const signinHeaders = await getCloudSigninHeaders(signinHolder);
 
-  const resp = await axios.default.post(`${DBGATE_CLOUD_URL}/${endpoint}`, body, {
-    headers: {
-      ...getLicenseHttpHeaders(),
-      ...signinHeaders,
-    },
-    validateStatus: status => status < 500,
-  });
+  const resp = await axios.default.post(
+    `${DBGATE_CLOUD_URL}/${endpoint}`,
+    body,
+    {
+      headers: {
+        ...getLicenseHttpHeaders(),
+        ...signinHeaders,
+      },
+      validateStatus: (status) => status < 500,
+    }
+  );
   const { errorMessage, isLicenseLimit, limitedLicenseLimits } = resp.data;
   if (errorMessage) {
     return {
@@ -342,7 +384,7 @@ async function callCloudApiPost(endpoint, body, signinHolder = null) {
 async function getCloudFolderEncryptor(folid) {
   const { encryptionKey } = await callCloudApiGet(`folder-key/${folid}`);
   if (!encryptionKey) {
-    throw new Error('No encryption key for folder: ' + folid);
+    throw new Error(`No encryption key for folder: ${folid}`);
   }
   return simpleEncryptor.createEncryptor(encryptionKey);
 }
@@ -350,18 +392,15 @@ async function getCloudFolderEncryptor(folid) {
 async function getCloudContent(folid, cntid) {
   const signinHolder = await getCloudSigninHolder();
   if (!signinHolder) {
-    throw new Error('No signed in');
+    throw new Error("No signed in");
   }
 
   const encryptor = simpleEncryptor.createEncryptor(signinHolder.encryptionKey);
 
-  const { content, name, type, contentAttributes, apiErrorMessage } = await callCloudApiGet(
-    `content/${folid}/${cntid}`,
-    signinHolder,
-    {
-      'x-kehid': signinHolder.kehid,
-    }
-  );
+  const { content, name, type, contentAttributes, apiErrorMessage } =
+    await callCloudApiGet(`content/${folid}/${cntid}`, signinHolder, {
+      "x-kehid": signinHolder.kehid,
+    });
 
   if (apiErrorMessage) {
     return { apiErrorMessage };
@@ -379,10 +418,17 @@ async function getCloudContent(folid, cntid) {
  *
  * @returns Promise<{ cntid: string } | { apiErrorMessage: string }>
  */
-async function putCloudContent(folid, cntid, content, name, type, contentAttributes) {
+async function putCloudContent(
+  folid,
+  cntid,
+  content,
+  name,
+  type,
+  contentAttributes
+) {
   const signinHolder = await getCloudSigninHolder();
   if (!signinHolder) {
-    throw new Error('No signed in');
+    throw new Error("No signed in");
   }
 
   const encryptor = simpleEncryptor.createEncryptor(signinHolder.encryptionKey);
@@ -400,8 +446,8 @@ async function putCloudContent(folid, cntid, content, name, type, contentAttribu
     },
     signinHolder
   );
-  socket.emitChanged('cloud-content-changed');
-  socket.emit('cloud-content-updated');
+  socket.emitChanged("cloud-content-changed");
+  socket.emit("cloud-content-updated");
   return resp;
 }
 

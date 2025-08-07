@@ -2,37 +2,37 @@ function isAuthProxySupported() {
   return false;
 }
 
-async function authProxyGetRedirectUrl(options) {
+async function authProxyGetRedirectUrl(_options) {
   return null;
 }
 
-async function authProxyGetTokenFromCode(options) {
+async function authProxyGetTokenFromCode(_options) {
   return null;
 }
 
-function startTokenChecking(sid, callback) {}
+function startTokenChecking(_sid, _callback) {}
 
 function getAuthProxyUrl() {
-  return 'https://auth.dbgate.eu';
+  return "https://auth.dbgate.eu";
 }
 
 function supportsAwsIam() {
   return false;
 }
 
-async function getAwsIamToken(params) {
+async function getAwsIamToken(_params) {
   return null;
 }
 
-async function callTextToSqlApi(text, structure, dialect) {
+async function callTextToSqlApi(_text, _structure, _dialect) {
   return null;
 }
 
-async function callCompleteOnCursorApi(cursorId, query, position, dialect) {
+async function callCompleteOnCursorApi(_cursorId, _query, _position, _dialect) {
   return null;
 }
 
-async function callRefactorSqlQueryApi(query, task, structure, dialect) {
+async function callRefactorSqlQueryApi(_query, _task, _structure, _dialect) {
   return null;
 }
 
@@ -40,9 +40,9 @@ function getLicenseHttpHeaders() {
   return {};
 }
 
-async function tryToGetRefreshedLicense(oldLicenseKey) {
+async function tryToGetRefreshedLicense(_oldLicenseKey) {
   return {
-    status: 'error',
+    status: "error",
   };
 }
 

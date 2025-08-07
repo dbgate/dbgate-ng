@@ -1,12 +1,15 @@
-const { handleGetSshTunnelRequest, handleGetSshTunnelResponse } = require('./sshTunnelProxy');
+const {
+  handleGetSshTunnelRequest,
+  handleGetSshTunnelResponse,
+} = require("./sshTunnelProxy");
 
 function handleProcessCommunication(message, subprocess) {
   const { msgtype } = message;
-  if (msgtype == 'getsshtunnel-request') {
+  if (msgtype === "getsshtunnel-request") {
     handleGetSshTunnelRequest(message, subprocess);
     return true;
   }
-  if (msgtype == 'getsshtunnel-response') {
+  if (msgtype === "getsshtunnel-response") {
     handleGetSshTunnelResponse(message, subprocess);
     return true;
   }

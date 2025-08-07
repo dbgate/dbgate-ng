@@ -1,19 +1,23 @@
-import _ from 'lodash';
-import { loadCachedValue, subscribeCacheChange, unsubscribeCacheChange } from './cache';
-import stableStringify from 'json-stable-stringify';
-import { extendDatabaseInfo } from 'dbgate-tools';
-import { setLocalStorage } from '../utility/storageCache';
-import { apiCall, apiOff, apiOn } from './api';
+import { extendDatabaseInfo } from "dbgate-tools";
+import stableStringify from "json-stable-stringify";
+import _ from "lodash";
+import { setLocalStorage } from "../utility/storageCache";
+import { apiCall } from "./api";
+import {
+  loadCachedValue,
+  subscribeCacheChange,
+  unsubscribeCacheChange,
+} from "./cache";
 
 const databaseInfoLoader = ({ conid, database, modelTransFile }) => ({
-  url: 'database-connections/structure',
+  url: "database-connections/structure",
   params: { conid, database, modelTransFile },
   reloadTrigger: { key: `database-structure-changed`, conid, database },
   transform: extendDatabaseInfo,
 });
 
 const schemaListLoader = ({ conid, database }) => ({
-  url: 'database-connections/schema-list',
+  url: "database-connections/schema-list",
   params: { conid, database },
   reloadTrigger: { key: `schema-list-changed`, conid, database },
 });
@@ -31,33 +35,33 @@ const schemaListLoader = ({ conid, database }) => ({
 // });
 
 const connectionInfoLoader = ({ conid }) => ({
-  url: 'connections/get',
+  url: "connections/get",
   params: { conid },
-  reloadTrigger: { key: 'connection-list-changed' },
+  reloadTrigger: { key: "connection-list-changed" },
 });
 
 const configLoader = () => ({
-  url: 'config/get',
+  url: "config/get",
   params: {},
-  reloadTrigger: { key: 'config-changed' },
+  reloadTrigger: { key: "config-changed" },
 });
 
 const settingsLoader = () => ({
-  url: 'config/get-settings',
+  url: "config/get-settings",
   params: {},
-  reloadTrigger: { key: 'settings-changed' },
+  reloadTrigger: { key: "settings-changed" },
 });
 
 const platformInfoLoader = () => ({
-  url: 'config/platform-info',
+  url: "config/platform-info",
   params: {},
-  reloadTrigger: { key: 'platform-info-changed' },
+  reloadTrigger: { key: "platform-info-changed" },
 });
 
 const favoritesLoader = () => ({
-  url: 'files/favorites',
+  url: "files/favorites",
   params: {},
-  reloadTrigger: { key: 'files-changed-favorites' },
+  reloadTrigger: { key: "files-changed-favorites" },
 });
 
 // const sqlObjectListLoader = ({ conid, database }) => ({
@@ -67,53 +71,53 @@ const favoritesLoader = () => ({
 // });
 
 const databaseStatusLoader = ({ conid, database }) => ({
-  url: 'database-connections/status',
+  url: "database-connections/status",
   params: { conid, database },
   reloadTrigger: { key: `database-status-changed`, conid, database },
 });
 
 const databaseListLoader = ({ conid }) => ({
-  url: 'server-connections/list-databases',
+  url: "server-connections/list-databases",
   params: { conid },
   reloadTrigger: { key: `database-list-changed`, conid },
-  onLoaded: value => {
+  onLoaded: (value) => {
     if (value?.length > 0) setLocalStorage(`database_list_${conid}`, value);
   },
   errorValue: [],
 });
 
 const serverVersionLoader = ({ conid }) => ({
-  url: 'server-connections/version',
+  url: "server-connections/version",
   params: { conid },
   reloadTrigger: { key: `server-version-changed`, conid },
 });
 
 const databaseServerVersionLoader = ({ conid, database }) => ({
-  url: 'database-connections/server-version',
+  url: "database-connections/server-version",
   params: { conid, database },
   reloadTrigger: { key: `database-server-version-changed`, conid, database },
 });
 
 const archiveFoldersLoader = () => ({
-  url: 'archive/folders',
+  url: "archive/folders",
   params: {},
   reloadTrigger: { key: `archive-folders-changed` },
 });
 
 const archiveFilesLoader = ({ folder }) => ({
-  url: 'archive/files',
+  url: "archive/files",
   params: { folder },
   reloadTrigger: { key: `archive-files-changed`, folder },
 });
 
 const appFoldersLoader = () => ({
-  url: 'apps/folders',
+  url: "apps/folders",
   params: {},
   reloadTrigger: { key: `app-folders-changed` },
 });
 
 const appFilesLoader = ({ folder }) => ({
-  url: 'apps/files',
+  url: "apps/files",
   params: { folder },
   reloadTrigger: { key: `app-files-changed`, app: folder },
 });
@@ -125,59 +129,60 @@ const appFilesLoader = ({ folder }) => ({
 // });
 
 const usedAppsLoader = ({ conid, database }) => ({
-  url: 'apps/get-used-apps',
+  url: "apps/get-used-apps",
   params: {},
   reloadTrigger: { key: `used-apps-changed` },
 });
 
 const serverStatusLoader = () => ({
-  url: 'server-connections/server-status',
+  url: "server-connections/server-status",
   params: {},
   reloadTrigger: { key: `server-status-changed` },
 });
 
 const connectionListLoader = () => ({
-  url: 'connections/list',
+  url: "connections/list",
   params: {},
   reloadTrigger: { key: `connection-list-changed` },
 });
 
 const installedPluginsLoader = () => ({
-  url: 'plugins/installed',
+  url: "plugins/installed",
   params: {},
   reloadTrigger: { key: `installed-plugins-changed` },
 });
 
 const filesLoader = ({ folder }) => ({
-  url: 'files/list',
+  url: "files/list",
   params: { folder },
   reloadTrigger: { key: `files-changed`, folder },
 });
 const allFilesLoader = () => ({
-  url: 'files/list-all',
+  url: "files/list-all",
   params: {},
   reloadTrigger: { key: `all-files-changed` },
 });
 const authTypesLoader = ({ engine }) => ({
-  url: 'plugins/auth-types',
+  url: "plugins/auth-types",
   params: { engine },
   reloadTrigger: { key: `installed-plugins-changed` },
   errorValue: null,
 });
 
 const publicCloudFilesLoader = () => ({
-  url: 'cloud/public-files',
+  url: "cloud/public-files",
   params: {},
   reloadTrigger: { key: `public-cloud-changed` },
 });
 const cloudContentListLoader = () => ({
-  url: 'cloud/content-list',
+  url: "cloud/content-list",
   params: {},
   reloadTrigger: { key: `cloud-content-changed` },
 });
 
 async function getCore(loader, args) {
-  const { url, params, reloadTrigger, transform, onLoaded, errorValue } = loader(args);
+  const { url, params, reloadTrigger, transform, onLoaded, errorValue } =
+    loader(args);
   const key = stableStringify({ url, ...params });
 
   async function doLoad() {
@@ -186,7 +191,7 @@ async function getCore(loader, args) {
       if (onLoaded) onLoaded(errorValue);
       return errorValue;
     }
-    const res = (transform || (x => x))(resp);
+    const res = (transform || ((x) => x))(resp);
     if (onLoaded) onLoaded(res);
     return res;
   }
@@ -201,7 +206,7 @@ function useCore(loader, args) {
   let openedCount = 0;
 
   return {
-    subscribe: onChange => {
+    subscribe: (onChange) => {
       async function handleReload() {
         const res = await getCore(loader, args);
         if (openedCount > 0) {
@@ -240,25 +245,26 @@ export async function getDbCore(args, objectTypeField = undefined) {
   const db = await getDatabaseInfo(args);
   if (!db) return null;
   return db[objectTypeField || args.objectTypeField].find(
-    x => x.pureName == args.pureName && x.schemaName == args.schemaName
+    (x) => x.pureName === args.pureName && x.schemaName === args.schemaName
   );
 }
 
 export function useDbCore(args, objectTypeField = undefined) {
   const dbStore = useDatabaseInfo(args);
   if (!dbStore) return null;
-  return derived(dbStore, db => {
+  return derived(dbStore, (db) => {
     if (!db) return null;
     if (_.isArray(objectTypeField)) {
       for (const field of objectTypeField) {
         const res = db[field || args.objectTypeField].find(
-          x => x.pureName == args.pureName && x.schemaName == args.schemaName
+          (x) =>
+            x.pureName === args.pureName && x.schemaName === args.schemaName
         );
         if (res) return res;
       }
     } else {
       return db[objectTypeField || args.objectTypeField].find(
-        x => x.pureName == args.pureName && x.schemaName == args.schemaName
+        (x) => x.pureName === args.pureName && x.schemaName === args.schemaName
       );
     }
   });
@@ -266,27 +272,27 @@ export function useDbCore(args, objectTypeField = undefined) {
 
 /** @returns {Promise<import('dbgate-types').TableInfo>} */
 export function getTableInfo(args) {
-  return getDbCore(args, 'tables');
+  return getDbCore(args, "tables");
 }
 
 /** @returns {import('dbgate-types').TableInfo} */
 export function useTableInfo(args) {
-  return useDbCore(args, 'tables');
+  return useDbCore(args, "tables");
 }
 
 /** @returns {Promise<import('dbgate-types').ViewInfo>} */
 export function getViewInfo(args) {
-  return getDbCore(args, 'views');
+  return getDbCore(args, "views");
 }
 
 /** @returns {import('dbgate-types').ViewInfo} */
 export function useViewInfo(args) {
-  return useDbCore(args, ['views', 'matviews']);
+  return useDbCore(args, ["views", "matviews"]);
 }
 
 /** @returns {import('dbgate-types').CollectionInfo} */
 export function useCollectionInfo(args) {
-  return useDbCore(args, 'collections');
+  return useDbCore(args, "collections");
 }
 
 export function getSqlObjectInfo(args) {

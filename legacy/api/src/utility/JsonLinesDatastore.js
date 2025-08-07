@@ -1,15 +1,15 @@
-const crypto = require('crypto');
-const fs = require('fs');
-const os = require('os');
-const rimraf = require('rimraf');
-const path = require('path');
-const AsyncLock = require('async-lock');
+const crypto = require("node:crypto");
+const fs = require("node:fs");
+const os = require("node:os");
+const rimraf = require("rimraf");
+const path = require("node:path");
+const AsyncLock = require("async-lock");
 const lock = new AsyncLock();
-const stableStringify = require('json-stable-stringify');
-const { evaluateCondition } = require('dbgate-sqltree');
-const esort = require('external-sorting');
-const { jsldir } = require('./directories');
-const LineReader = require('./LineReader');
+const stableStringify = require("json-stable-stringify");
+const { evaluateCondition } = require("dbgate-sqltree");
+const esort = require("external-sorting");
+const { jsldir } = require("./directories");
+const LineReader = require("./LineReader");
 
 class JsonLinesDatastore {
   constructor(file, formatterFunction) {
@@ -23,7 +23,7 @@ class JsonLinesDatastore {
     this.currentFilter = null;
     this.currentSort = null;
     if (formatterFunction) {
-      const requirePluginFunction = require('./requirePluginFunction');
+      const requirePluginFunction = require("./requirePluginFunction");
       this.rowFormatter = requirePluginFunction(formatterFunction);
     }
     this.sortedFiles = {};
@@ -45,10 +45,10 @@ class JsonLinesDatastore {
           for (const item of sort) {
             const { uniqueName, order } = item;
             if (a[uniqueName] < b[uniqueName]) {
-              return order == 'ASC' ? -1 : 1;
+              return order === "ASC" ? -1 : 1;
             }
             if (a[uniqueName] > b[uniqueName]) {
-              return order == 'ASC' ? 1 : -1;
+              return order === "ASC" ? 1 : -1;
             }
           }
           return 0;
@@ -56,7 +56,7 @@ class JsonLinesDatastore {
       })
       .asc();
 
-    await new Promise(resolve => rimraf(tempDir, resolve));
+    await new Promise((resolve) => rimraf(tempDir, resolve));
   }
 
   async _closeReader() {
@@ -74,7 +74,7 @@ class JsonLinesDatastore {
 
   async notifyChanged(callback) {
     this.notifyChangedCallback = callback;
-    await lock.acquire('reader', async () => {
+    await lock.acquire("reader", async () => {
       this._closeReader();
     });
     const call = this.notifyChangedCallback;
@@ -168,13 +168,15 @@ class JsonLinesDatastore {
   async _ensureReader(offset, filter, sort) {
     if (
       this.readedDataRowCount > offset ||
-      stableStringify(filter) != stableStringify(this.currentFilter) ||
-      stableStringify(sort) != stableStringify(this.currentSort)
+      stableStringify(filter) !== stableStringify(this.currentFilter) ||
+      stableStringify(sort) !== stableStringify(this.currentSort)
     ) {
       this._closeReader();
     }
     if (!this.reader) {
-      const reader = await this._openReader(sort ? this.sortedFiles[stableStringify(sort)] : this.file);
+      const reader = await this._openReader(
+        sort ? this.sortedFiles[stableStringify(sort)] : this.file
+      );
       this.reader = reader;
       this.currentFilter = filter;
       this.currentSort = sort;
@@ -198,7 +200,7 @@ class JsonLinesDatastore {
   }
 
   async enumRows(eachRow) {
-    await lock.acquire('reader', async () => {
+    await lock.acquire("reader", async () => {
       await this._ensureReader(0, null);
       for (;;) {
         const line = await this._readLine(true);
@@ -217,7 +219,7 @@ class JsonLinesDatastore {
       await JsonLinesDatastore.sortFile(this.file, sortedFile, sort);
       this.sortedFiles[stableStringify(sort)] = sortedFile;
     }
-    await lock.acquire('reader', async () => {
+    await lock.acquire("reader", async () => {
       await this._ensureReader(offset, filter, sort);
       // console.log(JSON.stringify(this.currentFilter, undefined, 2));
       for (let i = 0; i < limit; i += 1) {

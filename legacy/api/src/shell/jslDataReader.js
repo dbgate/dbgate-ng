@@ -1,5 +1,5 @@
-const getJslFileName = require('../utility/getJslFileName');
-const jsonLinesReader = require('./jsonLinesReader');
+const getJslFileName = require("../utility/getJslFileName");
+const jsonLinesReader = require("./jsonLinesReader");
 
 function jslDataReader({ jslid, ...other }) {
   const fileName = getJslFileName(jslid);

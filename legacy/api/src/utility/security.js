@@ -1,9 +1,18 @@
-const path = require('path');
-const { filesdir, archivedir, uploadsdir, appdir } = require('../utility/directories');
+const path = require("node:path");
+const {
+  filesdir,
+  archivedir,
+  uploadsdir,
+  appdir,
+} = require("../utility/directories");
 
 function checkSecureFilePathsWithoutDirectory(...filePaths) {
   for (const filePath of filePaths) {
-    if (filePath.includes('..') || filePath.includes('/') || filePath.includes('\\')) {
+    if (
+      filePath.includes("..") ||
+      filePath.includes("/") ||
+      filePath.includes("\\")
+    ) {
       return false;
     }
   }
@@ -12,20 +21,25 @@ function checkSecureFilePathsWithoutDirectory(...filePaths) {
 
 function checkSecureDirectories(...filePaths) {
   for (const filePath of filePaths) {
-    if (!filePath.includes('/') && !filePath.includes('\\')) {
+    if (!filePath.includes("/") && !filePath.includes("\\")) {
       // If the filePath does not contain any directory separators, it is considered secure
       continue;
     }
     const directory = path.dirname(filePath);
-    if (directory != filesdir() && directory != uploadsdir() && directory != archivedir() && directory != appdir()) {
+    if (
+      directory !== filesdir() &&
+      directory !== uploadsdir() &&
+      directory !== archivedir() &&
+      directory !== appdir()
+    ) {
       return false;
     }
   }
   return true;
 }
 
-function findDisallowedFileNames(node, isAllowed, trace = '$', out = []) {
-  if (node && typeof node === 'object') {
+function findDisallowedFileNames(node, isAllowed, trace = "$", out = []) {
+  if (node && typeof node === "object") {
     if (node?.props?.fileName) {
       const name = node.props.fileName;
       const ok = isAllowed(name);
@@ -42,7 +56,7 @@ function findDisallowedFileNames(node, isAllowed, trace = '$', out = []) {
 
 function checkSecureDirectoriesInScript(script) {
   const disallowed = findDisallowedFileNames(script, checkSecureDirectories);
-  return disallowed.length == 0;
+  return disallowed.length === 0;
 }
 
 module.exports = {

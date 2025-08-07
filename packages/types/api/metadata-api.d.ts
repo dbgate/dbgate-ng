@@ -33,7 +33,7 @@ export type Metadata_SqlObjectInfo_Request = {
   response: any;
 };
 
-export type Metadata_Request = 
-  | Metadata_ListObjects_Request 
+export type Metadata_Request =
+  | Metadata_ListObjects_Request
   | Metadata_TableInfo_Request
   | Metadata_SqlObjectInfo_Request;

@@ -1,33 +1,33 @@
-const axios = require('axios');
-const os = require('os');
-const crypto = require('crypto');
-const platformInfo = require('./platformInfo');
+const axios = require("axios");
+const os = require("node:os");
+const crypto = require("node:crypto");
+const platformInfo = require("./platformInfo");
 
 async function getPublicIpInfo() {
   try {
-    const resp = await axios.default.get('https://ipinfo.io/json');
+    const resp = await axios.default.get("https://ipinfo.io/json");
     if (!resp.data?.ip) {
-      return { ip: 'unknown-ip' };
+      return { ip: "unknown-ip" };
     }
     return resp.data;
-  } catch (err) {
-    return { ip: 'unknown-ip' };
+  } catch (_err) {
+    return { ip: "unknown-ip" };
   }
 }
 
 function getMacAddress() {
   try {
     const interfaces = os.networkInterfaces();
-    for (let iface of Object.values(interfaces)) {
-      for (let config of iface) {
-        if (config.mac && config.mac !== '00:00:00:00:00:00') {
+    for (const iface of Object.values(interfaces)) {
+      for (const config of iface) {
+        if (config.mac && config.mac !== "00:00:00:00:00:00") {
           return config.mac;
         }
       }
     }
-    return '00:00:00:00:00:00';
-  } catch (err) {
-    return '00:00:00:00:00:00';
+    return "00:00:00:00:00:00";
+  } catch (_err) {
+    return "00:00:00:00:00:00";
   }
 }
 
@@ -57,7 +57,10 @@ async function getHardwareFingerprintHash(data = undefined) {
     data = await getHardwareFingerprint();
   }
   const fingerprintData = JSON.stringify(data);
-  const hash = crypto.createHash('sha256').update(fingerprintData).digest('hex');
+  const hash = crypto
+    .createHash("sha256")
+    .update(fingerprintData)
+    .digest("hex");
   return hash;
 }
 

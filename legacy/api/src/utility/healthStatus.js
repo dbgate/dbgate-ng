@@ -1,16 +1,16 @@
-const os = require('os');
+const os = require("node:os");
 
-const databaseConnections = require('../controllers/databaseConnections');
-const serverConnections = require('../controllers/serverConnections');
-const sessions = require('../controllers/sessions');
-const runners = require('../controllers/runners');
+const databaseConnections = require("../controllers/databaseConnections");
+const serverConnections = require("../controllers/serverConnections");
+const sessions = require("../controllers/sessions");
+const runners = require("../controllers/runners");
 
 async function getHealthStatus() {
   const memory = process.memoryUsage();
   const cpuUsage = process.cpuUsage();
 
   return {
-    status: 'ok',
+    status: "ok",
     databaseConnectionCount: databaseConnections.opened.length,
     serverConnectionCount: serverConnections.opened.length,
     sessionCount: sessions.opened.length,
@@ -26,7 +26,7 @@ async function getHealthStatus() {
 
 async function getHealthStatusSprinx() {
   return {
-    overallStatus: 'OK',
+    overallStatus: "OK",
     timeStamp: new Date().toISOString(),
     timeStampUnix: Math.floor(Date.now() / 1000),
   };

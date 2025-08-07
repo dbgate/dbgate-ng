@@ -1,16 +1,21 @@
-const EnsureStreamHeaderStream = require('../utility/EnsureStreamHeaderStream');
-const ColumnMapTransformStream = require('../utility/ColumnMapTransformStream');
-const streamPipeline = require('../utility/streamPipeline');
-const { getLogger, extractErrorLogData, RowProgressReporter, extractErrorMessage } = require('dbgate-tools');
-const logger = getLogger('copyStream');
-const stream = require('stream');
+const EnsureStreamHeaderStream = require("../utility/EnsureStreamHeaderStream");
+const ColumnMapTransformStream = require("../utility/ColumnMapTransformStream");
+const streamPipeline = require("../utility/streamPipeline");
+const {
+  getLogger,
+  extractErrorLogData,
+  RowProgressReporter,
+  extractErrorMessage,
+} = require("dbgate-tools");
+const logger = getLogger("copyStream");
+const stream = require("node:stream");
 
 class ReportingTransform extends stream.Transform {
   constructor(reporter, options = {}) {
     super({ ...options, objectMode: true });
     this.reporter = reporter;
   }
-  _transform(chunk, encoding, callback) {
+  _transform(chunk, _encoding, callback) {
     if (!chunk?.__isStreamHeader) {
       this.reporter.add(1);
     }
@@ -35,16 +40,16 @@ async function copyStream(input, output, options) {
 
   if (progressName) {
     process.send({
-      msgtype: 'progress',
+      msgtype: "progress",
       progressName,
-      status: 'running',
+      status: "running",
     });
   }
 
   const transforms = [];
 
   if (progressName) {
-    const reporter = new RowProgressReporter(progressName, 'readRowCount');
+    const reporter = new RowProgressReporter(progressName, "readRowCount");
     transforms.push(new ReportingTransform(reporter));
   }
   if (columns) {
@@ -59,14 +64,14 @@ async function copyStream(input, output, options) {
 
     if (progressName) {
       process.send({
-        msgtype: 'progress',
+        msgtype: "progress",
         progressName,
-        status: 'done',
+        status: "done",
       });
     }
   } catch (err) {
     process.send({
-      msgtype: 'copyStreamError',
+      msgtype: "copyStreamError",
       copyStreamError: {
         message: extractErrorMessage(err),
         progressName,
@@ -76,14 +81,17 @@ async function copyStream(input, output, options) {
 
     if (progressName) {
       process.send({
-        msgtype: 'progress',
+        msgtype: "progress",
         progressName,
-        status: 'error',
+        status: "error",
         errorMessage: extractErrorMessage(err),
       });
     }
 
-    logger.error(extractErrorLogData(err, { progressName }), 'DBGM-00157 Import/export job failed');
+    logger.error(
+      extractErrorLogData(err, { progressName }),
+      "DBGM-00157 Import/export job failed"
+    );
     // throw err;
   }
 }

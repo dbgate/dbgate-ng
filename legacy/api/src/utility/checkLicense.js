@@ -1,14 +1,14 @@
 function checkLicense() {
   return {
-    status: 'ok',
-    type: 'community',
+    status: "ok",
+    type: "community",
   };
 }
 
-function checkLicenseKey(key) {
+function checkLicenseKey(_key) {
   return {
-    status: 'ok',
-    type: 'community',
+    status: "ok",
+    type: "community",
   };
 }
 

@@ -56,8 +56,8 @@ export type Runners_ScriptResult_Request = {
   response: any;
 };
 
-export type Runners_Request = 
-  | Runners_Start_Request 
+export type Runners_Request =
+  | Runners_Start_Request
   | Runners_GetNodeScript_Request
   | Runners_Cancel_Request
   | Runners_Files_Request

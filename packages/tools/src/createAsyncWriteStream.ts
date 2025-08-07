@@ -1,19 +1,20 @@
-import _intersection from 'lodash/intersection';
-import _isArray from 'lodash/isArray';
-import { getLogger } from './getLogger';
+import { getLogger } from "./getLogger";
 
-const logger = getLogger('asyncWriteStream');
+const _logger = getLogger("asyncWriteStream");
 
 export interface AsyncWriteStreamOptions {
   processItem: (chunk: any) => Promise<void>;
 }
 
-export function createAsyncWriteStream(stream, options: AsyncWriteStreamOptions): any {
+export function createAsyncWriteStream(
+  stream,
+  options: AsyncWriteStreamOptions
+): any {
   const writable = new stream.Writable({
     objectMode: true,
   });
 
-  writable._write = async (chunk, encoding, callback) => {
+  writable._write = async (chunk, _encoding, callback) => {
     try {
       await options.processItem(chunk);
       callback(null);

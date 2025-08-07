@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-const net = require('net');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
-const debug = require('debug');
+const net = require("node:net");
+const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
+const debug = require("debug");
 
 // interface Options {
 //   username?: string;
@@ -43,17 +43,21 @@ const debug = require('debug');
 class SSHConnection {
   constructor(options) {
     this.options = options;
-    this.debug = debug('ssh');
+    this.debug = debug("ssh");
     this.connections = [];
-    this.isWindows = process.platform === 'win32';
+    this.isWindows = process.platform === "win32";
     if (!options.username) {
-      this.options.username = process.env['SSH_USERNAME'] || process.env['USER'];
+      this.options.username = process.env.SSH_USERNAME || process.env.USER;
     }
     if (!options.endPort) {
       this.options.endPort = 22;
     }
-    if (!options.privateKey && !options.agentForward && !options.skipAutoPrivateKey) {
-      const defaultFilePath = path.join(os.homedir(), '.ssh', 'id_rsa');
+    if (
+      !options.privateKey &&
+      !options.agentForward &&
+      !options.skipAutoPrivateKey
+    ) {
+      const defaultFilePath = path.join(os.homedir(), ".ssh", "id_rsa");
       if (fs.existsSync(defaultFilePath)) {
         this.options.privateKey = fs.readFileSync(defaultFilePath);
       }
@@ -61,12 +65,12 @@ class SSHConnection {
   }
 
   async shutdown() {
-    this.debug('Shutdown connections');
+    this.debug("Shutdown connections");
     for (const connection of this.connections) {
       connection.removeAllListeners();
       connection.end();
     }
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       if (this.server) {
         this.server.close(resolve);
       }
@@ -76,7 +80,7 @@ class SSHConnection {
 
   async tty() {
     const connection = await this.establish();
-    this.debug('Opening tty');
+    this.debug("Opening tty");
     await this.shell(connection);
   }
 
@@ -93,7 +97,7 @@ class SSHConnection {
           return reject(err);
         }
         stream
-          .on('close', async () => {
+          .on("close", async () => {
             stream.end();
             process.stdin.unpipe(stream);
             process.stdin.destroy();
@@ -101,7 +105,7 @@ class SSHConnection {
             await this.shutdown();
             return resolve();
           })
-          .stderr.on('data', data => {
+          .stderr.on("data", (data) => {
             return reject(data);
           });
         stream.pipe(process.stdout);
@@ -146,7 +150,7 @@ class SSHConnection {
   }
 
   async connect(host, stream) {
-    const { Client } = require('ssh2');
+    const { Client } = require("ssh2");
     this.debug('Connecting to "%s"', host);
     const connection = new Client();
     return new Promise(async (resolve, reject) => {
@@ -158,42 +162,46 @@ class SSHConnection {
         privateKey: this.options.privateKey,
       };
       if (this.options.agentForward) {
-        options['agentForward'] = true;
+        options.agentForward = true;
 
         // see https://github.com/mscdex/ssh2#client for agents on Windows
         // guaranteed to give the ssh agent sock if the agent is running (posix)
-        let agentDefault = process.env['SSH_AUTH_SOCK'];
+        let agentDefault = process.env.SSH_AUTH_SOCK;
         if (this.isWindows) {
           // null or undefined
           if (agentDefault == null) {
-            agentDefault = 'pageant';
+            agentDefault = "pageant";
           }
         }
 
-        const agentSock = this.options.agentSocket ? this.options.agentSocket : agentDefault;
+        const agentSock = this.options.agentSocket
+          ? this.options.agentSocket
+          : agentDefault;
         if (agentSock == null) {
-          throw new Error('SSH Agent Socket is not provided, or is not set in the SSH_AUTH_SOCK env variable');
+          throw new Error(
+            "SSH Agent Socket is not provided, or is not set in the SSH_AUTH_SOCK env variable"
+          );
         }
-        options['agent'] = agentSock;
+        options.agent = agentSock;
       }
       if (stream) {
-        options['sock'] = stream;
+        options.sock = stream;
       }
       // PPK private keys can be encrypted, but won't contain the word 'encrypted'
       // in fact they always contain a `encryption` header, so we can't do a simple check
-      options['passphrase'] = this.options.passphrase;
+      options.passphrase = this.options.passphrase;
       const looksEncrypted = this.options.privateKey
-        ? this.options.privateKey.toString().toLowerCase().includes('encrypted')
+        ? this.options.privateKey.toString().toLowerCase().includes("encrypted")
         : false;
-      if (looksEncrypted && !options['passphrase'] && !this.options.noReadline) {
+      if (looksEncrypted && !options.passphrase && !this.options.noReadline) {
         // options['passphrase'] = await this.getPassphrase();
       }
-      connection.on('ready', () => {
+      connection.on("ready", () => {
         this.connections.push(connection);
         return resolve(connection);
       });
 
-      connection.on('error', error => {
+      connection.on("error", (error) => {
         reject(error);
       });
       try {
@@ -220,7 +228,7 @@ class SSHConnection {
     const connection = await this.establish();
     return new Promise((resolve, reject) => {
       this.server = net
-        .createServer(socket => {
+        .createServer((socket) => {
           this.debug(
             'Forwarding connection from "localhost:%d" to "%s:%d"',
             options.fromPort,

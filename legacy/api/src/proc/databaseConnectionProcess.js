@@ -1,6 +1,6 @@
-const stableStringify = require('json-stable-stringify');
-const { splitQuery } = require('dbgate-query-splitter');
-const childProcessChecker = require('../utility/childProcessChecker');
+const stableStringify = require("json-stable-stringify");
+const { splitQuery } = require("dbgate-query-splitter");
+const childProcessChecker = require("../utility/childProcessChecker");
 const {
   extractBoolSettingsValue,
   extractIntSettingsValue,
@@ -12,20 +12,23 @@ const {
   SqlGenerator,
   playJsonScriptWriter,
   serializeJsTypesForJsonStringify,
-} = require('dbgate-tools');
-const requireEngineDriver = require('../utility/requireEngineDriver');
-const { connectUtility } = require('../utility/connectUtility');
-const { handleProcessCommunication } = require('../utility/processComm');
-const generateDeploySql = require('../shell/generateDeploySql');
-const { dumpSqlSelect } = require('dbgate-sqltree');
-const { allowExecuteCustomScript, handleQueryStream } = require('../utility/handleQueryStream');
-const dbgateApi = require('../shell');
-const requirePlugin = require('../shell/requirePlugin');
-const path = require('path');
-const { rundir } = require('../utility/directories');
-const fs = require('fs-extra');
+} = require("dbgate-tools");
+const requireEngineDriver = require("../utility/requireEngineDriver");
+const { connectUtility } = require("../utility/connectUtility");
+const { handleProcessCommunication } = require("../utility/processComm");
+const generateDeploySql = require("../shell/generateDeploySql");
+const { dumpSqlSelect } = require("dbgate-sqltree");
+const {
+  allowExecuteCustomScript,
+  handleQueryStream,
+} = require("../utility/handleQueryStream");
+const dbgateApi = require("../shell");
+const requirePlugin = require("../shell/requirePlugin");
+const path = require("node:path");
+const { rundir } = require("../utility/directories");
+const fs = require("fs-extra");
 
-const logger = getLogger('dbconnProcess');
+const logger = getLogger("dbconnProcess");
 
 let dbhan;
 let storedConnection;
@@ -58,8 +61,8 @@ async function checkedAsyncCall(promise) {
     return res;
   } catch (err) {
     setStatus({
-      name: 'error',
-      message: extractErrorMessage(err, 'Checked call error'),
+      name: "error",
+      message: extractErrorMessage(err, "Checked call error"),
     });
     // console.error(err);
     setTimeout(() => process.exit(1), 1000);
@@ -70,7 +73,10 @@ async function checkedAsyncCall(promise) {
 let loadingModel = false;
 
 async function handleFullRefresh() {
-  if (storedConnection.useSeparateSchemas && !isCompositeDbName(dbhan?.database)) {
+  if (
+    storedConnection.useSeparateSchemas &&
+    !isCompositeDbName(dbhan?.database)
+  ) {
     resolveAnalysedPromises();
     // skip loading DB structure
     return;
@@ -78,38 +84,45 @@ async function handleFullRefresh() {
 
   loadingModel = true;
   const driver = requireEngineDriver(storedConnection);
-  setStatusName('loadStructure');
-  analysedStructure = await checkedAsyncCall(driver.analyseFull(dbhan, serverVersion));
-  analysedTime = new Date().getTime();
-  process.send({ msgtype: 'structure', structure: analysedStructure });
-  process.send({ msgtype: 'structureTime', analysedTime });
-  setStatusName('ok');
+  setStatusName("loadStructure");
+  analysedStructure = await checkedAsyncCall(
+    driver.analyseFull(dbhan, serverVersion)
+  );
+  analysedTime = Date.now();
+  process.send({ msgtype: "structure", structure: analysedStructure });
+  process.send({ msgtype: "structureTime", analysedTime });
+  setStatusName("ok");
 
   loadingModel = false;
   resolveAnalysedPromises();
 }
 
 async function handleIncrementalRefresh(forceSend) {
-  if (storedConnection.useSeparateSchemas && !isCompositeDbName(dbhan?.database)) {
+  if (
+    storedConnection.useSeparateSchemas &&
+    !isCompositeDbName(dbhan?.database)
+  ) {
     resolveAnalysedPromises();
     // skip loading DB structure
     return;
   }
   loadingModel = true;
   const driver = requireEngineDriver(storedConnection);
-  setStatusName('checkStructure');
-  const newStructure = await checkedAsyncCall(driver.analyseIncremental(dbhan, analysedStructure, serverVersion));
-  analysedTime = new Date().getTime();
+  setStatusName("checkStructure");
+  const newStructure = await checkedAsyncCall(
+    driver.analyseIncremental(dbhan, analysedStructure, serverVersion)
+  );
+  analysedTime = Date.now();
   if (newStructure != null) {
     analysedStructure = newStructure;
   }
 
   if (forceSend || newStructure != null) {
-    process.send({ msgtype: 'structure', structure: analysedStructure });
+    process.send({ msgtype: "structure", structure: analysedStructure });
   }
 
-  process.send({ msgtype: 'structureTime', analysedTime });
-  setStatusName('ok');
+  process.send({ msgtype: "structureTime", analysedTime });
+  setStatusName("ok");
   loadingModel = false;
   resolveAnalysedPromises();
 }
@@ -123,8 +136,11 @@ function handleSyncModel({ isFullRefresh }) {
 function setStatus(status) {
   const newStatus = { ...lastStatus, ...status };
   const statusString = stableStringify(newStatus);
-  if (lastStatusString != statusString) {
-    process.send({ msgtype: 'status', status: { ...newStatus, counter: getStatusCounter() } });
+  if (lastStatusString !== statusString) {
+    process.send({
+      msgtype: "status",
+      status: { ...newStatus, counter: getStatusCounter() },
+    });
     lastStatusString = statusString;
     lastStatus = newStatus;
   }
@@ -138,27 +154,35 @@ async function readVersion() {
   const driver = requireEngineDriver(storedConnection);
   try {
     const version = await driver.getVersion(dbhan);
-    logger.debug(getLogInfo(), `DBGM-00037 Got server version: ${version.version}`);
+    logger.debug(
+      getLogInfo(),
+      `DBGM-00037 Got server version: ${version.version}`
+    );
     serverVersion = version;
   } catch (err) {
-    logger.error(extractErrorLogData(err, getLogInfo()), 'DBGM-00149 Error getting DB server version');
-    serverVersion = { version: 'Unknown' };
+    logger.error(
+      extractErrorLogData(err, getLogInfo()),
+      "DBGM-00149 Error getting DB server version"
+    );
+    serverVersion = { version: "Unknown" };
   }
-  process.send({ msgtype: 'version', version: serverVersion });
+  process.send({ msgtype: "version", version: serverVersion });
 }
 
 async function handleConnect({ connection, structure, globalSettings }) {
   storedConnection = connection;
-  lastPing = new Date().getTime();
+  lastPing = Date.now();
 
-  if (!structure) setStatusName('pending');
+  if (!structure) setStatusName("pending");
   const driver = requireEngineDriver(storedConnection);
-  dbhan = await checkedAsyncCall(connectUtility(driver, storedConnection, 'app'));
+  dbhan = await checkedAsyncCall(
+    connectUtility(driver, storedConnection, "app")
+  );
   logger.debug(
     getLogInfo(),
-    `DBGM-00038 Connected to database, separate schemas: ${storedConnection.useSeparateSchemas ? 'YES' : 'NO'}`
+    `DBGM-00038 Connected to database, separate schemas: ${storedConnection.useSeparateSchemas ? "YES" : "NO"}`
   );
-  dbhan.feedback = feedback => setStatus({ feedback });
+  dbhan.feedback = (feedback) => setStatus({ feedback });
   await checkedAsyncCall(readVersion());
   if (structure) {
     analysedStructure = structure;
@@ -167,10 +191,18 @@ async function handleConnect({ connection, structure, globalSettings }) {
     handleFullRefresh();
   }
 
-  if (extractBoolSettingsValue(globalSettings, 'connection.autoRefresh', false)) {
+  if (
+    extractBoolSettingsValue(globalSettings, "connection.autoRefresh", false)
+  ) {
     setInterval(
       handleIncrementalRefresh,
-      extractIntSettingsValue(globalSettings, 'connection.autoRefreshInterval', 30, 3, 3600) * 1000
+      extractIntSettingsValue(
+        globalSettings,
+        "connection.autoRefreshInterval",
+        30,
+        3,
+        3600
+      ) * 1000
     );
   }
 
@@ -201,50 +233,63 @@ function resolveAnalysedPromises() {
   afterAnalyseCallbacks = [];
 }
 
-async function handleRunScript({ msgid, sql, useTransaction }, skipReadonlyCheck = false) {
+async function handleRunScript(
+  { msgid, sql, useTransaction },
+  skipReadonlyCheck = false
+) {
   await waitConnected();
   const driver = requireEngineDriver(storedConnection);
   try {
     if (!skipReadonlyCheck) ensureExecuteCustomScript(driver);
     await driver.script(dbhan, sql, { useTransaction });
-    process.send({ msgtype: 'response', msgid });
+    process.send({ msgtype: "response", msgid });
   } catch (err) {
     process.send({
-      msgtype: 'response',
+      msgtype: "response",
       msgid,
-      errorMessage: extractErrorMessage(err, 'Error executing SQL script'),
+      errorMessage: extractErrorMessage(err, "Error executing SQL script"),
     });
   }
 }
 
-async function handleRunOperation({ msgid, operation, useTransaction }, skipReadonlyCheck = false) {
+async function handleRunOperation(
+  { msgid, operation, useTransaction },
+  skipReadonlyCheck = false
+) {
   await waitConnected();
   const driver = requireEngineDriver(storedConnection);
   try {
     if (!skipReadonlyCheck) ensureExecuteCustomScript(driver);
     await driver.operation(dbhan, operation, { useTransaction });
-    process.send({ msgtype: 'response', msgid });
+    process.send({ msgtype: "response", msgid });
   } catch (err) {
     process.send({
-      msgtype: 'response',
+      msgtype: "response",
       msgid,
-      errorMessage: extractErrorMessage(err, 'Error executing DB operation'),
+      errorMessage: extractErrorMessage(err, "Error executing DB operation"),
     });
   }
 }
 
-async function handleQueryData({ msgid, sql, range }, skipReadonlyCheck = false) {
+async function handleQueryData(
+  { msgid, sql, range },
+  skipReadonlyCheck = false
+) {
   await waitConnected();
   const driver = requireEngineDriver(storedConnection);
   try {
     if (!skipReadonlyCheck) ensureExecuteCustomScript(driver);
     const res = await driver.query(dbhan, sql, { range });
-    process.send({ msgtype: 'response', msgid, ...serializeJsTypesForJsonStringify(res) });
+    process.send({
+      msgtype: "response",
+      msgid,
+      ...serializeJsTypesForJsonStringify(res),
+    });
   } catch (err) {
     process.send({
-      msgtype: 'response',
+      msgtype: "response",
       msgid,
-      errorMessage: extractErrorMessage(err, 'Error executing SQL script'),
+      errorMessage: extractErrorMessage(err, "Error executing SQL script"),
     });
   }
 }
@@ -261,47 +306,77 @@ async function handleDriverDataCore(msgid, callMethod, { logName }) {
   const driver = requireEngineDriver(storedConnection);
   try {
     const result = await callMethod(driver);
-    process.send({ msgtype: 'response', msgid, result: serializeJsTypesForJsonStringify(result) });
+    process.send({
+      msgtype: "response",
+      msgid,
+      result: serializeJsTypesForJsonStringify(result),
+    });
   } catch (err) {
     logger.error(
       extractErrorLogData(err, { logName, ...getLogInfo() }),
       `DBGM-00150 Error when handling message ${logName}`
     );
-    process.send({ msgtype: 'response', msgid, errorMessage: extractErrorMessage(err, 'Error executing DB data') });
+    process.send({
+      msgtype: "response",
+      msgid,
+      errorMessage: extractErrorMessage(err, "Error executing DB data"),
+    });
   }
 }
 
 async function handleSchemaList({ msgid }) {
-  logger.debug(getLogInfo(), 'DBGM-00039 Loading schema list');
-  return handleDriverDataCore(msgid, driver => driver.listSchemas(dbhan), { logName: 'listSchemas' });
+  logger.debug(getLogInfo(), "DBGM-00039 Loading schema list");
+  return handleDriverDataCore(msgid, (driver) => driver.listSchemas(dbhan), {
+    logName: "listSchemas",
+  });
 }
 
 async function handleCollectionData({ msgid, options }) {
-  return handleDriverDataCore(msgid, driver => driver.readCollection(dbhan, options), { logName: 'readCollection' });
+  return handleDriverDataCore(
+    msgid,
+    (driver) => driver.readCollection(dbhan, options),
+    { logName: "readCollection" }
+  );
 }
 
 async function handleLoadKeys({ msgid, root, filter, limit }) {
-  return handleDriverDataCore(msgid, driver => driver.loadKeys(dbhan, root, filter, limit), { logName: 'loadKeys' });
+  return handleDriverDataCore(
+    msgid,
+    (driver) => driver.loadKeys(dbhan, root, filter, limit),
+    { logName: "loadKeys" }
+  );
 }
 
 async function handleScanKeys({ msgid, pattern, cursor, count }) {
-  return handleDriverDataCore(msgid, driver => driver.scanKeys(dbhan, pattern, cursor, count), { logName: 'scanKeys' });
+  return handleDriverDataCore(
+    msgid,
+    (driver) => driver.scanKeys(dbhan, pattern, cursor, count),
+    { logName: "scanKeys" }
+  );
 }
 
 async function handleExportKeys({ msgid, options }) {
-  return handleDriverDataCore(msgid, driver => driver.exportKeys(dbhan, options), { logName: 'exportKeys' });
+  return handleDriverDataCore(
+    msgid,
+    (driver) => driver.exportKeys(dbhan, options),
+    { logName: "exportKeys" }
+  );
 }
 
 async function handleLoadKeyInfo({ msgid, key }) {
-  return handleDriverDataCore(msgid, driver => driver.loadKeyInfo(dbhan, key), { logName: 'loadKeyInfo' });
+  return handleDriverDataCore(
+    msgid,
+    (driver) => driver.loadKeyInfo(dbhan, key),
+    { logName: "loadKeyInfo" }
+  );
 }
 
 async function handleCallMethod({ msgid, method, args }) {
   return handleDriverDataCore(
     msgid,
-    driver => {
+    (driver) => {
       if (storedConnection.isReadOnly) {
-        throw new Error('Connection is read only, cannot call custom methods');
+        throw new Error("Connection is read only, cannot call custom methods");
       }
 
       ensureExecuteCustomScript(driver);
@@ -312,17 +387,35 @@ async function handleCallMethod({ msgid, method, args }) {
 }
 
 async function handleLoadKeyTableRange({ msgid, key, cursor, count }) {
-  return handleDriverDataCore(msgid, driver => driver.loadKeyTableRange(dbhan, key, cursor, count), {
-    logName: 'loadKeyTableRange',
-  });
-}
-
-async function handleLoadFieldValues({ msgid, schemaName, pureName, field, search, dataType }) {
   return handleDriverDataCore(
     msgid,
-    driver => driver.loadFieldValues(dbhan, { schemaName, pureName }, field, search, dataType),
+    (driver) => driver.loadKeyTableRange(dbhan, key, cursor, count),
     {
-      logName: 'loadFieldValues',
+      logName: "loadKeyTableRange",
+    }
+  );
+}
+
+async function handleLoadFieldValues({
+  msgid,
+  schemaName,
+  pureName,
+  field,
+  search,
+  dataType,
+}) {
+  return handleDriverDataCore(
+    msgid,
+    (driver) =>
+      driver.loadFieldValues(
+        dbhan,
+        { schemaName, pureName },
+        field,
+        search,
+        dataType
+      ),
+    {
+      logName: "loadFieldValues",
     }
   );
 }
@@ -332,7 +425,7 @@ function ensureExecuteCustomScript(driver) {
     return;
   }
   if (storedConnection.isReadOnly) {
-    throw new Error('Connection is read only');
+    throw new Error("Connection is read only");
   }
 }
 
@@ -342,9 +435,13 @@ async function handleUpdateCollection({ msgid, changeSet }) {
   try {
     ensureExecuteCustomScript(driver);
     const result = await driver.updateCollection(dbhan, changeSet);
-    process.send({ msgtype: 'response', msgid, result });
+    process.send({ msgtype: "response", msgid, result });
   } catch (err) {
-    process.send({ msgtype: 'response', msgid, errorMessage: extractErrorMessage(err, 'Error updating collection') });
+    process.send({
+      msgtype: "response",
+      msgid,
+      errorMessage: extractErrorMessage(err, "Error updating collection"),
+    });
   }
 }
 
@@ -354,13 +451,28 @@ async function handleSqlPreview({ msgid, objects, options }) {
 
   try {
     const dmp = driver.createDumper();
-    const generator = new SqlGenerator(analysedStructure, options, objects, dmp, driver, dbhan);
+    const generator = new SqlGenerator(
+      analysedStructure,
+      options,
+      objects,
+      dmp,
+      driver,
+      dbhan
+    );
 
     await generator.dump();
-    process.send({ msgtype: 'response', msgid, sql: dmp.s, isTruncated: generator.isTruncated });
+    process.send({
+      msgtype: "response",
+      msgid,
+      sql: dmp.s,
+      isTruncated: generator.isTruncated,
+    });
     if (generator.isUnhandledException) {
       setTimeout(async () => {
-        logger.error(getLogInfo(), 'DBGM-00151 Exiting because of unhandled exception');
+        logger.error(
+          getLogInfo(),
+          "DBGM-00151 Exiting because of unhandled exception"
+        );
         await driver.close(dbhan);
         process.exit(0);
       }, 500);
@@ -368,10 +480,10 @@ async function handleSqlPreview({ msgid, objects, options }) {
   } catch (err) {
     console.error(err);
     process.send({
-      msgtype: 'response',
+      msgtype: "response",
       msgid,
       isError: true,
-      errorMessage: extractErrorMessage(err, 'Error generating SQL preview'),
+      errorMessage: extractErrorMessage(err, "Error generating SQL preview"),
     });
   }
 }
@@ -386,13 +498,13 @@ async function handleGenerateDeploySql({ msgid, modelFolder }) {
       analysedStructure,
       modelFolder,
     });
-    process.send({ ...res, msgtype: 'response', msgid });
+    process.send({ ...res, msgtype: "response", msgid });
   } catch (err) {
     process.send({
-      msgtype: 'response',
+      msgtype: "response",
       msgid,
       isError: true,
-      errorMessage: extractErrorMessage(err, 'Error generating deploy SQL'),
+      errorMessage: extractErrorMessage(err, "Error generating deploy SQL"),
     });
   }
 }
@@ -403,14 +515,14 @@ async function handleExecuteSessionQuery({ sesid, sql }) {
 
   if (!allowExecuteCustomScript(storedConnection, driver)) {
     process.send({
-      msgtype: 'info',
+      msgtype: "info",
       info: {
-        message: 'Connection without read-only sessions is read only',
-        severity: 'error',
+        message: "Connection without read-only sessions is read only",
+        severity: "error",
       },
       sesid,
     });
-    process.send({ msgtype: 'done', sesid, skipFinishedMessage: true });
+    process.send({ msgtype: "done", sesid, skipFinishedMessage: true });
     return;
     //process.send({ msgtype: 'error', error: e.message });
   }
@@ -420,15 +532,21 @@ async function handleExecuteSessionQuery({ sesid, sql }) {
     canceled: false,
   };
   for (const sqlItem of splitQuery(sql, {
-    ...driver.getQuerySplitterOptions('stream'),
+    ...driver.getQuerySplitterOptions("stream"),
     returnRichInfo: true,
   })) {
-    await handleQueryStream(dbhan, driver, queryStreamInfoHolder, sqlItem, sesid);
+    await handleQueryStream(
+      dbhan,
+      driver,
+      queryStreamInfoHolder,
+      sqlItem,
+      sesid
+    );
     if (queryStreamInfoHolder.canceled) {
       break;
     }
   }
-  process.send({ msgtype: 'done', sesid });
+  process.send({ msgtype: "done", sesid });
 }
 
 async function handleEvalJsonScript({ script, runid }) {
@@ -439,9 +557,14 @@ async function handleEvalJsonScript({ script, runid }) {
   try {
     process.chdir(directory);
 
-    const evalWriter = new ScriptWriterEval(dbgateApi, requirePlugin, dbhan, runid);
+    const evalWriter = new ScriptWriterEval(
+      dbgateApi,
+      requirePlugin,
+      dbhan,
+      runid
+    );
     await playJsonScriptWriter(script, evalWriter);
-    process.send({ msgtype: 'runnerDone', runid });
+    process.send({ msgtype: "runnerDone", runid });
   } finally {
     process.chdir(originalCwd);
   }
@@ -455,7 +578,7 @@ async function handleEvalJsonScript({ script, runid }) {
 // }
 
 function handlePing() {
-  lastPing = new Date().getTime();
+  lastPing = Date.now();
 }
 
 const messageHandlers = {
@@ -492,24 +615,30 @@ function start() {
   childProcessChecker();
 
   setInterval(async () => {
-    const time = new Date().getTime();
+    const time = Date.now();
     if (time - lastPing > 40 * 1000) {
-      logger.info(getLogInfo(), 'DBGM-00040 Database connection not alive, exiting');
+      logger.info(
+        getLogInfo(),
+        "DBGM-00040 Database connection not alive, exiting"
+      );
       const driver = requireEngineDriver(storedConnection);
       await driver.close(dbhan);
       process.exit(0);
     }
   }, 10 * 1000);
 
-  process.on('message', async message => {
+  process.on("message", async (message) => {
     if (handleProcessCommunication(message)) return;
     try {
       await handleMessage(message);
     } catch (err) {
-      logger.error(extractErrorLogData(err, getLogInfo()), 'DBGM-00041 Error in DB connection');
+      logger.error(
+        extractErrorLogData(err, getLogInfo()),
+        "DBGM-00041 Error in DB connection"
+      );
       process.send({
-        msgtype: 'error',
-        error: extractErrorMessage(err, 'DBGM-00042 Error processing message'),
+        msgtype: "error",
+        error: extractErrorMessage(err, "DBGM-00042 Error processing message"),
         msgid: message?.msgid,
       });
     }

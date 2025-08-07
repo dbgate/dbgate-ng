@@ -55,9 +55,9 @@ export type Config_Logout_Request = {
   response: boolean;
 };
 
-export type Config_Request = 
-  | Config_Get_Request 
-  | Config_GetSettings_Request 
-  | Config_UpdateSettings_Request 
-  | Config_SaveLicenseKey_Request 
+export type Config_Request =
+  | Config_Get_Request
+  | Config_GetSettings_Request
+  | Config_UpdateSettings_Request
+  | Config_SaveLicenseKey_Request
   | Config_Logout_Request;

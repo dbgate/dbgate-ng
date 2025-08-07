@@ -1,4 +1,4 @@
-import { EngineDriver } from './engines';
+import { EngineDriver } from "./engines";
 
 export interface FileFormatDefinition {
   storageType: string;
@@ -25,7 +25,7 @@ export interface FileFormatDefinition {
 export interface ThemeDefinition {
   themeClassName: string;
   themeName: string;
-  themeType: 'light' | 'dark';
+  themeType: "light" | "dark";
   themeCss?: string;
 }
 
@@ -37,7 +37,10 @@ export interface PluginDefinition {
 
 export interface QuickExportDefinition {
   label: string;
-  createWriter: (fileName: string, dataName?: string) => { functionName: string; props: any };
+  createWriter: (
+    fileName: string,
+    dataName?: string
+  ) => { functionName: string; props: any };
   extension: string;
   noFilenameDependency?: boolean;
 }

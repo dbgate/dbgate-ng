@@ -80,12 +80,12 @@ export type Sessions_StopProfiler_Request = {
   response: boolean;
 };
 
-export type Sessions_Request = 
-  | Sessions_Create_Request 
-  | Sessions_ExecuteQuery_Request 
-  | Sessions_ExecuteControlCommand_Request 
-  | Sessions_ExecuteReader_Request 
-  | Sessions_Kill_Request 
-  | Sessions_Ping_Request 
-  | Sessions_StartProfiler_Request 
+export type Sessions_Request =
+  | Sessions_Create_Request
+  | Sessions_ExecuteQuery_Request
+  | Sessions_ExecuteControlCommand_Request
+  | Sessions_ExecuteReader_Request
+  | Sessions_Kill_Request
+  | Sessions_Ping_Request
+  | Sessions_StartProfiler_Request
   | Sessions_StopProfiler_Request;

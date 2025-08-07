@@ -10,10 +10,10 @@ const {
   replaceSchemaInStructure,
   filterStructureBySchema,
   skipDbGateInternalObjects,
-} = require('dbgate-tools');
-const importDbModel = require('../utility/importDbModel');
-const requireEngineDriver = require('../utility/requireEngineDriver');
-const { connectUtility } = require('../utility/connectUtility');
+} = require("dbgate-tools");
+const importDbModel = require("../utility/importDbModel");
+const requireEngineDriver = require("../utility/requireEngineDriver");
+const { connectUtility } = require("../utility/connectUtility");
 
 /**
  * Generates query for deploying model into database
@@ -39,21 +39,24 @@ async function generateDeploySql({
   loadedDbModel = undefined,
   modelTransforms = undefined,
   dbdiffOptionsExtra = {},
-  ignoreNameRegex = '',
+  ignoreNameRegex = "",
   targetSchema = null,
   maxMissingTablesRatio = undefined,
 }) {
   if (!driver) driver = requireEngineDriver(connection);
 
-  const dbhan = systemConnection || (await connectUtility(driver, connection, 'read'));
+  const dbhan =
+    systemConnection || (await connectUtility(driver, connection, "read"));
   if (
     driver?.dialect?.multipleSchema &&
     !targetSchema &&
-    dbdiffOptionsExtra?.['schemaMode'] !== 'ignore' &&
-    dbdiffOptionsExtra?.['schemaMode'] !== 'ignoreImplicit'
+    dbdiffOptionsExtra?.schemaMode !== "ignore" &&
+    dbdiffOptionsExtra?.schemaMode !== "ignoreImplicit"
   ) {
     if (!driver?.dialect?.defaultSchemaName) {
-      throw new Error('targetSchema is required for databases with multiple schemas');
+      throw new Error(
+        "targetSchema is required for databases with multiple schemas"
+      );
     }
     targetSchema = driver.dialect.defaultSchemaName;
   }
@@ -68,8 +71,14 @@ async function generateDeploySql({
       : await importDbModel(modelFolder);
 
     if (ignoreNameRegex) {
-      analysedStructure = skipNamesInStructureByRegex(analysedStructure, new RegExp(ignoreNameRegex, 'i'));
-      deployedModelSource = skipNamesInStructureByRegex(deployedModelSource, new RegExp(ignoreNameRegex, 'i'));
+      analysedStructure = skipNamesInStructureByRegex(
+        analysedStructure,
+        new RegExp(ignoreNameRegex, "i")
+      );
+      deployedModelSource = skipNamesInStructureByRegex(
+        deployedModelSource,
+        new RegExp(ignoreNameRegex, "i")
+      );
     }
     analysedStructure = skipDbGateInternalObjects(analysedStructure);
 
@@ -78,12 +87,22 @@ async function generateDeploySql({
     }
 
     if (targetSchema) {
-      deployedModelSource = replaceSchemaInStructure(deployedModelSource, targetSchema);
-      analysedStructure = filterStructureBySchema(analysedStructure, targetSchema);
+      deployedModelSource = replaceSchemaInStructure(
+        deployedModelSource,
+        targetSchema
+      );
+      analysedStructure = filterStructureBySchema(
+        analysedStructure,
+        targetSchema
+      );
     }
 
-    const deployedModel = generateDbPairingId(extendDatabaseInfo(deployedModelSource));
-    const currentModel = generateDbPairingId(extendDatabaseInfo(analysedStructure));
+    const deployedModel = generateDbPairingId(
+      extendDatabaseInfo(deployedModelSource)
+    );
+    const currentModel = generateDbPairingId(
+      extendDatabaseInfo(analysedStructure)
+    );
     const opts = {
       ...modelCompareDbDiffOptions,
 
@@ -96,17 +115,29 @@ async function generateDeploySql({
 
       ...dbdiffOptionsExtra,
     };
-    const currentModelPaired = matchPairedObjects(deployedModel, currentModel, opts);
-    const currentModelPairedPreloaded = await enrichWithPreloadedRows(deployedModel, currentModelPaired, dbhan, driver);
+    const currentModelPaired = matchPairedObjects(
+      deployedModel,
+      currentModel,
+      opts
+    );
+    const currentModelPairedPreloaded = await enrichWithPreloadedRows(
+      deployedModel,
+      currentModelPaired,
+      dbhan,
+      driver
+    );
 
     if (maxMissingTablesRatio != null) {
       const missingTables = currentModelPaired.tables.filter(
-        x => !deployedModel.tables.find(y => y.pairingId == x.pairingId)
+        (x) => !deployedModel.tables.find((y) => y.pairingId === x.pairingId)
       );
       const missingTableCount = missingTables.length;
-      const missingTablesRatio = missingTableCount / (currentModelPaired.tables.length || 1);
+      const missingTablesRatio =
+        missingTableCount / (currentModelPaired.tables.length || 1);
       if (missingTablesRatio > maxMissingTablesRatio) {
-        throw new Error(`Too many missing tables (${missingTablesRatio * 100}%), aborting deploy`);
+        throw new Error(
+          `Too many missing tables (${missingTablesRatio * 100}%), aborting deploy`
+        );
       }
     }
 

@@ -1,16 +1,16 @@
-const fs = require('fs-extra');
-const _ = require('lodash');
-const path = require('path');
-const { appdir } = require('../utility/directories');
-const socket = require('../utility/socket');
-const connections = require('./connections');
+const fs = require("fs-extra");
+const _ = require("lodash");
+const path = require("node:path");
+const { appdir } = require("../utility/directories");
+const socket = require("../utility/socket");
+const connections = require("./connections");
 
 module.exports = {
   folders_meta: true,
   async folders() {
     const folders = await fs.readdir(appdir());
     return [
-      ...folders.map(name => ({
+      ...folders.map((name) => ({
         name,
       })),
     ];
@@ -20,7 +20,7 @@ module.exports = {
   async createFolder({ folder }) {
     const name = await this.getNewAppFolder({ name: folder });
     await fs.mkdir(path.join(appdir(), name));
-    socket.emitChanged('app-folders-changed');
+    socket.emitChanged("app-folders-changed");
     this.emitChangedDbApp(folder);
     return name;
   },
@@ -34,8 +34,8 @@ module.exports = {
 
     function fileType(ext, type) {
       return files
-        .filter(name => name.endsWith(ext))
-        .map(name => ({
+        .filter((name) => name.endsWith(ext))
+        .map((name) => ({
           name: name.slice(0, -ext.length),
           label: path.parse(name.slice(0, -ext.length)).base,
           type,
@@ -43,22 +43,22 @@ module.exports = {
     }
 
     return [
-      ...fileType('.command.sql', 'command.sql'),
-      ...fileType('.query.sql', 'query.sql'),
-      ...fileType('.config.json', 'config.json'),
+      ...fileType(".command.sql", "command.sql"),
+      ...fileType(".query.sql", "query.sql"),
+      ...fileType(".config.json", "config.json"),
     ];
   },
 
   async emitChangedDbApp(folder) {
     const used = await this.getUsedAppFolders();
     if (used.includes(folder)) {
-      socket.emitChanged('used-apps-changed');
+      socket.emitChanged("used-apps-changed");
     }
   },
 
   refreshFiles_meta: true,
   async refreshFiles({ folder }) {
-    socket.emitChanged('app-files-changed', { app: folder });
+    socket.emitChanged("app-files-changed", { app: folder });
   },
 
   refreshFolders_meta: true,
@@ -69,7 +69,7 @@ module.exports = {
   deleteFile_meta: true,
   async deleteFile({ folder, file, fileType }) {
     await fs.unlink(path.join(appdir(), folder, `${file}.${fileType}`));
-    socket.emitChanged('app-files-changed', { app: folder });
+    socket.emitChanged("app-files-changed", { app: folder });
     this.emitChangedDbApp(folder);
   },
 
@@ -79,24 +79,27 @@ module.exports = {
       path.join(path.join(appdir(), folder), `${file}.${fileType}`),
       path.join(path.join(appdir(), folder), `${newFile}.${fileType}`)
     );
-    socket.emitChanged('app-files-changed', { app: folder });
+    socket.emitChanged("app-files-changed", { app: folder });
     this.emitChangedDbApp(folder);
   },
 
   renameFolder_meta: true,
   async renameFolder({ folder, newFolder }) {
     const uniqueName = await this.getNewAppFolder({ name: newFolder });
-    await fs.rename(path.join(appdir(), folder), path.join(appdir(), uniqueName));
+    await fs.rename(
+      path.join(appdir(), folder),
+      path.join(appdir(), uniqueName)
+    );
     socket.emitChanged(`app-folders-changed`);
   },
 
   deleteFolder_meta: true,
   async deleteFolder({ folder }) {
-    if (!folder) throw new Error('Missing folder parameter');
+    if (!folder) throw new Error("Missing folder parameter");
     await fs.rmdir(path.join(appdir(), folder), { recursive: true });
     socket.emitChanged(`app-folders-changed`);
-    socket.emitChanged('app-files-changed', { app: folder });
-    socket.emitChanged('used-apps-changed');
+    socket.emitChanged("app-files-changed", { app: folder });
+    socket.emitChanged("used-apps-changed");
   },
 
   async getNewAppFolder({ name }) {
@@ -116,8 +119,8 @@ module.exports = {
     for (const connection of list) {
       for (const db of connection.databases || []) {
         for (const key of _.keys(db || {})) {
-          if (key.startsWith('useApp:') && db[key]) {
-            apps.push(key.substring('useApp:'.length));
+          if (key.startsWith("useApp:") && db[key]) {
+            apps.push(key.substring("useApp:".length));
           }
         }
       }
@@ -173,28 +176,35 @@ module.exports = {
           if (file.endsWith(ext)) {
             res[field].push({
               name: file.slice(0, -ext.length),
-              sql: await fs.readFile(path.join(dir, file), { encoding: 'utf-8' }),
+              sql: await fs.readFile(path.join(dir, file), {
+                encoding: "utf-8",
+              }),
             });
           }
         }
       }
 
-      await processType('.command.sql', 'commands');
-      await processType('.query.sql', 'queries');
+      await processType(".command.sql", "commands");
+      await processType(".query.sql", "queries");
     }
 
     try {
       res.virtualReferences = JSON.parse(
-        await fs.readFile(path.join(dir, 'virtual-references.config.json'), { encoding: 'utf-8' })
+        await fs.readFile(path.join(dir, "virtual-references.config.json"), {
+          encoding: "utf-8",
+        })
       );
-    } catch (err) {
+    } catch (_err) {
       res.virtualReferences = [];
     }
     try {
       res.dictionaryDescriptions = JSON.parse(
-        await fs.readFile(path.join(dir, 'dictionary-descriptions.config.json'), { encoding: 'utf-8' })
+        await fs.readFile(
+          path.join(dir, "dictionary-descriptions.config.json"),
+          { encoding: "utf-8" }
+        )
       );
-    } catch (err) {
+    } catch (_err) {
       res.dictionaryDescriptions = [];
     }
 
@@ -206,8 +216,8 @@ module.exports = {
 
     let json;
     try {
-      json = JSON.parse(await fs.readFile(file, { encoding: 'utf-8' }));
-    } catch (err) {
+      json = JSON.parse(await fs.readFile(file, { encoding: "utf-8" }));
+    } catch (_err) {
       json = [];
     }
 
@@ -219,22 +229,29 @@ module.exports = {
 
     await fs.writeFile(file, JSON.stringify(json, undefined, 2));
 
-    socket.emitChanged('app-files-changed', { app: appFolder });
-    socket.emitChanged('used-apps-changed');
+    socket.emitChanged("app-files-changed", { app: appFolder });
+    socket.emitChanged("used-apps-changed");
   },
 
   saveVirtualReference_meta: true,
-  async saveVirtualReference({ appFolder, schemaName, pureName, refSchemaName, refTableName, columns }) {
+  async saveVirtualReference({
+    appFolder,
+    schemaName,
+    pureName,
+    refSchemaName,
+    refTableName,
+    columns,
+  }) {
     await this.saveConfigFile(
       appFolder,
-      'virtual-references.config.json',
-      columns.length == 1
-        ? x =>
+      "virtual-references.config.json",
+      columns.length === 1
+        ? (x) =>
             !(
-              x.schemaName == schemaName &&
-              x.pureName == pureName &&
-              x.columns.length == 1 &&
-              x.columns[0].columnName == columns[0].columnName
+              x.schemaName === schemaName &&
+              x.pureName === pureName &&
+              x.columns.length === 1 &&
+              x.columns[0].columnName === columns[0].columnName
             )
         : null,
       {
@@ -249,11 +266,18 @@ module.exports = {
   },
 
   saveDictionaryDescription_meta: true,
-  async saveDictionaryDescription({ appFolder, pureName, schemaName, expression, columns, delimiter }) {
+  async saveDictionaryDescription({
+    appFolder,
+    pureName,
+    schemaName,
+    expression,
+    columns,
+    delimiter,
+  }) {
     await this.saveConfigFile(
       appFolder,
-      'dictionary-descriptions.config.json',
-      x => !(x.schemaName == schemaName && x.pureName == pureName),
+      "dictionary-descriptions.config.json",
+      (x) => !(x.schemaName === schemaName && x.pureName === pureName),
       {
         schemaName,
         pureName,
@@ -271,8 +295,8 @@ module.exports = {
     const file = path.join(appdir(), appFolder, fileName);
     if (!(await fs.exists(file))) {
       await fs.writeFile(file, JSON.stringify(content, undefined, 2));
-      socket.emitChanged('app-files-changed', { app: appFolder });
-      socket.emitChanged('used-apps-changed');
+      socket.emitChanged("app-files-changed", { app: appFolder });
+      socket.emitChanged("used-apps-changed");
       return true;
     }
     return false;

@@ -1,7 +1,7 @@
-import { For, type Component } from "solid-js";
-import FontIcon from "../elements/FontIcon";
+import { type Component, For } from "solid-js";
 import { selectedWidget, setSelectedWidget } from "../core/appstate";
 import { dbgateLocalDb } from "../core/localdb";
+import FontIcon from "../elements/FontIcon";
 
 const widgets = [
   // getCurrentConfig().storageDatabase && {
@@ -100,7 +100,7 @@ const WidgetIconPanel: Component = () => {
             }}
             onClick={() =>
               setSelectedWidget((old) =>
-                old == widget.name ? null : widget.name
+                old === widget.name ? null : widget.name
               )
             }
           >

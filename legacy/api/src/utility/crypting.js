@@ -1,13 +1,14 @@
-const crypto = require('crypto');
-const simpleEncryptor = require('simple-encryptor');
-const fs = require('fs');
-const path = require('path');
-const _ = require('lodash');
+const crypto = require("node:crypto");
+const simpleEncryptor = require("simple-encryptor");
+const fs = require("node:fs");
+const path = require("node:path");
+const _ = require("lodash");
 
-const { datadir } = require('./directories');
-const { encryptionKeyArg } = require('./processArgs');
+const { datadir } = require("./directories");
+const { encryptionKeyArg } = require("./processArgs");
 
-const defaultEncryptionKey = 'mQAUaXhavRGJDxDTXSCg7Ej0xMmGCrx6OKA07DIMBiDcYYkvkaXjTAzPUEHEHEf9';
+const defaultEncryptionKey =
+  "mQAUaXhavRGJDxDTXSCg7Ej0xMmGCrx6OKA07DIMBiDcYYkvkaXjTAzPUEHEHEf9";
 
 let _encryptionKey = null;
 
@@ -20,20 +21,20 @@ function loadEncryptionKey() {
   }
   const encryptor = simpleEncryptor.createEncryptor(defaultEncryptionKey);
 
-  const keyFile = path.join(datadir(), '.key');
+  const keyFile = path.join(datadir(), ".key");
 
   if (!fs.existsSync(keyFile)) {
     const generatedKey = crypto.randomBytes(32);
-    const newKey = generatedKey.toString('hex');
+    const newKey = generatedKey.toString("hex");
     const result = {
       encryptionKey: newKey,
     };
-    fs.writeFileSync(keyFile, encryptor.encrypt(result), 'utf-8');
+    fs.writeFileSync(keyFile, encryptor.encrypt(result), "utf-8");
   }
 
-  const encryptedData = fs.readFileSync(keyFile, 'utf-8');
+  const encryptedData = fs.readFileSync(keyFile, "utf-8");
   const data = encryptor.decrypt(encryptedData);
-  _encryptionKey = data['encryptionKey'];
+  _encryptionKey = data.encryptionKey;
   return _encryptionKey;
 }
 
@@ -42,7 +43,7 @@ async function loadEncryptionKeyFromExternal(storedValue, setStoredValue) {
 
   if (!storedValue) {
     const generatedKey = crypto.randomBytes(32);
-    const newKey = generatedKey.toString('hex');
+    const newKey = generatedKey.toString("hex");
     const result = {
       encryptionKey: newKey,
     };
@@ -54,7 +55,7 @@ async function loadEncryptionKeyFromExternal(storedValue, setStoredValue) {
   }
 
   const data = encryptor.decrypt(storedValue);
-  setEncryptionKey(data['encryptionKey']);
+  setEncryptionKey(data.encryptionKey);
 }
 
 let _encryptor = null;
@@ -68,43 +69,50 @@ function getInternalEncryptor() {
 }
 
 function encryptPasswordString(password) {
-  if (password && !password.startsWith('crypt:')) {
-    return 'crypt:' + getInternalEncryptor().encrypt(password);
+  if (password && !password.startsWith("crypt:")) {
+    return `crypt:${getInternalEncryptor().encrypt(password)}`;
   }
   return password;
 }
 
 function decryptPasswordString(password) {
-  if (password && password.startsWith('crypt:')) {
-    return getInternalEncryptor().decrypt(password.substring('crypt:'.length));
+  if (password?.startsWith("crypt:")) {
+    return getInternalEncryptor().decrypt(password.substring("crypt:".length));
   }
   return password;
 }
 
 function encryptObjectPasswordField(obj, field, encryptor = null) {
-  if (obj && obj[field] && !obj[field].startsWith('crypt:')) {
+  if (obj?.[field] && !obj[field].startsWith("crypt:")) {
     return {
       ...obj,
-      [field]: 'crypt:' + (encryptor || getInternalEncryptor()).encrypt(obj[field]),
+      [field]: `crypt:${(encryptor || getInternalEncryptor()).encrypt(obj[field])}`,
     };
   }
   return obj;
 }
 
 function decryptObjectPasswordField(obj, field, encryptor = null) {
-  if (obj && obj[field] && obj[field].startsWith('crypt:')) {
+  if (obj?.[field]?.startsWith("crypt:")) {
     return {
       ...obj,
-      [field]: (encryptor || getInternalEncryptor()).decrypt(obj[field].substring('crypt:'.length)),
+      [field]: (encryptor || getInternalEncryptor()).decrypt(
+        obj[field].substring("crypt:".length)
+      ),
     };
   }
   return obj;
 }
 
-const fieldsToEncrypt = ['password', 'sshPassword', 'sshKeyfilePassword', 'connectionDefinition'];
+const fieldsToEncrypt = [
+  "password",
+  "sshPassword",
+  "sshKeyfilePassword",
+  "connectionDefinition",
+];
 
 function encryptConnection(connection, encryptor = null) {
-  if (connection.passwordMode != 'saveRaw') {
+  if (connection.passwordMode !== "saveRaw") {
     for (const field of fieldsToEncrypt) {
       connection = encryptObjectPasswordField(connection, field, encryptor);
     }
@@ -126,13 +134,13 @@ function decryptConnection(connection) {
 
 function encryptUser(user) {
   if (user.encryptPassword) {
-    user = encryptObjectPasswordField(user, 'password');
+    user = encryptObjectPasswordField(user, "password");
   }
   return user;
 }
 
 function decryptUser(user) {
-  user = decryptObjectPasswordField(user, 'password');
+  user = decryptObjectPasswordField(user, "password");
   return user;
 }
 
@@ -141,9 +149,16 @@ function pickSafeConnectionInfo(connection) {
     return connection;
   }
   return _.mapValues(connection, (v, k) => {
-    if (k == 'engine' || k == 'port' || k == 'authType' || k == 'sshMode' || k == 'passwordMode') return v;
+    if (
+      k === "engine" ||
+      k === "port" ||
+      k === "authType" ||
+      k === "sshMode" ||
+      k === "passwordMode"
+    )
+      return v;
     if (v === null || v === true || v === false) return v;
-    if (v) return '***';
+    if (v) return "***";
     return undefined;
   });
 }
@@ -161,7 +176,7 @@ function getEncryptionKey() {
 function generateTransportEncryptionKey() {
   const encryptor = simpleEncryptor.createEncryptor(defaultEncryptionKey);
   const result = {
-    encryptionKey: crypto.randomBytes(32).toString('hex'),
+    encryptionKey: crypto.randomBytes(32).toString("hex"),
   };
   return encryptor.encrypt(result);
 }
@@ -169,35 +184,63 @@ function generateTransportEncryptionKey() {
 function createTransportEncryptor(encryptionData) {
   const encryptor = simpleEncryptor.createEncryptor(defaultEncryptionKey);
   const data = encryptor.decrypt(encryptionData);
-  const res = simpleEncryptor.createEncryptor(data['encryptionKey']);
+  const res = simpleEncryptor.createEncryptor(data.encryptionKey);
   return res;
 }
 
-function recryptObjectPasswordField(obj, field, decryptEncryptor, encryptEncryptor) {
-  if (obj && obj[field] && obj[field].startsWith('crypt:')) {
+function recryptObjectPasswordField(
+  obj,
+  field,
+  decryptEncryptor,
+  encryptEncryptor
+) {
+  if (obj?.[field]?.startsWith("crypt:")) {
     return {
       ...obj,
-      [field]: 'crypt:' + encryptEncryptor.encrypt(decryptEncryptor.decrypt(obj[field].substring('crypt:'.length))),
+      [field]:
+        "crypt:" +
+        encryptEncryptor.encrypt(
+          decryptEncryptor.decrypt(obj[field].substring("crypt:".length))
+        ),
     };
   }
   return obj;
 }
 
-function recryptObjectPasswordFieldInPlace(obj, field, decryptEncryptor, encryptEncryptor) {
-  if (obj && obj[field] && obj[field].startsWith('crypt:')) {
-    obj[field] = 'crypt:' + encryptEncryptor.encrypt(decryptEncryptor.decrypt(obj[field].substring('crypt:'.length)));
+function recryptObjectPasswordFieldInPlace(
+  obj,
+  field,
+  decryptEncryptor,
+  encryptEncryptor
+) {
+  if (obj?.[field]?.startsWith("crypt:")) {
+    obj[field] =
+      "crypt:" +
+      encryptEncryptor.encrypt(
+        decryptEncryptor.decrypt(obj[field].substring("crypt:".length))
+      );
   }
 }
 
 function recryptConnection(connection, decryptEncryptor, encryptEncryptor) {
   for (const field of fieldsToEncrypt) {
-    connection = recryptObjectPasswordField(connection, field, decryptEncryptor, encryptEncryptor);
+    connection = recryptObjectPasswordField(
+      connection,
+      field,
+      decryptEncryptor,
+      encryptEncryptor
+    );
   }
   return connection;
 }
 
 function recryptUser(user, decryptEncryptor, encryptEncryptor) {
-  user = recryptObjectPasswordField(user, 'password', decryptEncryptor, encryptEncryptor);
+  user = recryptObjectPasswordField(
+    user,
+    "password",
+    decryptEncryptor,
+    encryptEncryptor
+  );
   return user;
 }
 

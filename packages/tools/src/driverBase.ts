@@ -1,14 +1,14 @@
-import _compact from 'lodash/compact';
-import _isString from 'lodash/isString';
-import { SqlDumper } from './SqlDumper';
-import { splitQuery } from 'dbgate-query-splitter';
-import { dumpSqlSelect, Select } from 'dbgate-sqltree';
-import { EngineDriver, QueryResult, RunScriptOptions } from 'dbgate-types';
-import { detectSqlFilterBehaviour } from './detectSqlFilterBehaviour';
-import { getLogger } from './getLogger';
-import { getLimitedQuery } from './stringTools';
+import { splitQuery } from "dbgate-query-splitter";
+import { dumpSqlSelect, type Select } from "dbgate-sqltree";
+import type { EngineDriver, QueryResult, RunScriptOptions } from "dbgate-types";
+import _compact from "lodash/compact";
+import _isString from "lodash/isString";
+import { detectSqlFilterBehaviour } from "./detectSqlFilterBehaviour";
+import { getLogger } from "./getLogger";
+import { SqlDumper } from "./SqlDumper";
+import { getLimitedQuery } from "./stringTools";
 
-const logger = getLogger('driverBase');
+const logger = getLogger("driverBase");
 
 const dialect = {
   limitSelect: true,
@@ -16,7 +16,7 @@ const dialect = {
   topRecords: false,
   offsetFetchRangeSyntax: true,
   stringEscapeChar: "'",
-  fallbackDataType: 'nvarchar(max)',
+  fallbackDataType: "nvarchar(max)",
   quoteIdentifier(s) {
     return s;
   },
@@ -30,7 +30,7 @@ const dialect = {
 export async function runCommandOnDriver(
   pool,
   driver: EngineDriver,
-  cmd: (dmp: SqlDumper) => void | string
+  cmd: (dmp: SqlDumper) => undefined | string
 ): Promise<void> {
   const dmp = driver.createDumper();
   if (_isString(cmd)) {
@@ -73,19 +73,19 @@ export const driverBase = {
   analyserClass: null,
   dumperClass: SqlDumper,
   dialect,
-  databaseEngineTypes: ['sql'],
+  databaseEngineTypes: ["sql"],
   supportedCreateDatabase: true,
 
   async analyseFull(pool, version) {
     const analyser = new this.analyserClass(pool, this, version);
     return analyser.fullAnalysis();
   },
-  async analyseSingleObject(pool, name, typeField = 'tables') {
+  async analyseSingleObject(pool, name, typeField = "tables") {
     const analyser = new this.analyserClass(pool, this);
     return analyser.singleObjectAnalysis(name, typeField);
   },
   analyseSingleTable(pool, name) {
-    return this.analyseSingleObject(pool, name, 'tables');
+    return this.analyseSingleObject(pool, name, "tables");
   },
   async analyseIncremental(pool, structure, version) {
     const analyser = new this.analyserClass(pool, this, version);
@@ -96,61 +96,84 @@ export const driverBase = {
   },
   async script(pool, sql, options: RunScriptOptions) {
     if (options?.useTransaction && this.supportsTransactions) {
-      runCommandOnDriver(pool, this, dmp => dmp.beginTransaction());
+      runCommandOnDriver(pool, this, (dmp) => dmp.beginTransaction());
     }
-    for (const sqlItem of splitQuery(sql, this.getQuerySplitterOptions('script'))) {
+    for (const sqlItem of splitQuery(
+      sql,
+      this.getQuerySplitterOptions("script")
+    )) {
       try {
         if (options?.logScriptItems) {
-          logger.info({ sql: getLimitedQuery(sqlItem as string) }, 'DBGM-00131 Execute script item');
+          logger.info(
+            { sql: getLimitedQuery(sqlItem as string) },
+            "DBGM-00131 Execute script item"
+          );
         }
-        await this.query(pool, sqlItem, { discardResult: true, ...options?.queryOptions });
+        await this.query(pool, sqlItem, {
+          discardResult: true,
+          ...options?.queryOptions,
+        });
       } catch (err) {
         if (options?.useTransaction && this.supportsTransactions) {
-          runCommandOnDriver(pool, this, dmp => dmp.rollbackTransaction());
+          runCommandOnDriver(pool, this, (dmp) => dmp.rollbackTransaction());
         }
         throw err;
       }
     }
     if (options?.useTransaction && this.supportsTransactions) {
-      runCommandOnDriver(pool, this, dmp => dmp.commitTransaction());
+      runCommandOnDriver(pool, this, (dmp) => dmp.commitTransaction());
     }
   },
-  async operation(pool, operation, options: RunScriptOptions) {
+  async operation(pool, operation, _options: RunScriptOptions) {
     const { type } = operation;
     switch (type) {
-      case 'createSchema':
-        await runCommandOnDriver(pool, this, dmp => dmp.createSchema(operation.schemaName));
+      case "createSchema":
+        await runCommandOnDriver(pool, this, (dmp) =>
+          dmp.createSchema(operation.schemaName)
+        );
         break;
-      case 'dropSchema':
-        await runCommandOnDriver(pool, this, dmp => dmp.dropSchema(operation.schemaName));
+      case "dropSchema":
+        await runCommandOnDriver(pool, this, (dmp) =>
+          dmp.dropSchema(operation.schemaName)
+        );
         break;
       default:
         throw new Error(`Operation type ${type} not supported`);
     }
   },
   getNewObjectTemplates() {
-    if (this.databaseEngineTypes.includes('sql')) {
-      return [{ label: 'New view', sql: 'CREATE VIEW myview\nAS\nSELECT * FROM table1' }];
+    if (this.databaseEngineTypes.includes("sql")) {
+      return [
+        {
+          label: "New view",
+          sql: "CREATE VIEW myview\nAS\nSELECT * FROM table1",
+        },
+      ];
     }
     return [];
   },
   async loadFieldValues(pool, name, columnName, search, dataType) {
     const dmp = this.createDumper();
 
-    let expr;
+    let expr: any;
     if (this.dialect.createColumnViewExpression) {
-      expr = this.dialect.createColumnViewExpression(columnName, dataType, { name }, 'value');
+      expr = this.dialect.createColumnViewExpression(
+        columnName,
+        dataType,
+        { name },
+        "value"
+      );
     }
     if (!expr) {
       expr = {
-        exprType: 'column',
+        exprType: "column",
         columnName,
-        alias: 'value',
+        alias: "value",
       };
     }
 
     const select: Select = {
-      commandType: 'select',
+      commandType: "select",
       distinct: true,
 
       from: {
@@ -159,9 +182,9 @@ export const driverBase = {
       columns: [expr],
       orderBy: [
         {
-          exprType: 'column',
+          exprType: "column",
           columnName,
-          direction: 'ASC',
+          direction: "ASC",
         },
       ],
     };
@@ -173,19 +196,19 @@ export const driverBase = {
     }
 
     if (search) {
-      const tokens = _compact(search.split(' ').map(x => x.trim()));
+      const tokens = _compact(search.split(" ").map((x) => x.trim()));
       if (tokens.length > 0) {
         // @ts-ignore
         select.where = {
-          conditionType: 'and',
-          conditions: tokens.map(token => ({
-            conditionType: 'like',
+          conditionType: "and",
+          conditions: tokens.map((token) => ({
+            conditionType: "like",
             left: {
-              exprType: 'column',
+              exprType: "column",
               columnName,
             },
             right: {
-              exprType: 'value',
+              exprType: "value",
               value: `%${token}%`,
             },
           })),
@@ -204,23 +227,31 @@ export const driverBase = {
     dumpSqlSelect(dmp, select);
     return this.readQuery(pool, dmp.s, structure);
   },
-  showConnectionField: (field, values) => false,
-  showConnectionTab: field => true,
-  getAccessTokenFromAuth: async (connection, req) => null,
-  getFilterBehaviour(dataType: string, standardFilterBehaviours) {
+  showConnectionField: (_field, _values) => false,
+  showConnectionTab: (_field) => true,
+  getAccessTokenFromAuth: async (_connection, _req) => null,
+  getFilterBehaviour(dataType: string, _standardFilterBehaviours) {
     return detectSqlFilterBehaviour(dataType);
   },
 
-  getCollectionExportQueryScript(collection: string, condition: any, sort: any) {
+  getCollectionExportQueryScript(
+    _collection: string,
+    _condition: any,
+    _sort: any
+  ) {
     return null;
   },
-  getCollectionExportQueryJson(collection: string, condition: any, sort: any) {
+  getCollectionExportQueryJson(
+    _collection: string,
+    _condition: any,
+    _sort: any
+  ) {
     return null;
   },
-  getScriptTemplates(objectTypeField) {
+  getScriptTemplates(_objectTypeField) {
     return [];
   },
-  getScriptTemplateContent(scriptTemplate, props) {
+  getScriptTemplateContent(_scriptTemplate, _props) {
     return null;
   },
 
@@ -240,18 +271,18 @@ export const driverBase = {
   adaptTableInfo(table) {
     return {
       ...table,
-      columns: table.columns?.map(col => ({
+      columns: table.columns?.map((col) => ({
         ...col,
         dataType: this.adaptDataType(col.dataType),
       })),
     };
   },
 
-  async listSchemas(pool) {
+  async listSchemas(_pool) {
     return null;
   },
 
-  async writeQueryFromStream(dbhan, sql) {
+  async writeQueryFromStream(_dbhan, _sql) {
     return null;
   },
 

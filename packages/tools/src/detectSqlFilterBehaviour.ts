@@ -1,11 +1,16 @@
-import { FilterBehaviour } from 'dbgate-types';
+import type { FilterBehaviour } from "dbgate-types";
+import {
+  isTypeDateTime,
+  isTypeLogical,
+  isTypeNumber,
+  isTypeString,
+} from "./commonTypeParser";
 import {
   datetimeFilterBehaviour,
   logicalFilterBehaviour,
   numberFilterBehaviour,
   stringFilterBehaviour,
-} from './filterBehaviours';
-import { isTypeDateTime, isTypeLogical, isTypeNumber, isTypeString } from './commonTypeParser';
+} from "./filterBehaviours";
 
 export function detectSqlFilterBehaviour(dataType: string): FilterBehaviour {
   if (!dataType) return stringFilterBehaviour;

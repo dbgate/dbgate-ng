@@ -1,4 +1,4 @@
-import { createEffect, createSignal, Signal } from "solid-js";
+import { createEffect, createSignal, type Signal } from "solid-js";
 
 export function createStoredSignal<T>(
   key: string,

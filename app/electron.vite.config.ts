@@ -1,21 +1,22 @@
-import { resolve } from 'path'
-import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
-import solid from 'vite-plugin-solid'
 // @ts-ignore Bad import
-import tailwindcss from '@tailwindcss/vite'
+
+import { resolve } from "node:path";
+import tailwindcss from "@tailwindcss/vite";
+import { defineConfig, externalizeDepsPlugin } from "electron-vite";
+import solid from "vite-plugin-solid";
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()]
+    plugins: [externalizeDepsPlugin()],
   },
   preload: {
-    plugins: [externalizeDepsPlugin()]
+    plugins: [externalizeDepsPlugin()],
   },
   renderer: {
     resolve: {
       alias: {
-        '@renderer': resolve('../packages/web/src')
-      }
+        "@renderer": resolve("../packages/web/src"),
+      },
     },
     // resolve: {
     //   alias: {
@@ -23,14 +24,14 @@ export default defineConfig({
     //   }
     // },
     plugins: [solid(), tailwindcss()],
-    root: resolve(__dirname, '../packages/web'),
+    root: resolve(__dirname, "../packages/web"),
     build: {
-      outDir: resolve(__dirname, '../dist/renderer'),
+      outDir: resolve(__dirname, "../dist/renderer"),
       rollupOptions: {
         input: {
-          index: resolve(__dirname, '../packages/web/index.html')
-        }
-      }
-    }
-  }
-})
+          index: resolve(__dirname, "../packages/web/index.html"),
+        },
+      },
+    },
+  },
+});

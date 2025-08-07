@@ -1,7 +1,7 @@
-const requireEngineDriver = require('../utility/requireEngineDriver');
-const { connectUtility } = require('../utility/connectUtility');
-const { getLogger } = require('dbgate-tools');
-const logger = getLogger('queryReader');
+const requireEngineDriver = require("../utility/requireEngineDriver");
+const { connectUtility } = require("../utility/connectUtility");
+const { getLogger } = require("dbgate-tools");
+const logger = getLogger("queryReader");
 
 /**
  * Returns reader object for {@link copyStream} function. This reader object reads data from query.
@@ -35,10 +35,18 @@ async function queryReader({
   if (!driver) {
     driver = requireEngineDriver(connection);
   }
-  const dbhan = systemConnection || (await connectUtility(driver, connection, queryType == 'json' ? 'read' : 'script'));
+  const dbhan =
+    systemConnection ||
+    (await connectUtility(
+      driver,
+      connection,
+      queryType === "json" ? "read" : "script"
+    ));
 
   const reader =
-    queryType == 'json' ? await driver.readJsonQuery(dbhan, query) : await driver.readQuery(dbhan, query || sql);
+    queryType === "json"
+      ? await driver.readJsonQuery(dbhan, query)
+      : await driver.readQuery(dbhan, query || sql);
   return reader;
 }
 

@@ -1,5 +1,5 @@
-const { databaseInfoFromYamlModel, DatabaseAnalyser } = require('dbgate-tools');
-const loadModelFolder = require('./loadModelFolder');
+const { databaseInfoFromYamlModel, DatabaseAnalyser } = require("dbgate-tools");
+const loadModelFolder = require("./loadModelFolder");
 
 async function importDbModel(inputDir) {
   const files = await loadModelFolder(inputDir);

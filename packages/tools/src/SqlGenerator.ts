@@ -7,15 +7,15 @@ import type {
   TableInfo,
   TriggerInfo,
   ViewInfo,
-} from 'dbgate-types';
-import _flatten from 'lodash/flatten';
-import _uniqBy from 'lodash/uniqBy';
-import { getLogger } from './getLogger';
-import { SqlDumper } from './SqlDumper';
-import { extendDatabaseInfo } from './structureTools';
-import { extractErrorLogData } from './stringTools';
+} from "dbgate-types";
+import _flatten from "lodash/flatten";
+import _uniqBy from "lodash/uniqBy";
+import { getLogger } from "./getLogger";
+import type { SqlDumper } from "./SqlDumper";
+import { extractErrorLogData } from "./stringTools";
+import { extendDatabaseInfo } from "./structureTools";
 
-const logger = getLogger('sqlGenerator');
+const logger = getLogger("sqlGenerator");
 
 interface SqlGeneratorOptions {
   dropTables: boolean;
@@ -59,7 +59,13 @@ interface SqlGeneratorOptions {
 interface SqlGeneratorObject {
   schemaName: string;
   pureName: string;
-  objectTypeField: 'tables' | 'views' | 'procedures' | 'functions' | 'triggers' | 'schedulerEvents';
+  objectTypeField:
+    | "tables"
+    | "views"
+    | "procedures"
+    | "functions"
+    | "triggers"
+    | "schedulerEvents";
 }
 
 export class SqlGenerator {
@@ -83,35 +89,35 @@ export class SqlGenerator {
     public pool
   ) {
     this.dbinfo = extendDatabaseInfo(dbinfo);
-    this.tables = this.extract('tables');
-    this.views = this.extract('views');
-    this.matviews = this.extract('matviews');
-    this.procedures = this.extract('procedures');
-    this.functions = this.extract('functions');
-    this.triggers = this.extract('triggers');
-    this.schedulerEvents = this.extract('schedulerEvents');
+    this.tables = this.extract("tables");
+    this.views = this.extract("views");
+    this.matviews = this.extract("matviews");
+    this.procedures = this.extract("procedures");
+    this.functions = this.extract("functions");
+    this.triggers = this.extract("triggers");
+    this.schedulerEvents = this.extract("schedulerEvents");
   }
 
-  private handleException = error => {
-    logger.error(extractErrorLogData(error), 'DBGM-00186 Unhandled error');
+  private handleException = (error) => {
+    logger.error(extractErrorLogData(error), "DBGM-00186 Unhandled error");
     this.isUnhandledException = true;
   };
 
   async dump() {
     try {
-      process.on('uncaughtException', this.handleException);
+      process.on("uncaughtException", this.handleException);
 
-      this.dropObjects(this.procedures, 'Procedure');
+      this.dropObjects(this.procedures, "Procedure");
       if (this.checkDumper()) return;
-      this.dropObjects(this.functions, 'Function');
+      this.dropObjects(this.functions, "Function");
       if (this.checkDumper()) return;
-      this.dropObjects(this.views, 'View');
+      this.dropObjects(this.views, "View");
       if (this.checkDumper()) return;
-      this.dropObjects(this.matviews, 'Matview');
+      this.dropObjects(this.matviews, "Matview");
       if (this.checkDumper()) return;
-      this.dropObjects(this.triggers, 'Trigger');
+      this.dropObjects(this.triggers, "Trigger");
       if (this.checkDumper()) return;
-      this.dropObjects(this.schedulerEvents, 'SchedulerEvent');
+      this.dropObjects(this.schedulerEvents, "SchedulerEvent");
       if (this.checkDumper()) return;
 
       this.dropTables();
@@ -129,28 +135,30 @@ export class SqlGenerator {
       this.createForeignKeys();
       if (this.checkDumper()) return;
 
-      this.createObjects(this.procedures, 'Procedure');
+      this.createObjects(this.procedures, "Procedure");
       if (this.checkDumper()) return;
-      this.createObjects(this.functions, 'Function');
+      this.createObjects(this.functions, "Function");
       if (this.checkDumper()) return;
-      this.createObjects(this.views, 'View');
+      this.createObjects(this.views, "View");
       if (this.checkDumper()) return;
-      this.createObjects(this.matviews, 'Matview');
+      this.createObjects(this.matviews, "Matview");
       if (this.checkDumper()) return;
-      this.createObjects(this.triggers, 'Trigger');
+      this.createObjects(this.triggers, "Trigger");
       if (this.checkDumper()) return;
-      this.createObjects(this.schedulerEvents, 'SchedulerEvent');
+      this.createObjects(this.schedulerEvents, "SchedulerEvent");
       if (this.checkDumper()) return;
     } finally {
-      process.off('uncaughtException', this.handleException);
+      process.off("uncaughtException", this.handleException);
     }
   }
 
   createForeignKeys() {
     const fks = [];
-    if (this.options.createForeignKeys) fks.push(..._flatten(this.tables.map(x => x.foreignKeys || [])));
-    if (this.options.createReferences) fks.push(..._flatten(this.tables.map(x => x.dependencies || [])));
-    for (const fk of _uniqBy(fks, 'constraintName')) {
+    if (this.options.createForeignKeys)
+      fks.push(..._flatten(this.tables.map((x) => x.foreignKeys || [])));
+    if (this.options.createReferences)
+      fks.push(..._flatten(this.tables.map((x) => x.dependencies || [])));
+    for (const fk of _uniqBy(fks, "constraintName")) {
       this.dmp.createForeignKey(fk);
       if (this.checkDumper()) return;
     }
@@ -178,7 +186,7 @@ export class SqlGenerator {
       }
     }
     if (this.options.createIndexes) {
-      for (const index of _flatten(this.tables.map(x => x.indexes || []))) {
+      for (const index of _flatten(this.tables.map((x) => x.indexes || []))) {
         this.dmp.createIndex(index);
       }
     }
@@ -200,9 +208,11 @@ export class SqlGenerator {
   checkDumper() {
     if (this.dmp.s.length > 4000000) {
       if (!this.isTruncated) {
-        this.dmp.putRaw('\n');
-        this.dmp.comment(' *************** SQL is truncated ******************');
-        this.dmp.putRaw('\n');
+        this.dmp.putRaw("\n");
+        this.dmp.comment(
+          " *************** SQL is truncated ******************"
+        );
+        this.dmp.putRaw("\n");
       }
       this.isTruncated = true;
       return true;
@@ -213,7 +223,9 @@ export class SqlGenerator {
   dropObjects(list, name) {
     if (this.options[`drop${name}s`]) {
       for (const item of list) {
-        this.dmp[`drop${name}`](item, { testIfExists: this.options[`checkIf${name}Exists`] });
+        this.dmp[`drop${name}`](item, {
+          testIfExists: this.options[`checkIf${name}Exists`],
+        });
         if (this.checkDumper()) return;
       }
     }
@@ -230,23 +242,25 @@ export class SqlGenerator {
 
   dropTables() {
     if (this.options.dropReferences) {
-      for (const fk of _flatten(this.tables.map(x => x.dependencies || []))) {
+      for (const fk of _flatten(this.tables.map((x) => x.dependencies || []))) {
         this.dmp.dropForeignKey(fk);
       }
     }
 
     if (this.options.dropTables) {
       for (const table of this.tables) {
-        this.dmp.dropTable(table, { testIfExists: this.options.checkIfTableExists });
+        this.dmp.dropTable(table, {
+          testIfExists: this.options.checkIfTableExists,
+        });
       }
     }
   }
 
   async insertTableData(table: TableInfo) {
     const dmpLocal = this.driver.createDumper();
-    dmpLocal.put('^select * ^from %f', table);
+    dmpLocal.put("^select * ^from %f", table);
 
-    const autoinc = table.columns.find(x => x.autoIncrement);
+    const autoinc = table.columns.find((x) => x.autoIncrement);
     if (autoinc && !this.options.skipAutoincrementColumn) {
       this.dmp.allowIdentityInsert(table, true);
     }
@@ -261,14 +275,14 @@ export class SqlGenerator {
 
   processReadable(table: TableInfo, readable) {
     const columnsFiltered = this.options.skipAutoincrementColumn
-      ? table.columns.filter(x => !x.autoIncrement)
+      ? table.columns.filter((x) => !x.autoIncrement)
       : table.columns;
-    const columnNames = columnsFiltered.map(x => x.columnName);
+    const columnNames = columnsFiltered.map((x) => x.columnName);
     let isClosed = false;
     let isHeaderRead = false;
 
-    return new Promise(resolve => {
-      readable.on('data', chunk => {
+    return new Promise((resolve) => {
+      readable.on("data", (chunk) => {
         if (isClosed) return;
         if (!isHeaderRead) {
           isHeaderRead = true;
@@ -282,15 +296,17 @@ export class SqlGenerator {
           return;
         }
 
-        const columnNamesCopy = this.options.omitNulls ? columnNames.filter(col => chunk[col] != null) : columnNames;
+        const columnNamesCopy = this.options.omitNulls
+          ? columnNames.filter((col) => chunk[col] != null)
+          : columnNames;
         this.dmp.put(
-          '^insert ^into %f (%,i) ^values (%,v);&n',
+          "^insert ^into %f (%,i) ^values (%,v);&n",
           table,
           columnNamesCopy,
-          columnNamesCopy.map(col => chunk[col])
+          columnNamesCopy.map((col) => chunk[col])
         );
       });
-      readable.on('end', () => {
+      readable.on("end", () => {
         resolve(undefined);
       });
     });
@@ -298,9 +314,12 @@ export class SqlGenerator {
 
   extract(objectTypeField) {
     return (
-      this.dbinfo[objectTypeField]?.filter(x =>
+      this.dbinfo[objectTypeField]?.filter((x) =>
         this.objects.find(
-          y => x.pureName == y.pureName && x.schemaName == y.schemaName && y.objectTypeField == objectTypeField
+          (y) =>
+            x.pureName === y.pureName &&
+            x.schemaName === y.schemaName &&
+            y.objectTypeField === objectTypeField
         )
       ) ?? []
     );

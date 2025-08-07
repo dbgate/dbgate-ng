@@ -1,14 +1,14 @@
-import { Request, Response } from "express";
-import {
+import crypto from "node:crypto";
+import type { Request, Response } from "express";
+import type {
   Connection,
-  Connections_List_Request,
-  Connections_Get_Request,
-  Connections_Test_Request,
-  Connections_Save_Request,
   Connections_Delete_Request,
+  Connections_Get_Request,
+  Connections_List_Request,
   Connections_NewSqliteDatabase_Request,
+  Connections_Save_Request,
+  Connections_Test_Request,
 } from "../../../types/api/connections-api";
-import crypto from "crypto";
 
 // Simple in-memory storage for connections (loaded from env)
 let connections: Connection[] = [];
@@ -75,7 +75,7 @@ initializeConnections();
 export const connectionsController = {
   // List all connections
   async list(
-    req: Request<{}, Connections_List_Request["response"], {}, {}>,
+    _req: Request<{}, Connections_List_Request["response"], {}, {}>,
     res: Response<Connections_List_Request["response"]>
   ): Promise<void> {
     try {
@@ -150,7 +150,7 @@ export const connectionsController = {
 
   // Save connection (not implemented for env-based connections)
   async save(
-    req: Request<
+    _req: Request<
       {},
       Connections_Save_Request["response"],
       { params: Connections_Save_Request["params"] },
@@ -165,7 +165,7 @@ export const connectionsController = {
 
   // Delete connection (not implemented for env-based connections)
   async delete(
-    req: Request<
+    _req: Request<
       {},
       Connections_Delete_Request["response"],
       { params: Connections_Delete_Request["params"] },
@@ -180,7 +180,7 @@ export const connectionsController = {
 
   // Create new SQLite database (not implemented)
   async newSqliteDatabase(
-    req: Request<
+    _req: Request<
       {},
       Connections_NewSqliteDatabase_Request["response"],
       { params: Connections_NewSqliteDatabase_Request["params"] },
@@ -194,7 +194,7 @@ export const connectionsController = {
   },
 
   // Refresh connections from environment variables (custom endpoint)
-  async refresh(req: Request, res: Response): Promise<void> {
+  async refresh(_req: Request, res: Response): Promise<void> {
     try {
       initializeConnections();
       res.json({ success: true, count: connections.length });

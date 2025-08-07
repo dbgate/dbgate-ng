@@ -1,15 +1,13 @@
 {
-    "compilerOptions": {
-      "declaration": true,
-      "skipLibCheck": true,
-      "outDir": "lib",
-      "preserveWatchOutput": true,
-      "esModuleInterop": true,
-      "composite": true,
-      "incremental": true,
-      "rootDir": "src"
-    },
-    "include": [
-      "src/**/*"
-    ]
-  }
+  "compilerOptions": {
+    "declaration": true,
+    "skipLibCheck": true,
+    "outDir": "lib",
+    "preserveWatchOutput": true,
+    "esModuleInterop": true,
+    "composite": true,
+    "incremental": true,
+    "rootDir": "src"
+  },
+  "include": ["src/**/*"]
+}

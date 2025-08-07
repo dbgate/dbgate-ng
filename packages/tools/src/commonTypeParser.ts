@@ -11,7 +11,9 @@ export function isTypeFloat(dataType) {
 }
 
 export function isTypeNumber(dataType) {
-  return isTypeInteger(dataType) || isTypeFloat(dataType) || isTypeNumeric(dataType);
+  return (
+    isTypeInteger(dataType) || isTypeFloat(dataType) || isTypeNumeric(dataType)
+  );
 }
 
 export function isTypeString(dataType) {

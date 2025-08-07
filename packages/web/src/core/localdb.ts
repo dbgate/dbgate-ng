@@ -1,4 +1,4 @@
-import Dexie, { Table } from "dexie";
+import Dexie, { type Table } from "dexie";
 import { createDexieArrayQuery } from "../utility/dexietools";
 
 export interface TabDefinition {

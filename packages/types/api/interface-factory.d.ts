@@ -24,7 +24,11 @@ type ActionToMethodName<T extends string> = T extends string ? T : never;
 /**
  * Generate a method signature from a request type
  */
-type GenerateMethodSignature<T> = T extends { action: infer A; params: infer P; response: infer R }
+type GenerateMethodSignature<T> = T extends {
+  action: infer A;
+  params: infer P;
+  response: infer R;
+}
   ? A extends string
     ? {
         [K in ActionToMethodName<A>]: (params: P) => Promise<R>;
@@ -35,12 +39,18 @@ type GenerateMethodSignature<T> = T extends { action: infer A; params: infer P; 
 /**
  * Union all method signatures from a union of request types
  */
-type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
+  k: infer I
+) => void
+  ? I
+  : never;
 
 /**
  * Main factory type that generates an interface from API request union types
  */
-export type ApiInterfaceFactory<T> = UnionToIntersection<GenerateMethodSignature<T>>;
+export type ApiInterfaceFactory<T> = UnionToIntersection<
+  GenerateMethodSignature<T>
+>;
 
 /**
  * Alternative factory that includes optional context parameter for all methods
@@ -78,15 +88,23 @@ export type CustomApiInterfaceFactory<T, TMethodSignature> = {
 };
 
 // Helper types for common use cases
-export type RequestParams<T, A extends string> = ExtractParams<Extract<T, { action: A }>>;
-export type RequestResponse<T, A extends string> = ExtractResponse<Extract<T, { action: A }>>;
+export type RequestParams<T, A extends string> = ExtractParams<
+  Extract<T, { action: A }>
+>;
+export type RequestResponse<T, A extends string> = ExtractResponse<
+  Extract<T, { action: A }>
+>;
 
 // Example usage types (for documentation)
-export type ExampleConnectionManagerInterface = AsyncApiInterfaceFactory<import('./connections-api').Connections_Request>;
+export type ExampleConnectionManagerInterface = AsyncApiInterfaceFactory<
+  import("./connections-api").Connections_Request
+>;
 
 /**
  * Utility type to check if all actions are implemented
  */
 export type EnsureAllActionsImplemented<T, TImpl> = {
-  [K in ExtractAction<T>]: K extends keyof TImpl ? TImpl[K] : `Missing implementation for action: ${K}`;
+  [K in ExtractAction<T>]: K extends keyof TImpl
+    ? TImpl[K]
+    : `Missing implementation for action: ${K}`;
 };

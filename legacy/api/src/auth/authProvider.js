@@ -1,17 +1,17 @@
-const { getTokenSecret, getTokenLifetime } = require('./authCommon');
-const _ = require('lodash');
-const axios = require('axios');
-const { getLogger, getPredefinedPermissions } = require('dbgate-tools');
+const { getTokenSecret, getTokenLifetime } = require("./authCommon");
+const _ = require("lodash");
+const axios = require("axios");
+const { getLogger, getPredefinedPermissions } = require("dbgate-tools");
 
-const AD = require('activedirectory2').promiseWrapper;
-const jwt = require('jsonwebtoken');
+const AD = require("activedirectory2").promiseWrapper;
+const jwt = require("jsonwebtoken");
 
-const logger = getLogger('authProvider');
+const logger = getLogger("authProvider");
 
 class AuthProviderBase {
-  amoid = 'none';
+  amoid = "none";
 
-  async login(login, password, options = undefined, req = undefined) {
+  async login(_login, _password, _options = undefined, _req = undefined) {
     return {
       accessToken: jwt.sign(
         {
@@ -23,7 +23,7 @@ class AuthProviderBase {
     };
   }
 
-  oauthToken(params, req) {
+  oauthToken(_params, _req) {
     return {};
   }
 
@@ -46,21 +46,21 @@ class AuthProviderBase {
     return null;
   }
 
-  getSingleConnectionId(req) {
+  getSingleConnectionId(_req) {
     return null;
   }
 
   toJson() {
     return {
       amoid: this.amoid,
-      workflowType: 'anonymous',
-      name: 'Anonymous',
+      workflowType: "anonymous",
+      name: "Anonymous",
     };
   }
 
   async redirect({ state }) {
     return {
-      status: 'error',
+      status: "error",
     };
   }
 
@@ -70,12 +70,14 @@ class AuthProviderBase {
 }
 
 class OAuthProvider extends AuthProviderBase {
-  amoid = 'oauth';
+  amoid = "oauth";
 
   async oauthToken(params) {
     const { redirectUri, code } = params;
 
-    const scopeParam = process.env.OAUTH_SCOPE ? `&scope=${process.env.OAUTH_SCOPE}` : '';
+    const scopeParam = process.env.OAUTH_SCOPE
+      ? `&scope=${process.env.OAUTH_SCOPE}`
+      : "";
     const resp = await axios.default.post(
       `${process.env.OAUTH_TOKEN}`,
       `grant_type=authorization_code&code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(
@@ -94,40 +96,55 @@ class OAuthProvider extends AuthProviderBase {
       payload = jwt.decode(id_token);
     }
 
-    logger.info({ payload }, 'DBGM-00002 User payload returned from OAUTH');
+    logger.info({ payload }, "DBGM-00002 User payload returned from OAUTH");
 
     const login =
-      process.env.OAUTH_LOGIN_FIELD && payload && payload[process.env.OAUTH_LOGIN_FIELD]
+      process.env.OAUTH_LOGIN_FIELD &&
+      payload &&
+      payload[process.env.OAUTH_LOGIN_FIELD]
         ? payload[process.env.OAUTH_LOGIN_FIELD]
-        : 'oauth';
+        : "oauth";
 
     if (
       process.env.OAUTH_ALLOWED_LOGINS &&
-      !process.env.OAUTH_ALLOWED_LOGINS.split(',').find(x => x.toLowerCase().trim() == login.toLowerCase().trim())
+      !process.env.OAUTH_ALLOWED_LOGINS.split(",").find(
+        (x) => x.toLowerCase().trim() === login.toLowerCase().trim()
+      )
     ) {
       return { error: `Username ${login} not allowed to log in` };
     }
 
     const groups =
-      process.env.OAUTH_GROUP_FIELD && payload && payload[process.env.OAUTH_GROUP_FIELD]
+      process.env.OAUTH_GROUP_FIELD &&
+      payload &&
+      payload[process.env.OAUTH_GROUP_FIELD]
         ? payload[process.env.OAUTH_GROUP_FIELD]
         : [];
 
     const allowedGroups = process.env.OAUTH_ALLOWED_GROUPS
-      ? process.env.OAUTH_ALLOWED_GROUPS.split(',').map(group => group.toLowerCase().trim())
+      ? process.env.OAUTH_ALLOWED_GROUPS.split(",").map((group) =>
+          group.toLowerCase().trim()
+        )
       : [];
 
-    if (process.env.OAUTH_ALLOWED_GROUPS && !groups.some(group => allowedGroups.includes(group.toLowerCase().trim()))) {
+    if (
+      process.env.OAUTH_ALLOWED_GROUPS &&
+      !groups.some((group) =>
+        allowedGroups.includes(group.toLowerCase().trim())
+      )
+    ) {
       return { error: `Username ${login} does not belong to an allowed group` };
     }
 
     if (access_token) {
       return {
-        accessToken: jwt.sign({ login }, getTokenSecret(), { expiresIn: getTokenLifetime() }),
+        accessToken: jwt.sign({ login }, getTokenSecret(), {
+          expiresIn: getTokenLifetime(),
+        }),
       };
     }
 
-    return { error: 'Token not found' };
+    return { error: "Token not found" };
   }
 
   async getLogoutUrl() {
@@ -137,15 +154,17 @@ class OAuthProvider extends AuthProviderBase {
   toJson() {
     return {
       ...super.toJson(),
-      workflowType: 'redirect',
-      name: 'OAuth 2.0',
+      workflowType: "redirect",
+      name: "OAuth 2.0",
     };
   }
 
   redirect({ state, redirectUri }) {
-    const scopeParam = process.env.OAUTH_SCOPE ? `&scope=${process.env.OAUTH_SCOPE}` : '';
+    const scopeParam = process.env.OAUTH_SCOPE
+      ? `&scope=${process.env.OAUTH_SCOPE}`
+      : "";
     return {
-      status: 'ok',
+      status: "ok",
       uri: `${process.env.OAUTH_AUTH}?client_id=${
         process.env.OAUTH_CLIENT_ID
       }&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(
@@ -156,9 +175,9 @@ class OAuthProvider extends AuthProviderBase {
 }
 
 class ADProvider extends AuthProviderBase {
-  amoid = 'ad';
+  amoid = "ad";
 
-  async login(login, password, options = undefined) {
+  async login(login, password, _options = undefined) {
     const adConfig = {
       url: process.env.AD_URL,
       baseDN: process.env.AD_BASEDN,
@@ -169,11 +188,13 @@ class ADProvider extends AuthProviderBase {
     try {
       const res = await ad.authenticate(login, password);
       if (!res) {
-        return { error: 'Login failed' };
+        return { error: "Login failed" };
       }
       if (
         process.env.AD_ALLOWED_LOGINS &&
-        !process.env.AD_ALLOWED_LOGINS.split(',').find(x => x.toLowerCase().trim() == login.toLowerCase().trim())
+        !process.env.AD_ALLOWED_LOGINS.split(",").find(
+          (x) => x.toLowerCase().trim() === login.toLowerCase().trim()
+        )
       ) {
         return { error: `Username ${login} not allowed to log in` };
       }
@@ -187,25 +208,30 @@ class ADProvider extends AuthProviderBase {
           { expiresIn: getTokenLifetime() }
         ),
       };
-    } catch (e) {
-      return { error: 'Login failed' };
+    } catch (_e) {
+      return { error: "Login failed" };
     }
   }
 
   toJson() {
     return {
       ...super.toJson(),
-      workflowType: 'credentials',
-      name: 'Active Directory',
+      workflowType: "credentials",
+      name: "Active Directory",
     };
   }
 }
 
 class LoginsProvider extends AuthProviderBase {
-  amoid = 'logins';
+  amoid = "logins";
 
-  async login(login, password, options = undefined) {
-    if (login && password && process.env['LOGIN'] == login && process.env['PASSWORD'] == password) {
+  async login(login, password, _options = undefined) {
+    if (
+      login &&
+      password &&
+      process.env.LOGIN === login &&
+      process.env.PASSWORD === password
+    ) {
       return {
         accessToken: jwt.sign(
           {
@@ -218,7 +244,7 @@ class LoginsProvider extends AuthProviderBase {
       };
     }
 
-    if (password && password == process.env[`LOGIN_PASSWORD_${login}`]) {
+    if (password && password === process.env[`LOGIN_PASSWORD_${login}`]) {
       return {
         accessToken: jwt.sign(
           {
@@ -231,30 +257,30 @@ class LoginsProvider extends AuthProviderBase {
       };
     }
 
-    return { error: 'Invalid credentials' };
+    return { error: "Invalid credentials" };
   }
 
   toJson() {
     return {
       ...super.toJson(),
-      workflowType: 'credentials',
-      name: 'Login & Password',
+      workflowType: "credentials",
+      name: "Login & Password",
     };
   }
 }
 
 class DenyAllProvider extends AuthProviderBase {
-  amoid = 'deny';
+  amoid = "deny";
 
-  async login(login, password, options = undefined) {
-    return { error: 'Login not allowed' };
+  async login(_login, _password, _options = undefined) {
+    return { error: "Login not allowed" };
   }
 
   toJson() {
     return {
       ...super.toJson(),
-      workflowType: 'credentials',
-      name: 'Deny all',
+      workflowType: "credentials",
+      name: "Deny all",
     };
   }
 }
@@ -264,7 +290,7 @@ function hasEnvLogins() {
     return true;
   }
   for (const key in process.env) {
-    if (key.startsWith('LOGIN_PASSWORD_')) {
+    if (key.startsWith("LOGIN_PASSWORD_")) {
       return true;
     }
   }
@@ -276,24 +302,30 @@ function detectEnvAuthProviderCore() {
     return process.env.AUTH_PROVIDER;
   }
   if (process.env.STORAGE_DATABASE) {
-    return 'denyall';
+    return "denyall";
   }
   if (process.env.OAUTH_AUTH) {
-    return 'oauth';
+    return "oauth";
   }
   if (process.env.AD_URL) {
-    return 'ad';
+    return "ad";
   }
   if (hasEnvLogins()) {
-    return 'logins';
+    return "logins";
   }
-  return 'none';
+  return "none";
 }
 
 function detectEnvAuthProvider() {
   const authProvider = detectEnvAuthProviderCore();
-  if (process.env.BASIC_AUTH && authProvider != 'logins' && authProvider != 'ad') {
-    throw new Error(`BASIC_AUTH is not supported with ${authProvider} auth provider`);
+  if (
+    process.env.BASIC_AUTH &&
+    authProvider !== "logins" &&
+    authProvider !== "ad"
+  ) {
+    throw new Error(
+      `BASIC_AUTH is not supported with ${authProvider} auth provider`
+    );
   }
   return authProvider;
 }
@@ -301,13 +333,13 @@ function detectEnvAuthProvider() {
 function createEnvAuthProvider() {
   const authProvider = detectEnvAuthProvider();
   switch (authProvider) {
-    case 'oauth':
+    case "oauth":
       return new OAuthProvider();
-    case 'ad':
+    case "ad":
       return new ADProvider();
-    case 'logins':
+    case "logins":
       return new LoginsProvider();
-    case 'denyall':
+    case "denyall":
       return new DenyAllProvider();
     default:
       return new AuthProviderBase();
@@ -322,7 +354,7 @@ function getAuthProviders() {
 }
 
 function getAuthProviderById(amoid) {
-  return authProviders.find(x => x.amoid == amoid);
+  return authProviders.find((x) => x.amoid === amoid);
 }
 
 function getDefaultAuthProvider() {

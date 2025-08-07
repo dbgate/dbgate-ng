@@ -1,5 +1,5 @@
 // Utility functions for DBGate Shell
-import crypto from 'crypto';
+import crypto from "node:crypto";
 
 /**
  * Generate a unique ID using crypto.randomUUID()
@@ -11,7 +11,7 @@ export function generateId(): string {
 /**
  * Generate a connection ID with a prefix
  */
-export function generateConnectionId(prefix: string = 'conn'): string {
+export function generateConnectionId(prefix: string = "conn"): string {
   return `${prefix}_${generateId()}`;
 }
 
@@ -38,9 +38,9 @@ export function deepClone<T>(obj: T): T {
  */
 export function isEmpty(value: any): boolean {
   if (value == null) return true;
-  if (typeof value === 'string') return value.trim() === '';
+  if (typeof value === "string") return value.trim() === "";
   if (Array.isArray(value)) return value.length === 0;
-  if (typeof value === 'object') return Object.keys(value).length === 0;
+  if (typeof value === "object") return Object.keys(value).length === 0;
   return false;
 }
 
@@ -70,7 +70,9 @@ export function throttle<T extends (...args: any[]) => any>(
     if (!inThrottle) {
       func(...args);
       inThrottle = true;
-      setTimeout(() => (inThrottle = false), limit);
+      setTimeout(() => {
+        inThrottle = false;
+      }, limit);
     }
   };
 }
@@ -79,7 +81,7 @@ export function throttle<T extends (...args: any[]) => any>(
  * Sleep/delay function
  */
 export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -94,24 +96,24 @@ export async function retry<T>(
   } = {}
 ): Promise<T> {
   const { maxAttempts = 3, delay = 1000, backoffMultiplier = 2 } = options;
-  
+
   let lastError: Error;
-  
+
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       return await fn();
     } catch (error) {
       lastError = error as Error;
-      
+
       if (attempt === maxAttempts) {
         throw lastError;
       }
-      
-      const waitTime = delay * Math.pow(backoffMultiplier, attempt - 1);
+
+      const waitTime = delay * backoffMultiplier ** (attempt - 1);
       await sleep(waitTime);
     }
   }
-  
+
   throw lastError!;
 }
 
@@ -119,15 +121,15 @@ export async function retry<T>(
  * Format bytes to human readable string
  */
 export function formatBytes(bytes: number, decimals: number = 2): string {
-  if (bytes === 0) return '0 Bytes';
-  
+  if (bytes === 0) return "0 Bytes";
+
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-  
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+
+  return `${parseFloat((bytes / k ** i).toFixed(dm))} ${sizes[i]}`;
 }
 
 /**
@@ -157,13 +159,13 @@ export function extractErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
   }
-  if (typeof error === 'string') {
+  if (typeof error === "string") {
     return error;
   }
-  if (error && typeof error === 'object' && 'message' in error) {
+  if (error && typeof error === "object" && "message" in error) {
     return String(error.message);
   }
-  return 'Unknown error occurred';
+  return "Unknown error occurred";
 }
 
 /**
@@ -176,11 +178,15 @@ export interface Logger {
   error: (message: string, ...args: any[]) => void;
 }
 
-export function createLogger(prefix: string = 'DBGate'): Logger {
+export function createLogger(prefix: string = "DBGate"): Logger {
   return {
-    debug: (message: string, ...args: any[]) => console.debug(`[${prefix}] ${message}`, ...args),
-    info: (message: string, ...args: any[]) => console.info(`[${prefix}] ${message}`, ...args),
-    warn: (message: string, ...args: any[]) => console.warn(`[${prefix}] ${message}`, ...args),
-    error: (message: string, ...args: any[]) => console.error(`[${prefix}] ${message}`, ...args),
+    debug: (message: string, ...args: any[]) =>
+      console.debug(`[${prefix}] ${message}`, ...args),
+    info: (message: string, ...args: any[]) =>
+      console.info(`[${prefix}] ${message}`, ...args),
+    warn: (message: string, ...args: any[]) =>
+      console.warn(`[${prefix}] ${message}`, ...args),
+    error: (message: string, ...args: any[]) =>
+      console.error(`[${prefix}] ${message}`, ...args),
   };
 }

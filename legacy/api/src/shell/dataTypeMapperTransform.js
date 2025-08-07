@@ -1,10 +1,10 @@
-const dataTypeMapperTransform = (oldType, newType) => database => {
+const dataTypeMapperTransform = (oldType, newType) => (database) => {
   return {
     ...database,
-    tables: database.tables.map(table => {
+    tables: database.tables.map((table) => {
       return {
         ...table,
-        columns: table.columns.map(column => {
+        columns: table.columns.map((column) => {
           if (column.dataType?.toLowerCase() === oldType?.toLowerCase()) {
             return {
               ...column,

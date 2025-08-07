@@ -15,7 +15,13 @@ export interface ColumnReference {
 export interface ConstraintInfo extends NamedObjectInfo {
   pairingId?: string;
   constraintName?: string;
-  constraintType: 'primaryKey' | 'foreignKey' | 'sortingKey' | 'index' | 'check' | 'unique';
+  constraintType:
+    | "primaryKey"
+    | "foreignKey"
+    | "sortingKey"
+    | "index"
+    | "check"
+    | "unique";
 }
 
 export interface ColumnsConstraintInfo extends ConstraintInfo {
@@ -121,7 +127,7 @@ export interface ViewInfo extends SqlObjectInfo {
   columns: ColumnInfo[];
 }
 
-export type ParameterMode = 'IN' | 'OUT' | 'INOUT' | 'RETURN';
+export type ParameterMode = "IN" | "OUT" | "INOUT" | "RETURN";
 
 export interface ParameterInfo extends NamedObjectInfo {
   parameterName?: string;
@@ -145,26 +151,26 @@ export interface TriggerInfo extends SqlObjectInfo {
   functionName?: string;
   tableName?: string;
   triggerTiming?:
-    | 'BEFORE'
-    | 'AFTER'
-    | 'INSTEAD OF'
-    | 'BEFORE EACH ROW'
-    | 'INSTEAD OF'
-    | 'AFTER EACH ROW'
-    | 'AFTER STATEMENT'
-    | 'BEFORE STATEMENT'
-    | 'AFTER EVENT'
-    | 'BEFORE EVENT'
+    | "BEFORE"
+    | "AFTER"
+    | "INSTEAD OF"
+    | "BEFORE EACH ROW"
+    | "INSTEAD OF"
+    | "AFTER EACH ROW"
+    | "AFTER STATEMENT"
+    | "BEFORE STATEMENT"
+    | "AFTER EVENT"
+    | "BEFORE EVENT"
     | null;
-  triggerLevel?: 'ROW' | 'STATEMENT';
-  eventType?: 'INSERT' | 'UPDATE' | 'DELETE' | 'TRUNCATE';
+  triggerLevel?: "ROW" | "STATEMENT";
+  eventType?: "INSERT" | "UPDATE" | "DELETE" | "TRUNCATE";
 }
 
 export interface SchedulerEventInfo extends SqlObjectInfo {
   definer: string;
-  eventType: 'RECURRING' | 'ONE TIME';
-  onCompletion: 'PRESERVE' | 'NOT PRESERVE';
-  status: 'ENABLED' | 'DISABLED';
+  eventType: "RECURRING" | "ONE TIME";
+  onCompletion: "PRESERVE" | "NOT PRESERVE";
+  status: "ENABLED" | "DISABLED";
   lastExecuted?: string;
   intervalValue: string;
   intervalField: string;

@@ -1,4 +1,4 @@
-import { Component, For, JSX } from "solid-js";
+import { type Component, For } from "solid-js";
 import { closeOpenedTab, openedTabs, setSelectedTab } from "../core/localdb";
 import FontIcon from "../elements/FontIcon";
 

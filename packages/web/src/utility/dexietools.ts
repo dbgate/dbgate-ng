@@ -1,13 +1,13 @@
+import { liveQuery, type PromiseExtended } from "dexie";
 import {
-  from,
-  Accessor,
-  createMemo,
+  type Accessor,
   createEffect,
+  createMemo,
+  from,
   on,
   onCleanup,
 } from "solid-js";
-import { createStore, reconcile, SetStoreFunction } from "solid-js/store";
-import { liveQuery, PromiseExtended } from "dexie";
+import { createStore, reconcile, type SetStoreFunction } from "solid-js/store";
 
 type ReconcileOptions = Parameters<typeof reconcile>[1];
 

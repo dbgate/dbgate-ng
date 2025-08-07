@@ -1,20 +1,21 @@
-const fs = require('fs-extra');
-const { decryptConnection } = require('./crypting');
-const { getSshTunnelProxy } = require('./sshTunnelProxy');
-const platformInfo = require('../utility/platformInfo');
-const connections = require('../controllers/connections');
-const _ = require('lodash');
+const fs = require("fs-extra");
+const { decryptConnection } = require("./crypting");
+const { getSshTunnelProxy } = require("./sshTunnelProxy");
+const platformInfo = require("../utility/platformInfo");
+const connections = require("../controllers/connections");
+const _ = require("lodash");
 
 async function loadConnection(driver, storedConnection, connectionMode) {
-  const { allowShellConnection, allowConnectionFromEnvVariables } = platformInfo;
+  const { allowShellConnection, allowConnectionFromEnvVariables } =
+    platformInfo;
 
-  if (connectionMode == 'app') {
+  if (connectionMode === "app") {
     return storedConnection;
   }
 
   if (storedConnection._id || !allowShellConnection) {
     if (!storedConnection._id) {
-      throw new Error('Missing connection _id');
+      throw new Error("Missing connection _id");
     }
 
     await connections._init();
@@ -25,19 +26,20 @@ async function loadConnection(driver, storedConnection, connectionMode) {
     };
 
     if (loaded.isReadOnly) {
-      if (connectionMode == 'read') return loadedWithDb;
-      if (connectionMode == 'write') throw new Error('Cannot write readonly connection');
-      if (connectionMode == 'script') {
+      if (connectionMode === "read") return loadedWithDb;
+      if (connectionMode === "write")
+        throw new Error("Cannot write readonly connection");
+      if (connectionMode === "script") {
         if (driver.readOnlySessions) return loadedWithDb;
-        throw new Error('Cannot write readonly connection');
+        throw new Error("Cannot write readonly connection");
       }
     }
     return loadedWithDb;
   }
 
   if (allowConnectionFromEnvVariables) {
-    return _.mapValues(storedConnection, (value, key) => {
-      if (_.isString(value) && value.startsWith('${') && value.endsWith('}')) {
+    return _.mapValues(storedConnection, (value, _key) => {
+      if (_.isString(value) && value.startsWith("${") && value.endsWith("}")) {
         return process.env[value.slice(2, -1)];
       }
       return value;
@@ -49,7 +51,7 @@ async function loadConnection(driver, storedConnection, connectionMode) {
 
 async function extractConnectionSslParams(connection) {
   /** @type {any} */
-  let ssl = undefined;
+  let ssl;
   if (connection.useSsl) {
     ssl = {};
 
@@ -89,24 +91,33 @@ async function extractConnectionSslParams(connection) {
 }
 
 async function decryptCloudConnection(connection) {
-  const { getCloudFolderEncryptor } = require('./cloudIntf');
+  const { getCloudFolderEncryptor } = require("./cloudIntf");
 
-  const m = connection?._id?.match(/^cloud\:\/\/(.+)\/(.+)$/);
+  const m = connection?._id?.match(/^cloud:\/\/(.+)\/(.+)$/);
   if (!m) {
-    throw new Error('Invalid cloud connection ID format');
+    throw new Error("Invalid cloud connection ID format");
   }
 
   const folid = m[1];
-  const cntid = m[2];
+  const _cntid = m[2];
 
   const folderEncryptor = await getCloudFolderEncryptor(folid);
   return decryptConnection(connection, folderEncryptor);
 }
 
-async function connectUtility(driver, storedConnection, connectionMode, additionalOptions = null) {
-  const connectionLoaded = await loadConnection(driver, storedConnection, connectionMode);
+async function connectUtility(
+  driver,
+  storedConnection,
+  connectionMode,
+  additionalOptions = null
+) {
+  const connectionLoaded = await loadConnection(
+    driver,
+    storedConnection,
+    connectionMode
+  );
 
-  const connection = connectionLoaded?._id?.startsWith('cloud://')
+  const connection = connectionLoaded?._id?.startsWith("cloud://")
     ? {
         database: connectionLoaded.defaultDatabase,
         ...(await decryptCloudConnection(connectionLoaded)),
@@ -122,7 +133,7 @@ async function connectUtility(driver, storedConnection, connectionMode, addition
 
   if (connection.useSshTunnel) {
     const tunnel = await getSshTunnelProxy(connection);
-    if (tunnel.state == 'error') {
+    if (tunnel.state === "error") {
       throw new Error(tunnel.message);
     }
 
@@ -132,7 +143,11 @@ async function connectUtility(driver, storedConnection, connectionMode, addition
 
   connection.ssl = await extractConnectionSslParams(connection);
 
-  const conn = await driver.connect({ conid: connectionLoaded?._id, ...connection, ...additionalOptions });
+  const conn = await driver.connect({
+    conid: connectionLoaded?._id,
+    ...connection,
+    ...additionalOptions,
+  });
   return conn;
 }
 

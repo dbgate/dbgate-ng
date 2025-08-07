@@ -1,10 +1,10 @@
-const byline = require('byline');
-const { safeJsonParse, getLogger } = require('dbgate-tools');
+const byline = require("byline");
+const { safeJsonParse, getLogger } = require("dbgate-tools");
 const logger = getLogger();
 
-const logDispatcher = method => data => {
+const logDispatcher = (method) => (data) => {
   const json = safeJsonParse(data.toString());
-  if (json && json.level) {
+  if (json?.level) {
     logger.log(json);
   } else {
     logger[method](json || data.toString());
@@ -12,8 +12,8 @@ const logDispatcher = method => data => {
 };
 
 function pipeForkLogs(subprocess) {
-  byline(subprocess.stdout).on('data', logDispatcher('info'));
-  byline(subprocess.stderr).on('data', logDispatcher('error'));
+  byline(subprocess.stdout).on("data", logDispatcher("info"));
+  byline(subprocess.stderr).on("data", logDispatcher("error"));
 }
 
 module.exports = pipeForkLogs;

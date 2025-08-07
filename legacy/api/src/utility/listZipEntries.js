@@ -1,5 +1,5 @@
-const yauzl = require('yauzl');
-const path = require('path');
+const yauzl = require("yauzl");
+const _path = require("node:path");
 
 /**
  * Lists the files in a ZIP archive using yauzl,
@@ -19,7 +19,7 @@ function listZipEntries(zipPath) {
       zipfile.readEntry();
 
       // Handle each entry
-      zipfile.on('entry', entry => {
+      zipfile.on("entry", (entry) => {
         entries.push({
           fileName: entry.fileName,
           uncompressedSize: entry.uncompressedSize,
@@ -30,10 +30,10 @@ function listZipEntries(zipPath) {
       });
 
       // Finished reading all entries
-      zipfile.on('end', () => resolve(entries));
+      zipfile.on("end", () => resolve(entries));
 
       // Handle errors
-      zipfile.on('error', err => reject(err));
+      zipfile.on("error", (err) => reject(err));
     });
   });
 }

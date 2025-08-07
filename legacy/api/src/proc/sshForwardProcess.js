@@ -1,25 +1,39 @@
-const fs = require('fs-extra');
-const platformInfo = require('../utility/platformInfo');
-const childProcessChecker = require('../utility/childProcessChecker');
-const { handleProcessCommunication } = require('../utility/processComm');
-const { SSHConnection } = require('../utility/SSHConnection');
-const { getLogger, extractErrorLogData, extractErrorMessage } = require('dbgate-tools');
+const fs = require("fs-extra");
+const platformInfo = require("../utility/platformInfo");
+const childProcessChecker = require("../utility/childProcessChecker");
+const { handleProcessCommunication } = require("../utility/processComm");
+const { SSHConnection } = require("../utility/SSHConnection");
+const {
+  getLogger,
+  extractErrorLogData,
+  extractErrorMessage,
+} = require("dbgate-tools");
 
-const logger = getLogger('sshProcess');
+const logger = getLogger("sshProcess");
 
 async function getSshConnection(connection, tunnelConfig) {
   const sshConfig = {
-    endHost: connection.sshHost || '',
+    endHost: connection.sshHost || "",
     endPort: connection.sshPort || 22,
-    bastionHost: connection.sshBastionHost || '',
-    agentForward: connection.sshMode == 'agent',
-    passphrase: connection.sshMode == 'keyFile' ? connection.sshKeyfilePassword : undefined,
+    bastionHost: connection.sshBastionHost || "",
+    agentForward: connection.sshMode === "agent",
+    passphrase:
+      connection.sshMode === "keyFile"
+        ? connection.sshKeyfilePassword
+        : undefined,
     username: connection.sshLogin,
-    password: (connection.sshMode || 'userPassword') == 'userPassword' ? connection.sshPassword : undefined,
-    agentSocket: connection.sshMode == 'agent' ? platformInfo.sshAuthSock : undefined,
+    password:
+      (connection.sshMode || "userPassword") === "userPassword"
+        ? connection.sshPassword
+        : undefined,
+    agentSocket:
+      connection.sshMode === "agent" ? platformInfo.sshAuthSock : undefined,
     privateKey:
-      connection.sshMode == 'keyFile' && (connection.sshKeyfile || platformInfo?.defaultKeyfile)
-        ? await fs.readFile(connection.sshKeyfile || platformInfo?.defaultKeyfile)
+      connection.sshMode === "keyFile" &&
+      (connection.sshKeyfile || platformInfo?.defaultKeyfile)
+        ? await fs.readFile(
+            connection.sshKeyfile || platformInfo?.defaultKeyfile
+          )
         : undefined,
     skipAutoPrivateKey: true,
     noReadline: true,
@@ -36,15 +50,18 @@ async function handleStart({ connection, tunnelConfig }) {
     await sshConn.forward(tunnelConfig);
 
     process.send({
-      msgtype: 'connected',
+      msgtype: "connected",
       connection,
       tunnelConfig,
     });
   } catch (err) {
-    logger.error(extractErrorLogData(err), 'DBGM-00156 Error creating SSH tunnel connection:');
+    logger.error(
+      extractErrorLogData(err),
+      "DBGM-00156 Error creating SSH tunnel connection:"
+    );
 
     process.send({
-      msgtype: 'error',
+      msgtype: "error",
       connection,
       tunnelConfig,
       errorMessage: extractErrorMessage(err.message),
@@ -63,12 +80,12 @@ async function handleMessage({ msgtype, ...other }) {
 
 function start() {
   childProcessChecker();
-  process.on('message', async message => {
+  process.on("message", async (message) => {
     if (handleProcessCommunication(message)) return;
     try {
       await handleMessage(message);
     } catch (e) {
-      console.error('sshForwardProcess - unhandled error', e);
+      console.error("sshForwardProcess - unhandled error", e);
     }
   });
 }

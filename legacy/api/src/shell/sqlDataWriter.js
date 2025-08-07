@@ -1,9 +1,9 @@
-const fs = require('fs');
-const stream = require('stream');
-const path = require('path');
-const { driverBase, getLogger } = require('dbgate-tools');
-const requireEngineDriver = require('../utility/requireEngineDriver');
-const logger = getLogger('sqlDataWriter');
+const fs = require("node:fs");
+const stream = require("node:stream");
+const path = require("node:path");
+const { driverBase, getLogger } = require("dbgate-tools");
+const requireEngineDriver = require("../utility/requireEngineDriver");
+const logger = getLogger("sqlDataWriter");
 
 class SqlizeStream extends stream.Transform {
   constructor({ fileName, dataName }) {
@@ -13,7 +13,7 @@ class SqlizeStream extends stream.Transform {
     this.dataName = dataName;
     this.driver = driverBase;
   }
-  _transform(chunk, encoding, done) {
+  _transform(chunk, _encoding, done) {
     let skip = false;
     if (!this.wasHeader) {
       if (chunk.__isStreamHeader) {
@@ -29,7 +29,7 @@ class SqlizeStream extends stream.Transform {
     if (!skip) {
       const dmp = this.driver.createDumper();
       dmp.put(
-        '^insert ^into %f (%,i) ^values (%,v);\n',
+        "^insert ^into %f (%,i) ^values (%,v);\n",
         { pureName: this.dataName || this.tableName },
         Object.keys(chunk),
         Object.values(chunk)
@@ -40,7 +40,12 @@ class SqlizeStream extends stream.Transform {
   }
 }
 
-async function sqlDataWriter({ fileName, dataName, driver, encoding = 'utf-8' }) {
+async function sqlDataWriter({
+  fileName,
+  dataName,
+  driver,
+  encoding = "utf-8",
+}) {
   logger.info(`DBGM-00063 Writing file ${fileName}`);
   const stringify = new SqlizeStream({ fileName, dataName });
   const fileStream = fs.createWriteStream(fileName, encoding);

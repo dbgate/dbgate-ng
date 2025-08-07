@@ -1,12 +1,12 @@
-const childProcessChecker = require('../utility/childProcessChecker');
-const JsonLinesDatastore = require('../utility/JsonLinesDatastore');
-const { handleProcessCommunication } = require('../utility/processComm');
+const childProcessChecker = require("../utility/childProcessChecker");
+const JsonLinesDatastore = require("../utility/JsonLinesDatastore");
+const { handleProcessCommunication } = require("../utility/processComm");
 
 let lastPing = null;
 let datastore = new JsonLinesDatastore();
 
 function handlePing() {
-  lastPing = new Date().getTime();
+  lastPing = Date.now();
 }
 
 function handleOpen({ file }) {
@@ -17,12 +17,12 @@ function handleOpen({ file }) {
 async function handleRead({ msgid, offset, limit }) {
   handlePing();
   const rows = await datastore.getRows(offset, limit);
-  process.send({ msgtype: 'response', msgid, rows });
+  process.send({ msgtype: "response", msgid, rows });
 }
 
 async function handleNotify({ msgid }) {
   await datastore.notifyChanged();
-  process.send({ msgtype: 'notify', msgid });
+  process.send({ msgtype: "notify", msgid });
 }
 
 const messageHandlers = {
@@ -41,18 +41,18 @@ function start() {
   childProcessChecker();
 
   setInterval(() => {
-    const time = new Date().getTime();
+    const time = Date.now();
     if (time - lastPing > 60 * 1000) {
       process.exit(0);
     }
   }, 60 * 1000);
 
-  process.on('message', async message => {
+  process.on("message", async (message) => {
     if (handleProcessCommunication(message)) return;
     try {
       await handleMessage(message);
     } catch (e) {
-      process.send({ msgtype: 'error', error: e.message });
+      process.send({ msgtype: "error", error: e.message });
     }
   });
 }

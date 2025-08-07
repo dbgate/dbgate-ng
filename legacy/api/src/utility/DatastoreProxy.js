@@ -1,10 +1,10 @@
-const crypto = require('crypto');
-const { fork } = require('child_process');
-const { handleProcessCommunication } = require('./processComm');
-const processArgs = require('../utility/processArgs');
-const pipeForkLogs = require('./pipeForkLogs');
-const { getLogger, extractErrorLogData } = require('dbgate-tools');
-const logger = getLogger('DatastoreProxy');
+const crypto = require("node:crypto");
+const { fork } = require("node:child_process");
+const { handleProcessCommunication } = require("./processComm");
+const processArgs = require("../utility/processArgs");
+const pipeForkLogs = require("./pipeForkLogs");
+const { getLogger, extractErrorLogData } = require("dbgate-tools");
+const logger = getLogger("DatastoreProxy");
 
 class DatastoreProxy {
   constructor(file) {
@@ -18,7 +18,7 @@ class DatastoreProxy {
   }
 
   handle_response({ msgid, rows }) {
-    const [resolve, reject] = this.requests[msgid];
+    const [resolve, _reject] = this.requests[msgid];
     resolve(rows);
     delete this.requests[msgid];
   }
@@ -26,7 +26,7 @@ class DatastoreProxy {
   handle_ping() {}
 
   handle_notify({ msgid }) {
-    const [resolve, reject] = this.requests[msgid];
+    const [resolve, _reject] = this.requests[msgid];
     resolve();
     delete this.requests[msgid];
   }
@@ -34,21 +34,21 @@ class DatastoreProxy {
   async ensureSubprocess() {
     if (!this.subprocess) {
       this.subprocess = fork(
-        global['API_PACKAGE'] || process.argv[1],
+        global.API_PACKAGE || process.argv[1],
         [
-          '--is-forked-api',
-          '--start-process',
-          'jslDatastoreProcess',
+          "--is-forked-api",
+          "--start-process",
+          "jslDatastoreProcess",
           ...processArgs.getPassArgs(),
           // ...process.argv.slice(3),
         ],
         {
-          stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+          stdio: ["ignore", "pipe", "pipe", "ipc"],
         }
       );
       pipeForkLogs(this.subprocess);
 
-      this.subprocess.on('message', message => {
+      this.subprocess.on("message", (message) => {
         // @ts-ignore
         const { msgtype } = message;
         if (handleProcessCommunication(message, this.subprocess)) return;
@@ -56,15 +56,18 @@ class DatastoreProxy {
         // if (this.disconnected) return;
         this[`handle_${msgtype}`](message);
       });
-      this.subprocess.on('exit', () => {
+      this.subprocess.on("exit", () => {
         // if (this.disconnected) return;
         this.subprocess = null;
       });
-      this.subprocess.on('error', err => {
-        logger.error(extractErrorLogData(err), 'DBGM-00167 Error in data store subprocess');
+      this.subprocess.on("error", (err) => {
+        logger.error(
+          extractErrorLogData(err),
+          "DBGM-00167 Error in data store subprocess"
+        );
         this.subprocess = null;
       });
-      this.subprocess.send({ msgtype: 'open', file: this.file });
+      this.subprocess.send({ msgtype: "open", file: this.file });
     }
     return this.subprocess;
   }
@@ -75,9 +78,9 @@ class DatastoreProxy {
     const promise = new Promise((resolve, reject) => {
       this.requests[msgid] = [resolve, reject];
       try {
-        this.subprocess.send({ msgtype: 'read', msgid, offset, limit });
+        this.subprocess.send({ msgtype: "read", msgid, offset, limit });
       } catch (err) {
-        logger.error(extractErrorLogData(err), 'DBGM-00168 Error getting rows');
+        logger.error(extractErrorLogData(err), "DBGM-00168 Error getting rows");
         this.subprocess = null;
       }
     });
@@ -89,9 +92,12 @@ class DatastoreProxy {
     const promise = new Promise((resolve, reject) => {
       this.requests[msgid] = [resolve, reject];
       try {
-        this.subprocess.send({ msgtype: 'notify', msgid });
+        this.subprocess.send({ msgtype: "notify", msgid });
       } catch (err) {
-        logger.error(extractErrorLogData(err), 'DBGM-00169 Error notifying subprocess');
+        logger.error(
+          extractErrorLogData(err),
+          "DBGM-00169 Error notifying subprocess"
+        );
         this.subprocess = null;
       }
     });

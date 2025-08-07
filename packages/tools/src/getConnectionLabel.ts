@@ -1,11 +1,14 @@
 export function getDatabaseFileLabel(databaseFile) {
   if (!databaseFile) return databaseFile;
-  const m = databaseFile.match(/[\/]([^\/]+)$/);
+  const m = databaseFile.match(/[/]([^/]+)$/);
   if (m) return m[1];
   return databaseFile;
 }
 
-function getConnectionLabelCore(connection, { allowExplicitDatabase = true } = {}) {
+function getConnectionLabelCore(
+  connection,
+  { allowExplicitDatabase = true } = {}
+) {
   if (!connection) {
     return null;
   }
@@ -15,13 +18,18 @@ function getConnectionLabelCore(connection, { allowExplicitDatabase = true } = {
   if (connection.useDatabaseUrl) {
     return `${connection.databaseUrl}`;
   }
-  if (connection.singleDatabase && connection.server && allowExplicitDatabase && connection.defaultDatabase) {
+  if (
+    connection.singleDatabase &&
+    connection.server &&
+    allowExplicitDatabase &&
+    connection.defaultDatabase
+  ) {
     return `${connection.defaultDatabase} on ${connection.server}`;
   }
   if (connection.databaseFile) {
     return getDatabaseFileLabel(connection.databaseFile);
   }
-  if (connection.useSshTunnel && connection.server == 'localhost') {
+  if (connection.useSshTunnel && connection.server === "localhost") {
     return `${connection.sshHost} - SSH`;
   }
   if (connection.server) {
@@ -31,10 +39,13 @@ function getConnectionLabelCore(connection, { allowExplicitDatabase = true } = {
     return `${connection.defaultDatabase}`;
   }
 
-  return '';
+  return "";
 }
 
-export function getConnectionLabel(connection, { allowExplicitDatabase = true, showUnsaved = false } = {}) {
+export function getConnectionLabel(
+  connection,
+  { allowExplicitDatabase = true, showUnsaved = false } = {}
+) {
   const res = getConnectionLabelCore(connection, { allowExplicitDatabase });
 
   if (res && showUnsaved && connection?.unsaved) {
@@ -45,7 +56,7 @@ export function getConnectionLabel(connection, { allowExplicitDatabase = true, s
 }
 
 export function getEngineLabel(connection) {
-  const match = (connection?.engine || '').match(/^([^@]*)@/);
+  const match = (connection?.engine || "").match(/^([^@]*)@/);
   if (match) {
     return match[1];
   }

@@ -18,6 +18,6 @@ export type Uploads_DeleteGist_Request = {
   response: boolean;
 };
 
-export type Uploads_Request = 
-  | Uploads_UploadErrorToGist_Request 
+export type Uploads_Request =
+  | Uploads_UploadErrorToGist_Request
   | Uploads_DeleteGist_Request;

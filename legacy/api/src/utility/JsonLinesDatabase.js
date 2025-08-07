@@ -1,6 +1,6 @@
-const crypto = require('crypto');
-const AsyncLock = require('async-lock');
-const fs = require('fs-extra');
+const crypto = require("node:crypto");
+const AsyncLock = require("async-lock");
+const fs = require("fs-extra");
 
 const lock = new AsyncLock();
 
@@ -20,7 +20,10 @@ class JsonLinesDatabase {
       // don't override data
       return;
     }
-    await fs.writeFile(this.filename, this.data.map(x => JSON.stringify(x)).join('\n'));
+    await fs.writeFile(
+      this.filename,
+      this.data.map((x) => JSON.stringify(x)).join("\n")
+    );
   }
 
   async unload() {
@@ -31,7 +34,7 @@ class JsonLinesDatabase {
 
   async _ensureLoaded() {
     if (!this.loadPerformed) {
-      await lock.acquire('reader', async () => {
+      await lock.acquire("reader", async () => {
         if (!this.loadPerformed) {
           if (!(await fs.exists(this.filename))) {
             this.loadedOk = true;
@@ -39,11 +42,13 @@ class JsonLinesDatabase {
             return;
           }
           try {
-            const text = await fs.readFile(this.filename, { encoding: 'utf-8' });
+            const text = await fs.readFile(this.filename, {
+              encoding: "utf-8",
+            });
             this.data = text
-              .split('\n')
-              .filter(x => x.trim())
-              .map(x => JSON.parse(x));
+              .split("\n")
+              .filter((x) => x.trim())
+              .map((x) => JSON.parse(x));
             this.loadedOk = true;
           } catch (err) {
             console.error(`Error loading file ${this.filename}`, err);
@@ -57,7 +62,9 @@ class JsonLinesDatabase {
   async insert(obj) {
     await this._ensureLoaded();
     if (obj._id && (await this.get(obj._id))) {
-      throw new Error(`Cannot insert duplicate ID ${obj._id} into ${this.filename}`);
+      throw new Error(
+        `Cannot insert duplicate ID ${obj._id} into ${this.filename}`
+      );
     }
     const elem = obj._id
       ? obj
@@ -72,15 +79,15 @@ class JsonLinesDatabase {
 
   async get(id) {
     await this._ensureLoaded();
-    return this.data.find(x => x._id == id);
+    return this.data.find((x) => x._id === id);
   }
 
   async find(cond) {
     await this._ensureLoaded();
     if (cond) {
-      return this.data.filter(x => {
+      return this.data.filter((x) => {
         for (const key of Object.keys(cond)) {
-          if (x[key] != cond[key]) return false;
+          if (x[key] !== cond[key]) return false;
         }
         return true;
       });
@@ -91,7 +98,7 @@ class JsonLinesDatabase {
 
   async update(obj) {
     await this._ensureLoaded();
-    this.data = this.data.map(x => (x._id == obj._id ? obj : x));
+    this.data = this.data.map((x) => (x._id === obj._id ? obj : x));
     await this._save();
     return obj;
   }
@@ -104,15 +111,15 @@ class JsonLinesDatabase {
 
   async patch(id, values) {
     await this._ensureLoaded();
-    this.data = this.data.map(x => (x._id == id ? { ...x, ...values } : x));
+    this.data = this.data.map((x) => (x._id === id ? { ...x, ...values } : x));
     await this._save();
-    return this.data.find(x => x._id == id);
+    return this.data.find((x) => x._id === id);
   }
 
   async remove(id) {
     await this._ensureLoaded();
-    const removed = this.data.find(x => x._id == id);
-    this.data = this.data.filter(x => x._id != id);
+    const removed = this.data.find((x) => x._id === id);
+    this.data = this.data.filter((x) => x._id !== id);
     await this._save();
     return removed;
   }

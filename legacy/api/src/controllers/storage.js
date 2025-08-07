@@ -1,6 +1,6 @@
 module.exports = {
   connections_meta: true,
-  async connections(req) {
+  async connections(_req) {
     return null;
   },
 

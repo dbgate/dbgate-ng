@@ -1,14 +1,14 @@
 // only in DbGate Premium
 
-function markUserAsActive(licenseUid, token) {}
+function markUserAsActive(_licenseUid, _token) {}
 
-async function isLoginLicensed(req, licenseUid) {
+async function isLoginLicensed(_req, _licenseUid) {
   return true;
 }
 
-function markLoginAsLoggedOut(licenseUid) {}
+function markLoginAsLoggedOut(_licenseUid) {}
 
-const LOGIN_LIMIT_ERROR = '';
+const LOGIN_LIMIT_ERROR = "";
 
 module.exports = {
   markUserAsActive,

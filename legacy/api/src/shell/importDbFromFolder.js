@@ -1,13 +1,18 @@
-const path = require('path');
-const fs = require('fs-extra');
-const executeQuery = require('./executeQuery');
-const { connectUtility } = require('../utility/connectUtility');
-const requireEngineDriver = require('../utility/requireEngineDriver');
-const { getAlterDatabaseScript, DatabaseAnalyser, runCommandOnDriver, adaptDatabaseInfo } = require('dbgate-tools');
-const importDbModel = require('../utility/importDbModel');
-const jsonLinesReader = require('./jsonLinesReader');
-const tableWriter = require('./tableWriter');
-const copyStream = require('./copyStream');
+const path = require("node:path");
+const fs = require("fs-extra");
+const executeQuery = require("./executeQuery");
+const { connectUtility } = require("../utility/connectUtility");
+const requireEngineDriver = require("../utility/requireEngineDriver");
+const {
+  getAlterDatabaseScript,
+  DatabaseAnalyser,
+  runCommandOnDriver,
+  adaptDatabaseInfo,
+} = require("dbgate-tools");
+const importDbModel = require("../utility/importDbModel");
+const jsonLinesReader = require("./jsonLinesReader");
+const tableWriter = require("./tableWriter");
+const copyStream = require("./copyStream");
 
 /**
  * Deploys database model stored in modelFolder (table as yamls) to database
@@ -18,12 +23,19 @@ const copyStream = require('./copyStream');
  * @param {string} options.folder - folder with model files (YAML files for tables, SQL files for views, procedures, ...)
  * @param {function[]} options.modelTransforms - array of functions for transforming model
  */
-async function importDbFromFolder({ connection, systemConnection, driver, folder, modelTransforms }) {
+async function importDbFromFolder({
+  connection,
+  systemConnection,
+  driver,
+  folder,
+  modelTransforms,
+}) {
   if (!driver) driver = requireEngineDriver(connection);
-  const dbhan = systemConnection || (await connectUtility(driver, connection, 'read'));
+  const dbhan =
+    systemConnection || (await connectUtility(driver, connection, "read"));
 
   try {
-    if (driver?.databaseEngineTypes?.includes('sql')) {
+    if (driver?.databaseEngineTypes?.includes("sql")) {
       const model = await importDbModel(folder);
 
       let modelAdapted = adaptDatabaseInfo(model, driver);
@@ -33,7 +45,7 @@ async function importDbFromFolder({ connection, systemConnection, driver, folder
 
       const modelNoFk = {
         ...modelAdapted,
-        tables: modelAdapted.tables.map(table => ({
+        tables: modelAdapted.tables.map((table) => ({
           ...table,
           foreignKeys: [],
         })),
@@ -65,10 +77,18 @@ async function importDbFromFolder({ connection, systemConnection, driver, folder
         driver
       );
       // console.log('CREATING STRUCTURE:', sql);
-      await executeQuery({ connection, systemConnection: dbhan, driver, sql, logScriptItems: true });
+      await executeQuery({
+        connection,
+        systemConnection: dbhan,
+        driver,
+        sql,
+        logScriptItems: true,
+      });
 
       if (driver.dialect.enableAllForeignKeys) {
-        await runCommandOnDriver(dbhan, driver, dmp => dmp.enableAllForeignKeys(false));
+        await runCommandOnDriver(dbhan, driver, (dmp) =>
+          dmp.enableAllForeignKeys(false)
+        );
       }
 
       for (const table of modelAdapted.tables) {
@@ -86,7 +106,9 @@ async function importDbFromFolder({ connection, systemConnection, driver, folder
       }
 
       if (driver.dialect.enableAllForeignKeys) {
-        await runCommandOnDriver(dbhan, driver, dmp => dmp.enableAllForeignKeys(true));
+        await runCommandOnDriver(dbhan, driver, (dmp) =>
+          dmp.enableAllForeignKeys(true)
+        );
       } else if (driver.dialect.createForeignKey) {
         const dmp = driver.createDumper();
         for (const table of modelAdapted.tables) {
@@ -96,13 +118,21 @@ async function importDbFromFolder({ connection, systemConnection, driver, folder
         }
 
         // create foreign keys
-        await executeQuery({ connection, systemConnection: dbhan, driver, sql: dmp.s, logScriptItems: true });
+        await executeQuery({
+          connection,
+          systemConnection: dbhan,
+          driver,
+          sql: dmp.s,
+          logScriptItems: true,
+        });
       }
-    } else if (driver?.databaseEngineTypes?.includes('document')) {
+    } else if (driver?.databaseEngineTypes?.includes("document")) {
       for (const file of fs.readdirSync(folder)) {
-        if (!file.endsWith('.jsonl')) continue;
+        if (!file.endsWith(".jsonl")) continue;
         const pureName = path.parse(file).name;
-        const src = await jsonLinesReader({ fileName: path.join(folder, file) });
+        const src = await jsonLinesReader({
+          fileName: path.join(folder, file),
+        });
         const dst = await tableWriter({
           systemConnection: dbhan,
           pureName,

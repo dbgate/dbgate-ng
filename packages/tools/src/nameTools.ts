@@ -1,5 +1,3 @@
-import _cloneDeep from 'lodash/cloneDeep';
-import _isString from 'lodash/isString';
 import type {
   ColumnInfo,
   ColumnReference,
@@ -8,7 +6,9 @@ import type {
   NamedObjectInfo,
   SqlDialect,
   TableInfo,
-} from 'dbgate-types';
+} from "dbgate-types";
+import _cloneDeep from "lodash/cloneDeep";
+import _isString from "lodash/isString";
 
 export function fullNameFromString(name) {
   const m = name.match(/\[([^\]]+)\]\.\[([^\]]+)\]/);
@@ -39,17 +39,20 @@ export function fullNameToLabel({ schemaName, pureName }) {
 }
 
 export function quoteFullName(dialect, { schemaName, pureName }) {
-  if (schemaName) return `${dialect.quoteIdentifier(schemaName)}.${dialect.quoteIdentifier(pureName)}`;
+  if (schemaName)
+    return `${dialect.quoteIdentifier(schemaName)}.${dialect.quoteIdentifier(pureName)}`;
   return `${dialect.quoteIdentifier(pureName)}`;
 }
 
 export function equalStringLike(s1, s2) {
-  return (s1 || '').toLowerCase().trim() == (s2 || '').toLowerCase().trim();
+  return (s1 || "").toLowerCase().trim() === (s2 || "").toLowerCase().trim();
 }
 
 export function equalFullName(name1: NamedObjectInfo, name2: NamedObjectInfo) {
-  if (!name1 || !name2) return name1 == name2;
-  return name1.pureName == name2.pureName && name1.schemaName == name2.schemaName;
+  if (!name1 || !name2) return name1 === name2;
+  return (
+    name1.pureName === name2.pureName && name1.schemaName === name2.schemaName
+  );
 }
 
 export function findObjectLike(
@@ -61,18 +64,29 @@ export function findObjectLike(
   if (schemaName) {
     // @ts-ignore
     return dbinfo[objectTypeField]?.find(
-      x => equalStringLike(x.pureName, pureName) && equalStringLike(x.schemaName, schemaName)
+      (x) =>
+        equalStringLike(x.pureName, pureName) &&
+        equalStringLike(x.schemaName, schemaName)
     );
   }
   // @ts-ignore
-  return dbinfo[objectTypeField]?.find(x => equalStringLike(x.pureName, pureName));
+  return dbinfo[objectTypeField]?.find((x) =>
+    equalStringLike(x.pureName, pureName)
+  );
 }
 
-export function findForeignKeyForColumn(table: TableInfo, column: ColumnInfo | string) {
+export function findForeignKeyForColumn(
+  table: TableInfo,
+  column: ColumnInfo | string
+) {
   if (_isString(column)) {
-    return (table.foreignKeys || []).find(fk => fk.columns.find(col => col.columnName == column));
+    return (table.foreignKeys || []).find((fk) =>
+      fk.columns.find((col) => col.columnName === column)
+    );
   }
-  return (table.foreignKeys || []).find(fk => fk.columns.find(col => col.columnName == column.columnName));
+  return (table.foreignKeys || []).find((fk) =>
+    fk.columns.find((col) => col.columnName === column.columnName)
+  );
 }
 
 export function makeUniqueColumnNames(res: ColumnInfo[]) {
@@ -87,27 +101,35 @@ export function makeUniqueColumnNames(res: ColumnInfo[]) {
   }
 }
 
-function columnsConstraintName(prefix: string, table: TableInfo, columns: ColumnReference[]) {
-  return `${prefix}_${table.pureName}_${columns.map(x => x.columnName.replace(' ', '_')).join('_')}`;
+function columnsConstraintName(
+  prefix: string,
+  table: TableInfo,
+  columns: ColumnReference[]
+) {
+  return `${prefix}_${table.pureName}_${columns.map((x) => x.columnName.replace(" ", "_")).join("_")}`;
 }
 
 export function fillConstraintNames(table: TableInfo, dialect: SqlDialect) {
   if (!table) return table;
   const res = _cloneDeep(table);
-  if (res.primaryKey && !res.primaryKey.constraintName && !dialect.anonymousPrimaryKey) {
+  if (
+    res.primaryKey &&
+    !res.primaryKey.constraintName &&
+    !dialect.anonymousPrimaryKey
+  ) {
     res.primaryKey.constraintName = `PK_${res.pureName}`;
   }
   for (const fk of res.foreignKeys || []) {
     if (fk.constraintName) continue;
-    fk.constraintName = columnsConstraintName('FK', res, fk.columns);
+    fk.constraintName = columnsConstraintName("FK", res, fk.columns);
   }
   for (const ix of res.indexes || []) {
     if (ix.constraintName) continue;
-    ix.constraintName = columnsConstraintName('IX', res, ix.columns);
+    ix.constraintName = columnsConstraintName("IX", res, ix.columns);
   }
   for (const uq of res.uniques || []) {
     if (uq.constraintName) continue;
-    uq.constraintName = columnsConstraintName('UQ', res, uq.columns);
+    uq.constraintName = columnsConstraintName("UQ", res, uq.columns);
   }
   return res;
 }

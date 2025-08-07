@@ -1,4 +1,4 @@
-const readline = require('readline');
+const readline = require("node:readline");
 
 class Queue {
   constructor() {
@@ -38,7 +38,7 @@ class LineReader {
     });
     this.input.pause();
 
-    this.rl.on('line', line => {
+    this.rl.on("line", (line) => {
       this.input.pause();
       if (this.resolve) {
         const resolve = this.resolve;
@@ -49,7 +49,7 @@ class LineReader {
       this.queue.enqueue(line);
     });
 
-    this.rl.on('close', () => {
+    this.rl.on("close", () => {
       if (this.resolve) {
         const resolve = this.resolve;
         this.resolve = null;
@@ -74,14 +74,14 @@ class LineReader {
 
     this.input.resume();
 
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       this.resolve = resolve;
     });
   }
 
   close() {
     this.isEnded = true;
-    return new Promise(resolve => this.input.close(resolve));
+    return new Promise((resolve) => this.input.close(resolve));
   }
 }
 

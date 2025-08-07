@@ -1,4 +1,4 @@
-import { ParameterInfo, SchedulerEventInfo, TriggerInfo } from './dbinfo';
+import { ParameterInfo, SchedulerEventInfo, TriggerInfo } from "./dbinfo";
 
 export type TestObjectInfo = {
   type: string;

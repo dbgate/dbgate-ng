@@ -1,11 +1,11 @@
-const stream = require('stream');
+const stream = require("node:stream");
 
 class EnsureStreamHeaderStream extends stream.Transform {
   constructor() {
     super({ objectMode: true });
     this.wasHeader = false;
   }
-  _transform(chunk, encoding, done) {
+  _transform(chunk, _encoding, done) {
     if (!this.wasHeader) {
       if (chunk.__isDynamicStructure) {
         // ignore dynamic structure header
@@ -17,7 +17,7 @@ class EnsureStreamHeaderStream extends stream.Transform {
         this.push({
           __isStreamHeader: true,
           __isComputedStructure: true,
-          columns: Object.keys(chunk).map(columnName => ({ columnName })),
+          columns: Object.keys(chunk).map((columnName) => ({ columnName })),
         });
       }
 

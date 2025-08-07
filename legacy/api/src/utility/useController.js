@@ -1,10 +1,10 @@
-const _ = require('lodash');
-const express = require('express');
-const getExpressPath = require('./getExpressPath');
-const { MissingCredentialsError } = require('./exceptions');
-const { getLogger, extractErrorLogData } = require('dbgate-tools');
+const _ = require("lodash");
+const express = require("express");
+const getExpressPath = require("./getExpressPath");
+const { MissingCredentialsError } = require("./exceptions");
+const { getLogger, extractErrorLogData } = require("dbgate-tools");
 
-const logger = getLogger('useController');
+const logger = getLogger("useController");
 /**
  * @param {string} route
  */
@@ -16,7 +16,10 @@ module.exports = function useController(app, electron, route, controller) {
     try {
       controller._init();
     } catch (err) {
-      logger.error(extractErrorLogData(err), `DBGM-00097 Error initializing controller, exiting application`);
+      logger.error(
+        extractErrorLogData(err),
+        `DBGM-00097 Error initializing controller, exiting application`
+      );
       process.exit(1);
     }
   }
@@ -33,7 +36,7 @@ module.exports = function useController(app, electron, route, controller) {
       if (meta === true) {
         const handler = `${route.substring(1)}-${_.kebabCase(key)}`;
         // console.log('REGISTERING HANDLER', handler);
-        electron.ipcMain.handle(handler, async (event, args) => {
+        electron.ipcMain.handle(handler, async (_event, args) => {
           try {
             const data = await controller[key](args);
             // console.log('HANDLED API', handler, data);
@@ -43,7 +46,7 @@ module.exports = function useController(app, electron, route, controller) {
             if (err instanceof MissingCredentialsError) {
               return {
                 missingCredentials: true,
-                apiErrorMessage: 'Missing credentials',
+                apiErrorMessage: "Missing credentials",
                 detail: err.detail,
               };
             }
@@ -55,7 +58,7 @@ module.exports = function useController(app, electron, route, controller) {
       continue;
     }
 
-    let method = 'post';
+    let method = "post";
     let raw = false;
 
     // if (_.isString(meta)) {
@@ -75,18 +78,27 @@ module.exports = function useController(app, electron, route, controller) {
         //   controller._init_called = true;
         // }
         try {
-          const data = await controller[key]({ ...req.body, ...req.query }, req);
+          const data = await controller[key](
+            { ...req.body, ...req.query },
+            req
+          );
           res.json(data);
         } catch (err) {
-          logger.error(extractErrorLogData(err), `DBGM-00176 Error when processing route ${route}/${key}`);
+          logger.error(
+            extractErrorLogData(err),
+            `DBGM-00176 Error when processing route ${route}/${key}`
+          );
           if (err instanceof MissingCredentialsError) {
             res.json({
               missingCredentials: true,
-              apiErrorMessage: 'Missing credentials',
+              apiErrorMessage: "Missing credentials",
               detail: err.detail,
             });
           } else {
-            res.status(500).json({ apiErrorMessage: (_.isString(err) ? err : err.message) ?? 'Unknown error' });
+            res.status(500).json({
+              apiErrorMessage:
+                (_.isString(err) ? err : err.message) ?? "Unknown error",
+            });
           }
         }
       });

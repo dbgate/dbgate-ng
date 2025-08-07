@@ -1,14 +1,14 @@
-const fs = require('fs');
-const stream = require('stream');
-const byline = require('byline');
-const { getLogger } = require('dbgate-tools');
-const { parser } = require('stream-json');
-const { pick } = require('stream-json/filters/Pick');
-const { streamArray } = require('stream-json/streamers/StreamArray');
-const { streamObject } = require('stream-json/streamers/StreamObject');
-const download = require('./download');
+const fs = require("node:fs");
+const stream = require("node:stream");
+const _byline = require("byline");
+const { getLogger } = require("dbgate-tools");
+const { parser } = require("stream-json");
+const { pick } = require("stream-json/filters/Pick");
+const { streamArray } = require("stream-json/streamers/StreamArray");
+const { streamObject } = require("stream-json/streamers/StreamObject");
+const download = require("./download");
 
-const logger = getLogger('jsonReader');
+const logger = getLogger("jsonReader");
 
 class ParseStream extends stream.Transform {
   constructor({ limitRows, jsonStyle, keyField }) {
@@ -16,10 +16,10 @@ class ParseStream extends stream.Transform {
     this.wasHeader = false;
     this.limitRows = limitRows;
     this.jsonStyle = jsonStyle;
-    this.keyField = keyField || '_key';
+    this.keyField = keyField || "_key";
     this.rowsWritten = 0;
   }
-  _transform(chunk, encoding, done) {
+  _transform(chunk, _encoding, done) {
     if (!this.wasHeader) {
       this.push({
         __isStreamHeader: true,
@@ -29,7 +29,7 @@ class ParseStream extends stream.Transform {
       this.wasHeader = true;
     }
     if (!this.limitRows || this.rowsWritten < this.limitRows) {
-      if (this.jsonStyle === 'object') {
+      if (this.jsonStyle === "object") {
         this.push({
           ...chunk.value,
           [this.keyField]: chunk.key,
@@ -58,9 +58,9 @@ class ParseStream extends stream.Transform {
 async function jsonReader({
   fileName,
   jsonStyle,
-  keyField = '_key',
+  keyField = "_key",
   rootField = null,
-  encoding = 'utf-8',
+  encoding = "utf-8",
   limitRows = undefined,
 }) {
   logger.info(`DBGM-00056 Reading file ${fileName}`);
@@ -80,7 +80,7 @@ async function jsonReader({
 
   const parseStream = new ParseStream({ limitRows, jsonStyle, keyField });
 
-  const tramsformer = jsonStyle === 'object' ? streamObject() : streamArray();
+  const tramsformer = jsonStyle === "object" ? streamObject() : streamArray();
 
   if (rootField) {
     const filterStream = pick({ filter: rootField });

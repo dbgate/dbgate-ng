@@ -1,19 +1,27 @@
-const crypto = require('crypto');
-const path = require('path');
-const fs = require('fs');
-const _ = require('lodash');
-const childProcessChecker = require('../utility/childProcessChecker');
-const { splitQuery } = require('dbgate-query-splitter');
+const _crypto = require("node:crypto");
+const _path = require("node:path");
+const fs = require("node:fs");
+const _ = require("lodash");
+const childProcessChecker = require("../utility/childProcessChecker");
+const { splitQuery } = require("dbgate-query-splitter");
 
-const { jsldir } = require('../utility/directories');
-const requireEngineDriver = require('../utility/requireEngineDriver');
-const { decryptConnection } = require('../utility/crypting');
-const { connectUtility } = require('../utility/connectUtility');
-const { handleProcessCommunication } = require('../utility/processComm');
-const { getLogger, extractIntSettingsValue, extractBoolSettingsValue } = require('dbgate-tools');
-const { handleQueryStream, QueryStreamTableWriter, allowExecuteCustomScript } = require('../utility/handleQueryStream');
+const { jsldir } = require("../utility/directories");
+const requireEngineDriver = require("../utility/requireEngineDriver");
+const { decryptConnection } = require("../utility/crypting");
+const { connectUtility } = require("../utility/connectUtility");
+const { handleProcessCommunication } = require("../utility/processComm");
+const {
+  getLogger,
+  extractIntSettingsValue,
+  extractBoolSettingsValue,
+} = require("dbgate-tools");
+const {
+  handleQueryStream,
+  QueryStreamTableWriter,
+  allowExecuteCustomScript,
+} = require("../utility/handleQueryStream");
 
-const logger = getLogger('sessionProcess');
+const logger = getLogger("sessionProcess");
 
 let dbhan;
 let storedConnection;
@@ -28,7 +36,7 @@ async function handleConnect(connection) {
   storedConnection = connection;
 
   const driver = requireEngineDriver(storedConnection);
-  dbhan = await connectUtility(driver, storedConnection, 'app');
+  dbhan = await connectUtility(driver, storedConnection, "app");
   for (const [resolve] of afterConnectCallbacks) {
     resolve();
   }
@@ -49,13 +57,13 @@ function waitConnected() {
 }
 
 async function handleStartProfiler({ jslid }) {
-  lastActivity = new Date().getTime();
+  lastActivity = Date.now();
 
   await waitConnected();
   const driver = requireEngineDriver(storedConnection);
 
   if (!allowExecuteCustomScript(storedConnection, driver)) {
-    process.send({ msgtype: 'done' });
+    process.send({ msgtype: "done" });
     return;
   }
 
@@ -63,13 +71,13 @@ async function handleStartProfiler({ jslid }) {
   writer.initializeFromReader(jslid);
 
   currentProfiler = await driver.startProfiler(dbhan, {
-    row: data => writer.rowFromReader(data),
+    row: (data) => writer.rowFromReader(data),
   });
   currentProfiler.writer = writer;
 }
 
 async function handleStopProfiler({ jslid }) {
-  lastActivity = new Date().getTime();
+  lastActivity = Date.now();
 
   const driver = requireEngineDriver(storedConnection);
   currentProfiler.writer.close();
@@ -78,20 +86,23 @@ async function handleStopProfiler({ jslid }) {
 }
 
 async function handleExecuteControlCommand({ command }) {
-  lastActivity = new Date().getTime();
+  lastActivity = Date.now();
 
   await waitConnected();
   const driver = requireEngineDriver(storedConnection);
 
-  if (command == 'commitTransaction' && !allowExecuteCustomScript(storedConnection, driver)) {
+  if (
+    command === "commitTransaction" &&
+    !allowExecuteCustomScript(storedConnection, driver)
+  ) {
     process.send({
-      msgtype: 'info',
+      msgtype: "info",
       info: {
-        message: 'Connection without read-only sessions is read only',
-        severity: 'error',
+        message: "Connection without read-only sessions is read only",
+        severity: "error",
       },
     });
-    process.send({ msgtype: 'done', skipFinishedMessage: true });
+    process.send({ msgtype: "done", skipFinishedMessage: true });
     return;
     //process.send({ msgtype: 'error', error: e.message });
   }
@@ -100,38 +111,44 @@ async function handleExecuteControlCommand({ command }) {
   try {
     const dmp = driver.createDumper();
     switch (command) {
-      case 'commitTransaction':
+      case "commitTransaction":
         await dmp.commitTransaction();
         break;
-      case 'rollbackTransaction':
+      case "rollbackTransaction":
         await dmp.rollbackTransaction();
         break;
-      case 'beginTransaction':
+      case "beginTransaction":
         await dmp.beginTransaction();
         break;
     }
     await driver.query(dbhan, dmp.s, { discardResult: true });
-    process.send({ msgtype: 'done', controlCommand: command });
+    process.send({ msgtype: "done", controlCommand: command });
   } finally {
     executingScripts--;
   }
 }
 
-async function handleExecuteQuery({ sql, autoCommit, autoDetectCharts, limitRows, frontMatter }) {
-  lastActivity = new Date().getTime();
+async function handleExecuteQuery({
+  sql,
+  autoCommit,
+  autoDetectCharts,
+  limitRows,
+  frontMatter,
+}) {
+  lastActivity = Date.now();
 
   await waitConnected();
   const driver = requireEngineDriver(storedConnection);
 
   if (!allowExecuteCustomScript(storedConnection, driver)) {
     process.send({
-      msgtype: 'info',
+      msgtype: "info",
       info: {
-        message: 'Connection without read-only sessions is read only',
-        severity: 'error',
+        message: "Connection without read-only sessions is read only",
+        severity: "error",
       },
     });
-    process.send({ msgtype: 'done', skipFinishedMessage: true });
+    process.send({ msgtype: "done", skipFinishedMessage: true });
     return;
     //process.send({ msgtype: 'error', error: e.message });
   }
@@ -143,7 +160,7 @@ async function handleExecuteQuery({ sql, autoCommit, autoDetectCharts, limitRows
       canceled: false,
     };
     for (const sqlItem of splitQuery(sql, {
-      ...driver.getQuerySplitterOptions('stream'),
+      ...driver.getQuerySplitterOptions("stream"),
       returnRichInfo: true,
     })) {
       await handleQueryStream(
@@ -165,24 +182,24 @@ async function handleExecuteQuery({ sql, autoCommit, autoDetectCharts, limitRows
         break;
       }
     }
-    process.send({ msgtype: 'done', autoCommit });
+    process.send({ msgtype: "done", autoCommit });
   } finally {
     executingScripts--;
   }
 }
 
 async function handleExecuteReader({ jslid, sql, fileName }) {
-  lastActivity = new Date().getTime();
+  lastActivity = Date.now();
 
   await waitConnected();
 
   const driver = requireEngineDriver(storedConnection);
 
   if (fileName) {
-    sql = fs.readFileSync(fileName, 'utf-8');
+    sql = fs.readFileSync(fileName, "utf-8");
   } else {
     if (!allowExecuteCustomScript(storedConnection, driver)) {
-      process.send({ msgtype: 'done' });
+      process.send({ msgtype: "done" });
       return;
     }
   }
@@ -192,18 +209,18 @@ async function handleExecuteReader({ jslid, sql, fileName }) {
 
   const reader = await driver.readQuery(dbhan, sql);
 
-  reader.on('data', data => {
+  reader.on("data", (data) => {
     writer.rowFromReader(data);
   });
-  reader.on('end', () => {
+  reader.on("end", () => {
     writer.close(() => {
-      process.send({ msgtype: 'done' });
+      process.send({ msgtype: "done" });
     });
   });
 }
 
 function handlePing() {
-  lastPing = new Date().getTime();
+  lastPing = Date.now();
 }
 
 const messageHandlers = {
@@ -225,48 +242,56 @@ async function handleMessage({ msgtype, ...other }) {
 function start() {
   childProcessChecker();
 
-  lastPing = new Date().getTime();
+  lastPing = Date.now();
 
   setInterval(async () => {
-    const time = new Date().getTime();
+    const time = Date.now();
     if (time - lastPing > 25 * 1000) {
-      logger.info('DBGM-00045 Session not alive, exiting');
+      logger.info("DBGM-00045 Session not alive, exiting");
       const driver = requireEngineDriver(storedConnection);
       await driver.close(dbhan);
       process.exit(0);
     }
 
-    const useSessionTimeout =
-      storedConnection && storedConnection.globalSettings
-        ? extractBoolSettingsValue(storedConnection.globalSettings, 'session.autoClose', true)
-        : false;
-    const sessionTimeout =
-      storedConnection && storedConnection.globalSettings
-        ? extractIntSettingsValue(storedConnection.globalSettings, 'session.autoCloseTimeout', 15, 1, 120)
-        : 15;
+    const useSessionTimeout = storedConnection?.globalSettings
+      ? extractBoolSettingsValue(
+          storedConnection.globalSettings,
+          "session.autoClose",
+          true
+        )
+      : false;
+    const sessionTimeout = storedConnection?.globalSettings
+      ? extractIntSettingsValue(
+          storedConnection.globalSettings,
+          "session.autoCloseTimeout",
+          15,
+          1,
+          120
+        )
+      : 15;
     if (
       useSessionTimeout &&
       time - lastActivity > sessionTimeout * 60 * 1000 &&
       !currentProfiler &&
-      executingScripts == 0
+      executingScripts === 0
     ) {
-      logger.info('DBGM-00046 Session not active, exiting');
+      logger.info("DBGM-00046 Session not active, exiting");
       const driver = requireEngineDriver(storedConnection);
       await driver.close(dbhan);
       process.exit(0);
     }
   }, 10 * 1000);
 
-  process.on('message', async message => {
+  process.on("message", async (message) => {
     if (handleProcessCommunication(message)) return;
     try {
       await handleMessage(message);
     } catch (e) {
       process.send({
-        msgtype: 'info',
+        msgtype: "info",
         info: {
           message: e.message,
-          severity: 'error',
+          severity: "error",
         },
       });
       //process.send({ msgtype: 'error', error: e.message });

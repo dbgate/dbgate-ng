@@ -1,10 +1,14 @@
-import type { NamedObjectInfo, RangeDefinition, TransformType } from 'dbgate-types';
+import type {
+  NamedObjectInfo,
+  RangeDefinition,
+  TransformType,
+} from "dbgate-types";
 
 // export interface Command {
 // }
 
 export interface Select {
-  commandType: 'select';
+  commandType: "select";
 
   from: FromDefinition;
 
@@ -22,7 +26,7 @@ export interface Select {
 export type UpdateField = Expression & { targetColumn: string };
 
 export interface Update {
-  commandType: 'update';
+  commandType: "update";
   fields: UpdateField[];
   from: FromDefinition;
   where?: Condition;
@@ -31,7 +35,7 @@ export interface Update {
 }
 
 export interface Delete {
-  commandType: 'delete';
+  commandType: "delete";
   from: FromDefinition;
   where?: Condition;
 
@@ -40,14 +44,14 @@ export interface Delete {
 }
 
 export interface Insert {
-  commandType: 'insert';
+  commandType: "insert";
   fields: UpdateField[];
   targetTable: NamedObjectInfo;
   insertWhereNotExistsCondition?: Condition;
 }
 
 export interface AllowIdentityInsert {
-  commandType: 'allowIdentityInsert';
+  commandType: "allowIdentityInsert";
   targetTable: NamedObjectInfo;
   allow: boolean;
 }
@@ -64,77 +68,77 @@ export interface UnaryCondition {
 
 export interface ExpressionCondition extends UnaryCondition {
   // not in standard SQL
-  conditionType: 'expression';
+  conditionType: "expression";
 }
 
 export interface BinaryCondition {
-  conditionType: 'binary';
-  operator: '=' | '!=' | '<>' | '<' | '>' | '>=' | '<=';
+  conditionType: "binary";
+  operator: "=" | "!=" | "<>" | "<" | ">" | ">=" | "<=";
   left: Expression;
   right: Expression;
 }
 
 export interface LikeCondition {
-  conditionType: 'like' | 'notLike';
+  conditionType: "like" | "notLike";
   left: Expression;
   right: Expression;
 }
 
 export interface NotCondition {
-  conditionType: 'not';
+  conditionType: "not";
   condition: Condition;
 }
 
 export interface TestCondition extends UnaryCondition {
-  conditionType: 'isNull' | 'isNotNull' | 'isEmpty' | 'isNotEmpty';
+  conditionType: "isNull" | "isNotNull" | "isEmpty" | "isNotEmpty";
 }
 
 export interface SpecificPredicateCondition extends UnaryCondition {
-  conditionType: 'specificPredicate';
+  conditionType: "specificPredicate";
   predicate: string;
 }
 
 export interface CompoudCondition {
-  conditionType: 'and' | 'or';
+  conditionType: "and" | "or";
   conditions: Condition[];
 }
 
 export interface ExistsCondition {
-  conditionType: 'exists';
+  conditionType: "exists";
   subQuery: Select;
 }
 export interface NotExistsCondition {
-  conditionType: 'notExists';
+  conditionType: "notExists";
   subQuery: Select;
 }
 
 export interface BetweenCondition {
-  conditionType: 'between';
+  conditionType: "between";
   expr: Expression;
   left: Expression;
   right: Expression;
 }
 
 export interface InCondition {
-  conditionType: 'in';
+  conditionType: "in";
   expr: Expression;
   values: any[];
 }
 
 export interface NotInCondition {
-  conditionType: 'notIn';
+  conditionType: "notIn";
   expr: Expression;
   values: any[];
 }
 
 export interface RawTemplateCondition {
-  conditionType: 'rawTemplate';
+  conditionType: "rawTemplate";
   templateSql: string;
   expr: Expression;
 }
 
 export interface AnyColumnPassEvalOnlyCondition {
-  conditionType: 'anyColumnPass';
+  conditionType: "anyColumnPass";
   placeholderCondition: Condition;
 }
 
@@ -161,7 +165,7 @@ export interface Source {
   subQueryString?: string;
 }
 
-export type JoinType = 'LEFT JOIN' | 'INNER JOIN' | 'RIGHT JOIN' | 'CROSS JOIN';
+export type JoinType = "LEFT JOIN" | "INNER JOIN" | "RIGHT JOIN" | "CROSS JOIN";
 
 export type Relation = Source & {
   conditions?: Condition[];
@@ -174,55 +178,55 @@ export type FromDefinition = Source & { relations?: Relation[] };
 // }
 
 export interface ColumnRefExpression {
-  exprType: 'column';
+  exprType: "column";
   columnName: string;
   source?: Source;
 }
 
 export interface ValueExpression {
-  exprType: 'value';
+  exprType: "value";
   value: any;
   dataType?: string;
 }
 
 export interface PlaceholderExpression {
-  exprType: 'placeholder';
+  exprType: "placeholder";
 }
 
 export interface RawExpression {
-  exprType: 'raw';
+  exprType: "raw";
   sql: string;
 }
 
 export interface UnaryRawExpression {
-  exprType: 'unaryRaw';
+  exprType: "unaryRaw";
   expr: Expression;
   beforeSql?: string;
   afterSql?: string;
 }
 
 export interface CallExpression {
-  exprType: 'call';
+  exprType: "call";
   func: string;
   args: Expression[];
   argsPrefix?: string; // DISTINCT in case of COUNT DISTINCT
 }
 
 export interface MethodCallExpression {
-  exprType: 'methodCall';
+  exprType: "methodCall";
   method: string;
   args: Expression[];
   thisObject: Expression;
 }
 
 export interface TranformExpression {
-  exprType: 'transform';
+  exprType: "transform";
   expr: Expression;
   transform: TransformType;
 }
 
 export interface RowNumberExpression {
-  exprType: 'rowNumber';
+  exprType: "rowNumber";
   orderBy: OrderByExpression[];
 }
 
@@ -236,6 +240,6 @@ export type Expression =
   | MethodCallExpression
   | TranformExpression
   | RowNumberExpression;
-export type OrderByExpression = Expression & { direction: 'ASC' | 'DESC' };
+export type OrderByExpression = Expression & { direction: "ASC" | "DESC" };
 
 export type ResultField = Expression & { alias?: string };

@@ -63,10 +63,10 @@ export type Files_Rename_Request = {
   response: boolean;
 };
 
-export type Files_Request = 
-  | Files_List_Request 
-  | Files_Read_Request 
-  | Files_Write_Request 
-  | Files_Delete_Request 
-  | Files_CreateFolder_Request 
+export type Files_Request =
+  | Files_List_Request
+  | Files_Read_Request
+  | Files_Write_Request
+  | Files_Delete_Request
+  | Files_CreateFolder_Request
   | Files_Rename_Request;

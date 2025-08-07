@@ -1,5 +1,5 @@
-const importDbModel = require('../utility/importDbModel');
-const fs = require('fs');
+const importDbModel = require("../utility/importDbModel");
+const fs = require("node:fs");
 
 async function dbModelToJson({ modelFolder, outputFile, commonjs }) {
   const dbInfo = await importDbModel(modelFolder);

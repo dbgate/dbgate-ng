@@ -1,20 +1,32 @@
-const { setLogConfig, getLogger, setLoggerName, extractErrorLogData } = require('dbgate-tools');
-const processArgs = require('./utility/processArgs');
-const fs = require('fs');
-const moment = require('moment');
-const path = require('path');
-const { logsdir, setLogsFilePath, getLogsFilePath } = require('./utility/directories');
-const currentVersion = require('./currentVersion');
+const {
+  setLogConfig,
+  getLogger,
+  setLoggerName,
+  extractErrorLogData,
+} = require("dbgate-tools");
+const processArgs = require("./utility/processArgs");
+const fs = require("node:fs");
+const moment = require("moment");
+const path = require("node:path");
+const {
+  logsdir,
+  setLogsFilePath,
+  getLogsFilePath,
+} = require("./utility/directories");
+const currentVersion = require("./currentVersion");
 
-const logger = getLogger('apiIndex');
+const logger = getLogger("apiIndex");
 
-process.on('uncaughtException', err => {
-  logger.fatal(extractErrorLogData(err), 'DBGM-00259 Uncaught exception, exiting process');
+process.on("uncaughtException", (err) => {
+  logger.fatal(
+    extractErrorLogData(err),
+    "DBGM-00259 Uncaught exception, exiting process"
+  );
   process.exit(1);
 });
 
 if (processArgs.startProcess) {
-  setLoggerName(processArgs.startProcess.replace(/Process$/, ''));
+  setLoggerName(processArgs.startProcess.replace(/Process$/, ""));
 }
 if (processArgs.processDisplayName) {
   setLoggerName(processArgs.processDisplayName);
@@ -33,15 +45,23 @@ if (processArgs.processDisplayName) {
 // }
 
 function configureLogger() {
-  const { initializeRecentLogProvider, pushToRecentLogs } = require('./utility/appLogStore');
+  const {
+    initializeRecentLogProvider,
+    pushToRecentLogs,
+  } = require("./utility/appLogStore");
   initializeRecentLogProvider();
 
-  const logsFilePath = path.join(logsdir(), `${moment().format('YYYY-MM-DD-HH-mm')}-${process.pid}.ndjson`);
+  const logsFilePath = path.join(
+    logsdir(),
+    `${moment().format("YYYY-MM-DD-HH-mm")}-${process.pid}.ndjson`
+  );
   setLogsFilePath(logsFilePath);
-  setLoggerName('main');
+  setLoggerName("main");
 
-  const consoleLogLevel = process.env.CONSOLE_LOG_LEVEL || process.env.LOG_LEVEL || 'info';
-  const fileLogLevel = process.env.FILE_LOG_LEVEL || process.env.LOG_LEVEL || 'debug';
+  const consoleLogLevel =
+    process.env.CONSOLE_LOG_LEVEL || process.env.LOG_LEVEL || "info";
+  const fileLogLevel =
+    process.env.FILE_LOG_LEVEL || process.env.LOG_LEVEL || "debug";
 
   const streamsByDatePart = {};
 
@@ -49,36 +69,38 @@ function configureLogger() {
     base: { pid: process.pid },
     targets: [
       {
-        type: 'console',
+        type: "console",
         // @ts-ignore
         level: consoleLogLevel,
       },
       {
-        type: 'objstream',
+        type: "objstream",
         // @ts-ignore
         level: fileLogLevel,
         objstream: {
           send(msg) {
-            const datePart = moment(msg.time).format('YYYY-MM-DD');
+            const datePart = moment(msg.time).format("YYYY-MM-DD");
             if (!streamsByDatePart[datePart]) {
               streamsByDatePart[datePart] = fs.createWriteStream(
-                path.join(logsdir(), `${moment().format('YYYY-MM-DD-HH-mm')}-${process.pid}.ndjson`),
-                { flags: 'a' }
+                path.join(
+                  logsdir(),
+                  `${moment().format("YYYY-MM-DD-HH-mm")}-${process.pid}.ndjson`
+                ),
+                { flags: "a" }
               );
             }
             const additionals = {};
-            const finalMsg =
-              msg.msg && msg.msg.match(/^DBGM-\d\d\d\d\d/)
-                ? {
-                    ...msg,
-                    msg: msg.msg.substring(10).trimStart(),
-                    msgcode: msg.msg.substring(0, 10),
-                    ...additionals,
-                  }
-                : {
-                    ...msg,
-                    ...additionals,
-                  };
+            const finalMsg = msg.msg?.match(/^DBGM-\d\d\d\d\d/)
+              ? {
+                  ...msg,
+                  msg: msg.msg.substring(10).trimStart(),
+                  msgcode: msg.msg.substring(0, 10),
+                  ...additionals,
+                }
+              : {
+                  ...msg,
+                  ...additionals,
+                };
             streamsByDatePart[datePart].write(`${JSON.stringify(finalMsg)}\n`);
             pushToRecentLogs(finalMsg);
           },
@@ -131,31 +153,33 @@ function configureLogger() {
 
 if (processArgs.listenApi) {
   configureLogger();
-  logger.info(`DBGM-00026 Starting API process version ${currentVersion.version}`);
+  logger.info(
+    `DBGM-00026 Starting API process version ${currentVersion.version}`
+  );
 
   if (process.env.DEBUG_PRINT_ENV_VARIABLES) {
-    logger.info('DBGM-00027 Debug print environment variables:');
+    logger.info("DBGM-00027 Debug print environment variables:");
     for (const key of Object.keys(process.env)) {
       logger.info(`  ${key}: ${JSON.stringify(process.env[key])}`);
     }
   }
 }
 
-const shell = require('./shell/index');
+const shell = require("./shell/index");
 
 global.DBGATE_PACKAGES = {
-  'dbgate-tools': require('dbgate-tools'),
-  'dbgate-sqltree': require('dbgate-sqltree'),
+  "dbgate-tools": require("dbgate-tools"),
+  "dbgate-sqltree": require("dbgate-sqltree"),
 };
 
 if (processArgs.startProcess) {
-  const proc = require('./proc');
+  const proc = require("./proc");
   const module = proc[processArgs.startProcess];
   module.start();
 }
 
 if (processArgs.listenApi) {
-  const main = require('./main');
+  const main = require("./main");
   main.start();
 }
 
@@ -165,5 +189,5 @@ module.exports = {
   configureLogger,
   currentVersion,
   // loadLogsContent,
-  getMainModule: () => require('./main'),
+  getMainModule: () => require("./main"),
 };

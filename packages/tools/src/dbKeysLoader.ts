@@ -1,5 +1,4 @@
-import _omit from 'lodash/omit';
-import _sortBy from 'lodash/sortBy';
+import _sortBy from "lodash/sortBy";
 
 export const DB_KEYS_SHOW_INCREMENT = 100;
 
@@ -14,12 +13,20 @@ export interface DbKeysNodeModelBase {
 }
 
 export interface DbKeysLeafNodeModel extends DbKeysNodeModelBase {
-  type: 'string' | 'hash' | 'set' | 'list' | 'zset' | 'stream' | 'binary' | 'ReJSON-RL';
+  type:
+    | "string"
+    | "hash"
+    | "set"
+    | "list"
+    | "zset"
+    | "stream"
+    | "binary"
+    | "ReJSON-RL";
 }
 
 export interface DbKeysFolderNodeModel extends DbKeysNodeModelBase {
   // root: string;
-  type: 'dir';
+  type: "dir";
   // visibleCount?: number;
   // isExpanded?: boolean;
 }
@@ -50,7 +57,15 @@ export type DbKeysNodeModel = DbKeysLeafNodeModel | DbKeysFolderNodeModel;
 export interface DbKeyLoadedModel {
   key: string;
 
-  type: 'string' | 'hash' | 'set' | 'list' | 'zset' | 'stream' | 'binary' | 'ReJSON-RL';
+  type:
+    | "string"
+    | "hash"
+    | "set"
+    | "list"
+    | "zset"
+    | "stream"
+    | "binary"
+    | "ReJSON-RL";
   count?: number;
 }
 
@@ -155,7 +170,10 @@ export type DbKeysChangeModelFunction = (
 //   };
 // }
 
-export function dbKeys_mergeNextPage(tree: DbKeysTreeModel, nextPage: DbKeysLoadResult): DbKeysTreeModel {
+export function dbKeys_mergeNextPage(
+  tree: DbKeysTreeModel,
+  nextPage: DbKeysLoadResult
+): DbKeysTreeModel {
   const keyObjectsByKey = { ...tree.keyObjectsByKey };
 
   for (const keyObj of nextPage.keys) {
@@ -173,7 +191,7 @@ export function dbKeys_mergeNextPage(tree: DbKeysTreeModel, nextPage: DbKeysLoad
   const dirsByKey: { [key: string]: DbKeysFolderNodeModel } = {};
   const childrenByKey: { [key: string]: DbKeysNodeModel[] } = {};
 
-  dirsByKey[''] = tree.root;
+  dirsByKey[""] = tree.root;
 
   for (const keyObj of Object.values(keyObjectsByKey)) {
     const dirPath = keyObj.keyPath.slice(0, -1);
@@ -189,7 +207,7 @@ export function dbKeys_mergeNextPage(tree: DbKeysTreeModel, nextPage: DbKeysLoad
           level: keyObj.level - 1,
           keyPath: newDirPath,
           parentKey: newDirPath.slice(0, -1).join(tree.treeKeySeparator),
-          type: 'dir',
+          type: "dir",
           key: newDirKey,
           text: `${newDirPath[newDirPath.length - 1]}${tree.treeKeySeparator}*`,
           sortKey: newDirPath[newDirPath.length - 1],
@@ -207,7 +225,7 @@ export function dbKeys_mergeNextPage(tree: DbKeysTreeModel, nextPage: DbKeysLoad
   }
 
   for (const dirObj of Object.values(dirsByKey)) {
-    if (dirObj.key == '') {
+    if (dirObj.key === "") {
       continue;
     }
 
@@ -221,7 +239,7 @@ export function dbKeys_mergeNextPage(tree: DbKeysTreeModel, nextPage: DbKeysLoad
   }
 
   for (const key in childrenByKey) {
-    childrenByKey[key] = _sortBy(childrenByKey[key], 'sortKey');
+    childrenByKey[key] = _sortBy(childrenByKey[key], "sortKey");
   }
 
   return {
@@ -231,12 +249,16 @@ export function dbKeys_mergeNextPage(tree: DbKeysTreeModel, nextPage: DbKeysLoad
     childrenByKey,
     keyObjectsByKey,
     scannedKeys: tree.scannedKeys + tree.loadCount,
-    loadedAll: nextPage.nextCursor == '0',
+    loadedAll: nextPage.nextCursor === "0",
     dbsize: nextPage.dbsize,
   };
 }
 
-export function dbKeys_markNodeExpanded(tree: DbKeysTreeModel, root: string, isExpanded: boolean): DbKeysTreeModel {
+export function dbKeys_markNodeExpanded(
+  tree: DbKeysTreeModel,
+  root: string,
+  isExpanded: boolean
+): DbKeysTreeModel {
   const node = tree.dirStateByKey[root];
   return {
     ...tree,
@@ -250,7 +272,10 @@ export function dbKeys_markNodeExpanded(tree: DbKeysTreeModel, root: string, isE
   };
 }
 
-export function dbKeys_showNextItems(tree: DbKeysTreeModel, root: string): DbKeysTreeModel {
+export function dbKeys_showNextItems(
+  tree: DbKeysTreeModel,
+  root: string
+): DbKeysTreeModel {
   const node = tree.dirStateByKey[root];
   return {
     ...tree,
@@ -258,31 +283,35 @@ export function dbKeys_showNextItems(tree: DbKeysTreeModel, root: string): DbKey
       ...tree.dirStateByKey,
       [root]: {
         ...node,
-        visibleCount: (node?.visibleCount ?? DB_KEYS_SHOW_INCREMENT) + DB_KEYS_SHOW_INCREMENT,
+        visibleCount:
+          (node?.visibleCount ?? DB_KEYS_SHOW_INCREMENT) +
+          DB_KEYS_SHOW_INCREMENT,
       },
     },
   };
 }
 
-export function dbKeys_createNewModel(treeKeySeparator: string): DbKeysTreeModel {
+export function dbKeys_createNewModel(
+  treeKeySeparator: string
+): DbKeysTreeModel {
   const root: DbKeysFolderNodeModel = {
     level: 0,
-    type: 'dir',
+    type: "dir",
     keyPath: [],
-    parentKey: '',
-    key: '',
-    sortKey: '',
+    parentKey: "",
+    key: "",
+    sortKey: "",
   };
   return {
     treeKeySeparator,
     childrenByKey: {},
     keyObjectsByKey: {},
     dirsByKey: {
-      '': root,
+      "": root,
     },
     dirStateByKey: {
-      '': {
-        key: '',
+      "": {
+        key: "",
         visibleCount: DB_KEYS_SHOW_INCREMENT,
         isExpanded: true,
       },
@@ -290,7 +319,7 @@ export function dbKeys_createNewModel(treeKeySeparator: string): DbKeysTreeModel
     scannedKeys: 0,
     dbsize: 0,
     loadCount: 2000,
-    cursor: '0',
+    cursor: "0",
     root,
     loadedAll: false,
   };
@@ -302,11 +331,11 @@ export function dbKeys_clearLoadedData(tree: DbKeysTreeModel): DbKeysTreeModel {
     childrenByKey: {},
     keyObjectsByKey: {},
     dirsByKey: {
-      '': tree.root,
+      "": tree.root,
     },
     scannedKeys: 0,
     dbsize: 0,
-    cursor: '0',
+    cursor: "0",
     loadedAll: false,
   };
 }
@@ -326,7 +355,12 @@ export function dbKeys_clearLoadedData(tree: DbKeysTreeModel): DbKeysTreeModel {
 //   };
 // }
 
-function addFlatItems(tree: DbKeysTreeModel, root: string, res: DbKeysNodeModel[], visitedRoots: string[] = []) {
+function addFlatItems(
+  tree: DbKeysTreeModel,
+  root: string,
+  res: DbKeysNodeModel[],
+  visitedRoots: string[] = []
+) {
   const item = tree.dirStateByKey[root];
   if (!item?.isExpanded) {
     return false;
@@ -334,9 +368,9 @@ function addFlatItems(tree: DbKeysTreeModel, root: string, res: DbKeysNodeModel[
   const children = tree.childrenByKey[root] || [];
   for (const child of children) {
     res.push(child);
-    if (child.type == 'dir') {
+    if (child.type === "dir") {
       if (visitedRoots.includes(child.key)) {
-        console.warn('Redis: preventing infinite loop for root', child.key);
+        console.warn("Redis: preventing infinite loop for root", child.key);
         return false;
       }
       addFlatItems(tree, child.key, res, [...visitedRoots, root]);
@@ -346,6 +380,6 @@ function addFlatItems(tree: DbKeysTreeModel, root: string, res: DbKeysNodeModel[
 
 export function dbKeys_getFlatList(tree: DbKeysTreeModel) {
   const res: DbKeysNodeModel[] = [];
-  addFlatItems(tree, '', res);
+  addFlatItems(tree, "", res);
   return res;
 }

@@ -10,10 +10,6 @@
     "composite": true,
     "incremental": true
   },
-  "include": [
-    "src/**/*"
-  ],
-  "references": [
-    { "path": "../sqltree" }
-  ]    
+  "include": ["src/**/*"],
+  "references": [{ "path": "../sqltree" }]
 }

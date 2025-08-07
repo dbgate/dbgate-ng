@@ -1,20 +1,20 @@
-const crypto = require('crypto');
-const connections = require('./connections');
-const socket = require('../utility/socket');
-const { fork } = require('child_process');
-const _ = require('lodash');
-const AsyncLock = require('async-lock');
-const { handleProcessCommunication } = require('../utility/processComm');
+const crypto = require("node:crypto");
+const connections = require("./connections");
+const socket = require("../utility/socket");
+const { fork } = require("node:child_process");
+const _ = require("lodash");
+const AsyncLock = require("async-lock");
+const { handleProcessCommunication } = require("../utility/processComm");
 const lock = new AsyncLock();
-const config = require('./config');
-const processArgs = require('../utility/processArgs');
-const { testConnectionPermission } = require('../utility/hasPermission');
-const { MissingCredentialsError } = require('../utility/exceptions');
-const pipeForkLogs = require('../utility/pipeForkLogs');
-const { getLogger, extractErrorLogData } = require('dbgate-tools');
-const { sendToAuditLog } = require('../utility/auditlog');
+const config = require("./config");
+const processArgs = require("../utility/processArgs");
+const { testConnectionPermission } = require("../utility/hasPermission");
+const { MissingCredentialsError } = require("../utility/exceptions");
+const pipeForkLogs = require("../utility/pipeForkLogs");
+const { getLogger, extractErrorLogData } = require("dbgate-tools");
+const { sendToAuditLog } = require("../utility/auditlog");
 
-const logger = getLogger('serverConnection');
+const logger = getLogger("serverConnection");
 
 module.exports = {
   opened: [],
@@ -23,58 +23,66 @@ module.exports = {
   requests: {},
 
   handle_databases(conid, { databases }) {
-    const existing = this.opened.find(x => x.conid == conid);
+    const existing = this.opened.find((x) => x.conid === conid);
     if (!existing) return;
     existing.databases = databases;
     socket.emitChanged(`database-list-changed`, { conid });
   },
   handle_version(conid, { version }) {
-    const existing = this.opened.find(x => x.conid == conid);
+    const existing = this.opened.find((x) => x.conid === conid);
     if (!existing) return;
     existing.version = version;
     socket.emitChanged(`server-version-changed`, { conid });
   },
   handle_status(conid, { status }) {
-    const existing = this.opened.find(x => x.conid == conid);
+    const existing = this.opened.find((x) => x.conid === conid);
     if (!existing) return;
     existing.status = status;
     socket.emitChanged(`server-status-changed`);
   },
   handle_ping() {},
-  handle_response(conid, { msgid, ...response }) {
-    const [resolve, reject] = this.requests[msgid];
+  handle_response(_conid, { msgid, ...response }) {
+    const [resolve, _reject] = this.requests[msgid];
     resolve(response);
     delete this.requests[msgid];
   },
 
   async ensureOpened(conid) {
     const res = await lock.acquire(conid, async () => {
-      const existing = this.opened.find(x => x.conid == conid);
+      const existing = this.opened.find((x) => x.conid === conid);
       if (existing) return existing;
       const connection = await connections.getCore({ conid });
       if (!connection) {
-        throw new Error(`serverConnections: Connection with conid="${conid}" not found`);
+        throw new Error(
+          `serverConnections: Connection with conid="${conid}" not found`
+        );
       }
       if (connection.singleDatabase) {
         return null;
       }
-      if (connection.passwordMode == 'askPassword' || connection.passwordMode == 'askUser') {
-        throw new MissingCredentialsError({ conid, passwordMode: connection.passwordMode });
+      if (
+        connection.passwordMode === "askPassword" ||
+        connection.passwordMode === "askUser"
+      ) {
+        throw new MissingCredentialsError({
+          conid,
+          passwordMode: connection.passwordMode,
+        });
       }
       if (connection.useRedirectDbLogin) {
         throw new MissingCredentialsError({ conid, redirectToDbLogin: true });
       }
       const subprocess = fork(
-        global['API_PACKAGE'] || process.argv[1],
+        global.API_PACKAGE || process.argv[1],
         [
-          '--is-forked-api',
-          '--start-process',
-          'serverConnectionProcess',
+          "--is-forked-api",
+          "--start-process",
+          "serverConnectionProcess",
           ...processArgs.getPassArgs(),
           // ...process.argv.slice(3),
         ],
         {
-          stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+          stdio: ["ignore", "pipe", "pipe", "ipc"],
         }
       );
       pipeForkLogs(subprocess);
@@ -84,50 +92,60 @@ module.exports = {
         databases: [],
         connection,
         status: {
-          name: 'pending',
+          name: "pending",
         },
         disconnected: false,
       };
       this.opened.push(newOpened);
       delete this.closed[conid];
       socket.emitChanged(`server-status-changed`);
-      subprocess.on('message', message => {
+      subprocess.on("message", (message) => {
         // @ts-ignore
         const { msgtype } = message;
         if (handleProcessCommunication(message, subprocess)) return;
         if (newOpened.disconnected) return;
         this[`handle_${msgtype}`](conid, message);
       });
-      subprocess.on('exit', () => {
+      subprocess.on("exit", () => {
         if (newOpened.disconnected) return;
         this.close(conid, false);
       });
-      subprocess.on('error', err => {
-        logger.error(extractErrorLogData(err), 'DBGM-00119 Error in server connection subprocess');
+      subprocess.on("error", (err) => {
+        logger.error(
+          extractErrorLogData(err),
+          "DBGM-00119 Error in server connection subprocess"
+        );
         if (newOpened.disconnected) return;
         this.close(conid, false);
       });
-      subprocess.send({ msgtype: 'connect', ...connection, globalSettings: await config.getSettings() });
+      subprocess.send({
+        msgtype: "connect",
+        ...connection,
+        globalSettings: await config.getSettings(),
+      });
       return newOpened;
     });
     return res;
   },
 
   close(conid, kill = true) {
-    const existing = this.opened.find(x => x.conid == conid);
+    const existing = this.opened.find((x) => x.conid === conid);
     if (existing) {
       existing.disconnected = true;
       if (kill) {
         try {
           existing.subprocess.kill();
         } catch (err) {
-          logger.error(extractErrorLogData(err), 'DBGM-00120 Error killing subprocess');
+          logger.error(
+            extractErrorLogData(err),
+            "DBGM-00120 Error killing subprocess"
+          );
         }
       }
-      this.opened = this.opened.filter(x => x.conid != conid);
+      this.opened = this.opened.filter((x) => x.conid !== conid);
       this.closed[conid] = {
         ...existing.status,
-        name: 'error',
+        name: "error",
       };
       socket.emitChanged(`server-status-changed`);
     }
@@ -137,24 +155,24 @@ module.exports = {
   async disconnect({ conid }, req) {
     testConnectionPermission(conid, req);
     await this.close(conid, true);
-    return { status: 'ok' };
+    return { status: "ok" };
   },
 
   listDatabases_meta: true,
   async listDatabases({ conid }, req) {
     if (!conid) return [];
-    if (conid == '__model') return [];
+    if (conid === "__model") return [];
     testConnectionPermission(conid, req);
     const opened = await this.ensureOpened(conid);
     sendToAuditLog(req, {
-      category: 'serverop',
-      component: 'ServerConnectionsController',
-      action: 'listDatabases',
-      event: 'databases.list',
-      severity: 'info',
+      category: "serverop",
+      component: "ServerConnectionsController",
+      action: "listDatabases",
+      event: "databases.list",
+      severity: "info",
       conid,
       sessionParam: `${conid}`,
-      sessionGroup: 'listDatabases',
+      sessionGroup: "listDatabases",
       message: `Loaded databases for connection`,
     });
     return opened?.databases ?? [];
@@ -171,33 +189,38 @@ module.exports = {
   async serverStatus() {
     return {
       ...this.closed,
-      ..._.mapValues(_.keyBy(this.opened, 'conid'), 'status'),
+      ..._.mapValues(_.keyBy(this.opened, "conid"), "status"),
     };
   },
 
   ping_meta: true,
   async ping({ conidArray, strmid }) {
     await Promise.all(
-      _.uniq(conidArray).map(async conid => {
+      _.uniq(conidArray).map(async (conid) => {
         const last = this.lastPinged[conid];
-        if (last && new Date().getTime() - last < 30 * 1000) {
+        if (last && Date.now() - last < 30 * 1000) {
           return Promise.resolve();
         }
-        this.lastPinged[conid] = new Date().getTime();
+        this.lastPinged[conid] = Date.now();
         const opened = await this.ensureOpened(conid);
         if (!opened) {
           return Promise.resolve();
         }
         try {
-          opened.subprocess.send({ msgtype: 'ping' });
+          opened.subprocess.send({ msgtype: "ping" });
         } catch (err) {
-          logger.error(extractErrorLogData(err), 'DBGM-00121 Error pinging server connection');
+          logger.error(
+            extractErrorLogData(err),
+            "DBGM-00121 Error pinging server connection"
+          );
           this.close(conid);
         }
       })
     );
-    socket.setStreamIdFilter(strmid, { conid: [...(conidArray ?? []), '__model'] });
-    return { status: 'ok' };
+    socket.setStreamIdFilter(strmid, {
+      conid: [...(conidArray ?? []), "__model"],
+    });
+    return { status: "ok" };
   },
 
   refresh_meta: true,
@@ -206,7 +229,7 @@ module.exports = {
     if (!keepOpen) this.close(conid);
 
     await this.ensureOpened(conid);
-    return { status: 'ok' };
+    return { status: "ok" };
   },
 
   async sendDatabaseOp({ conid, msgtype, name }, req) {
@@ -229,12 +252,12 @@ module.exports = {
 
   createDatabase_meta: true,
   async createDatabase({ conid, name }, req) {
-    return this.sendDatabaseOp({ conid, msgtype: 'createDatabase', name }, req);
+    return this.sendDatabaseOp({ conid, msgtype: "createDatabase", name }, req);
   },
 
   dropDatabase_meta: true,
   async dropDatabase({ conid, name }, req) {
-    return this.sendDatabaseOp({ conid, msgtype: 'dropDatabase', name }, req);
+    return this.sendDatabaseOp({ conid, msgtype: "dropDatabase", name }, req);
   },
 
   sendRequest(conn, message) {
@@ -244,7 +267,10 @@ module.exports = {
       try {
         conn.subprocess.send({ msgid, ...message });
       } catch (err) {
-        logger.error(extractErrorLogData(err), 'DBGM-00122 Error sending request');
+        logger.error(
+          extractErrorLogData(err),
+          "DBGM-00122 Error sending request"
+        );
         this.close(conn.conid);
       }
     });
@@ -271,7 +297,7 @@ module.exports = {
   serverSummary_meta: true,
   async serverSummary({ conid }, req) {
     testConnectionPermission(conid, req);
-    return this.loadDataCore('serverSummary', { conid });
+    return this.loadDataCore("serverSummary", { conid });
   },
 
   summaryCommand_meta: true,
@@ -282,21 +308,21 @@ module.exports = {
       return null;
     }
     if (opened.connection.isReadOnly) return false;
-    return this.loadDataCore('summaryCommand', { conid, command, row });
+    return this.loadDataCore("summaryCommand", { conid, command, row });
   },
 
   getOpenedConnectionReport() {
-    return this.opened.map(con => ({
+    return this.opened.map((con) => ({
       status: con.status,
       versionText: con.version?.versionText,
       databaseCount: con.databases.length,
       connection: _.pick(con.connection, [
-        'engine',
-        'useSshTunnel',
-        'authType',
-        'trustServerCertificate',
-        'useSsl',
-        'sshMode',
+        "engine",
+        "useSshTunnel",
+        "authType",
+        "trustServerCertificate",
+        "useSsl",
+        "sshMode",
       ]),
     }));
   },

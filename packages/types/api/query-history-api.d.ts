@@ -14,6 +14,6 @@ export type QueryHistory_Write_Request = {
   response: boolean;
 };
 
-export type QueryHistory_Request = 
-  | QueryHistory_Read_Request 
+export type QueryHistory_Request =
+  | QueryHistory_Read_Request
   | QueryHistory_Write_Request;

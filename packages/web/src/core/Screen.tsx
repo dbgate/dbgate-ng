@@ -1,22 +1,14 @@
-import {
-  Show,
-  For,
-  createEffect,
-  createMemo,
-  createSignal,
-  onMount,
-} from "solid-js";
 import type { Component } from "solid-js";
+import { Show } from "solid-js";
 import TabsContainer from "../tabpanel/TabsContainer";
-import WidgetIconPanel from "../widgets/WidgetIconPanel";
-import WidgetContainer from "../widgets/WidgetContainer";
 import StatusBar from "../widgets/StatusBar";
+import WidgetContainer from "../widgets/WidgetContainer";
+import WidgetIconPanel from "../widgets/WidgetIconPanel";
 import {
   currentThemeClass,
   selectedWidget,
   setLeftPanelWidth,
 } from "./appstate";
-import splitterDrag from "../utility/splitterDrag";
 
 const Screen: Component = () => {
   const handleResizeSplitter = (e: CustomEvent) => {

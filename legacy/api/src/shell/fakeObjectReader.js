@@ -1,4 +1,4 @@
-const stream = require('stream');
+const stream = require("node:stream");
 
 async function fakeObjectReader({ delay = 0, dynamicData = null } = {}) {
   const pass = new stream.PassThrough({
@@ -12,13 +12,16 @@ async function fakeObjectReader({ delay = 0, dynamicData = null } = {}) {
       }
       pass.end();
     } else {
-      pass.write({ columns: [{ columnName: 'id' }, { columnName: 'country' }], __isStreamHeader: true });
-      pass.write({ id: 1, country: 'Czechia' });
-      pass.write({ id: 2, country: 'Austria' });
-      pass.write({ country: 'Germany', id: 3 });
-      pass.write({ country: 'Romania', id: 4 });
-      pass.write({ country: 'Great Britain', id: 5 });
-      pass.write({ country: 'Bosna, Hecegovina', id: 6 });
+      pass.write({
+        columns: [{ columnName: "id" }, { columnName: "country" }],
+        __isStreamHeader: true,
+      });
+      pass.write({ id: 1, country: "Czechia" });
+      pass.write({ id: 2, country: "Austria" });
+      pass.write({ country: "Germany", id: 3 });
+      pass.write({ country: "Romania", id: 4 });
+      pass.write({ country: "Great Britain", id: 5 });
+      pass.write({ country: "Bosna, Hecegovina", id: 6 });
       pass.end();
     }
   }

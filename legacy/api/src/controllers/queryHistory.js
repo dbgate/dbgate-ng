@@ -1,16 +1,16 @@
-const fsReverse = require('fs-reverse');
-const fs = require('fs-extra');
-const path = require('path');
-const { datadir } = require('../utility/directories');
-const _ = require('lodash');
-const { filterName } = require('dbgate-tools');
-const socket = require('../utility/socket');
+const fsReverse = require("fs-reverse");
+const fs = require("fs-extra");
+const path = require("node:path");
+const { datadir } = require("../utility/directories");
+const _ = require("lodash");
+const { filterName } = require("dbgate-tools");
+const socket = require("../utility/socket");
 
 function readCore(reader, skip, limit, filter) {
   return new Promise((resolve, reject) => {
     const res = [];
     let readed = 0;
-    reader.on('data', line => {
+    reader.on("data", (line) => {
       if (!line && !line.trim()) return;
       try {
         const json = JSON.parse(line);
@@ -29,14 +29,14 @@ function readCore(reader, skip, limit, filter) {
         reject(err);
       }
     });
-    reader.on('end', () => resolve(res));
+    reader.on("end", () => resolve(res));
   });
 }
 
 module.exports = {
   read_meta: true,
   async read({ skip, limit, filter }) {
-    const fileName = path.join(datadir(), 'query-history.jsonl');
+    const fileName = path.join(datadir(), "query-history.jsonl");
     // @ts-ignore
     if (!(await fs.exists(fileName))) return [];
     const reader = fsReverse(fileName);
@@ -46,9 +46,9 @@ module.exports = {
 
   write_meta: true,
   async write({ data }) {
-    const fileName = path.join(datadir(), 'query-history.jsonl');
-    await fs.appendFile(fileName, JSON.stringify(data) + '\n');
-    socket.emit('query-history-changed');
-    return 'OK';
+    const fileName = path.join(datadir(), "query-history.jsonl");
+    await fs.appendFile(fileName, `${JSON.stringify(data)}\n`);
+    socket.emit("query-history-changed");
+    return "OK";
   },
 };

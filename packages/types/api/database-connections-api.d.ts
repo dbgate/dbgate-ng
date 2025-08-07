@@ -63,9 +63,9 @@ export type DatabaseConnections_LoadDatabase_Request = {
   response: DatabaseInfo;
 };
 
-export type DatabaseConnections_Request = 
-  | DatabaseConnections_Status_Request 
-  | DatabaseConnections_Connect_Request 
-  | DatabaseConnections_Disconnect_Request 
-  | DatabaseConnections_LoadKeys_Request 
+export type DatabaseConnections_Request =
+  | DatabaseConnections_Status_Request
+  | DatabaseConnections_Connect_Request
+  | DatabaseConnections_Disconnect_Request
+  | DatabaseConnections_LoadKeys_Request
   | DatabaseConnections_LoadDatabase_Request;

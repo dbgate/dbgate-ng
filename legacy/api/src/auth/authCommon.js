@@ -1,9 +1,9 @@
-const crypto = require('crypto');
+const crypto = require("node:crypto");
 
 const tokenSecret = crypto.randomUUID();
 
 function getTokenLifetime() {
-  return process.env.TOKEN_LIFETIME || '1d';
+  return process.env.TOKEN_LIFETIME || "1d";
 }
 
 function getTokenSecret() {

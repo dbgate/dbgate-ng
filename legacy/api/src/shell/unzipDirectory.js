@@ -1,9 +1,9 @@
-const yauzl = require('yauzl');
-const fs = require('fs');
-const path = require('path');
-const { getLogger, extractErrorLogData } = require('dbgate-tools');
+const yauzl = require("yauzl");
+const fs = require("node:fs");
+const path = require("node:path");
+const { getLogger, extractErrorLogData } = require("dbgate-tools");
 
-const logger = getLogger('unzipDirectory');
+const logger = getLogger("unzipDirectory");
 
 /**
  * Extracts an entire ZIP file, preserving its internal directory layout.
@@ -23,7 +23,7 @@ function unzipDirectory(zipPath, outputDirectory) {
       // kick things off
       zipFile.readEntry();
 
-      zipFile.on('entry', entry => {
+      zipFile.on("entry", (entry) => {
         const destPath = path.join(outputDirectory, entry.fileName);
 
         // Handle directories (their names always end with “/” in ZIPs)
@@ -49,14 +49,16 @@ function unzipDirectory(zipPath, outputDirectory) {
                   readStream.pipe(writeStream);
 
                   // proceed to next entry once we’ve consumed *this* one
-                  readStream.on('end', () => zipFile.readEntry());
+                  readStream.on("end", () => zipFile.readEntry());
 
-                  writeStream.on('finish', () => {
-                    logger.info(`DBGM-00068 Extracted "${entry.fileName}" → "${destPath}".`);
+                  writeStream.on("finish", () => {
+                    logger.info(
+                      `DBGM-00068 Extracted "${entry.fileName}" → "${destPath}".`
+                    );
                     res();
                   });
 
-                  writeStream.on('error', writeErr => {
+                  writeStream.on("error", (writeErr) => {
                     logger.error(
                       extractErrorLogData(writeErr),
                       `DBGM-00069 Error extracting "${entry.fileName}" from "${zipPath}".`
@@ -71,17 +73,22 @@ function unzipDirectory(zipPath, outputDirectory) {
       });
 
       // Entire archive enumerated; wait for all streams to finish
-      zipFile.on('end', () => {
+      zipFile.on("end", () => {
         Promise.all(pending)
           .then(() => {
-            logger.info(`DBGM-00070 Archive "${zipPath}" fully extracted to "${outputDirectory}".`);
+            logger.info(
+              `DBGM-00070 Archive "${zipPath}" fully extracted to "${outputDirectory}".`
+            );
             resolve(true);
           })
           .catch(reject);
       });
 
-      zipFile.on('error', err => {
-        logger.error(extractErrorLogData(err), `DBGM-00071 ZIP file error in ${zipPath}.`);
+      zipFile.on("error", (err) => {
+        logger.error(
+          extractErrorLogData(err),
+          `DBGM-00071 ZIP file error in ${zipPath}.`
+        );
         reject(err);
       });
     });

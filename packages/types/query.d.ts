@@ -17,56 +17,56 @@ export interface QueryResult {
 }
 
 export type LeftOperand = {
-  exprType: 'placeholder' | 'column';
+  exprType: "placeholder" | "column";
   columnName?: string;
 };
 
 export type RightOperand = {
-  exprType: 'value';
+  exprType: "value";
   value: any;
 };
 
 export type BinaryCondition = {
-  conditionType: 'binary';
-  operator: '=' | '!=' | '<>' | '<' | '<=' | '>' | '>=';
+  conditionType: "binary";
+  operator: "=" | "!=" | "<>" | "<" | "<=" | ">" | ">=";
   left: LeftOperand;
   right: RightOperand;
 };
 
 export type AndCondition = {
-  conditionType: 'and';
+  conditionType: "and";
   conditions: FilterCondition[];
 };
 
 export type OrCondition = {
-  conditionType: 'or';
+  conditionType: "or";
   conditions: FilterCondition[];
 };
 
 export type NullCondition = {
-  conditionType: 'isNull' | 'isNotNull';
+  conditionType: "isNull" | "isNotNull";
   expr: LeftOperand;
 };
 
 export type NotCondition = {
-  conditionType: 'not';
+  conditionType: "not";
   condition: FilterCondition;
 };
 
 export type LikeCondition = {
-  conditionType: 'like';
+  conditionType: "like";
   left: LeftOperand;
   right: RightOperand;
 };
 
 export type PredicateCondition = {
-  conditionType: 'specificPredicate';
-  predicate: 'exists' | 'notExists' | 'emptyArray' | 'notEmptyArray';
+  conditionType: "specificPredicate";
+  predicate: "exists" | "notExists" | "emptyArray" | "notEmptyArray";
   expr: LeftOperand;
 };
 
 export type InCondition = {
-  conditionType: 'in';
+  conditionType: "in";
   expr: LeftOperand;
   values: any[];
 };
@@ -83,11 +83,11 @@ export type FilterCondition =
 
 export type SortItem = {
   columnName: string;
-  direction?: 'ASC' | 'DESC';
+  direction?: "ASC" | "DESC";
 };
 
 export type AggregateColumn = {
-  aggregateFunction: 'count' | 'sum' | 'avg' | 'min' | 'max';
+  aggregateFunction: "count" | "sum" | "avg" | "min" | "max";
   columnArgument?: string;
   alias: string;
 };

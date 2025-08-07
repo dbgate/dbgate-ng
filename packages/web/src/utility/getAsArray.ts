@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import _ from "lodash";
 
 export default function getAsArray(obj) {
   if (_.isArray(obj)) return obj;

@@ -1,9 +1,12 @@
 // splitterDrag.ts
-import { Accessor, onCleanup } from "solid-js";
+import { type Accessor, onCleanup } from "solid-js";
 
 type Axis = "clientX" | "clientY";
 
-export default function splitterDrag(el: HTMLElement, axisAccessor: Accessor<Axis>) {
+export default function splitterDrag(
+  el: HTMLElement,
+  axisAccessor: Accessor<Axis>
+) {
   let start: number | null = null;
 
   const getAxis = () => axisAccessor?.() ?? "clientX";
@@ -18,7 +21,7 @@ export default function splitterDrag(el: HTMLElement, axisAccessor: Accessor<Axi
     e.preventDefault();
     const axis = getAxis();
     const curr = (e as any)[axis] as number;
-    const diff = (start == null ? 0 : curr - start);
+    const diff = start == null ? 0 : curr - start;
     start = curr;
 
     el.dispatchEvent(new CustomEvent("resizeSplitter", { detail: diff }));

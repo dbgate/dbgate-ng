@@ -1,7 +1,7 @@
-import stream from 'stream';
-import { QueryResult } from './query';
-import { SqlDialect } from './dialect';
-import { SqlDumper } from './dumper';
+import stream from "node:stream";
+import { QueryResult } from "./query";
+import { SqlDialect } from "./dialect";
+import { SqlDumper } from "./dumper";
 import {
   DatabaseInfo,
   NamedObjectInfo,
@@ -12,8 +12,8 @@ import {
   TriggerInfo,
   CollectionInfo,
   SchemaInfo,
-} from './dbinfo';
-import { FilterBehaviour } from './filter-type';
+} from "./dbinfo";
+import { FilterBehaviour } from "./filter-type";
 
 export interface StreamOptions {
   recordset: (columns) => void;
@@ -25,22 +25,22 @@ export interface StreamOptions {
 
 export type CollectionOperationInfo =
   | {
-      type: 'createCollection';
+      type: "createCollection";
       collection: {
         name: string;
       };
     }
   | {
-      type: 'dropCollection';
+      type: "dropCollection";
       collection: string;
     }
   | {
-      type: 'renameCollection';
+      type: "renameCollection";
       collection: string;
       newName: string;
     }
   | {
-      type: 'cloneCollection';
+      type: "cloneCollection";
       collection: string;
       newName: string;
     };
@@ -106,15 +106,20 @@ export interface SqlBackupDumper {
 export interface SummaryColumn {
   fieldName: string;
   header: string;
-  dataType: 'string' | 'number' | 'bytes';
+  dataType: "string" | "number" | "bytes";
 }
-export interface ServerSummaryDatabase {}
+export type ServerSummaryDatabase = {};
 export interface ServerSummary {
   columns: SummaryColumn[];
   databases: ServerSummaryDatabase[];
 }
 
-export type CollectionAggregateFunction = 'count' | 'sum' | 'avg' | 'min' | 'max';
+export type CollectionAggregateFunction =
+  | "count"
+  | "sum"
+  | "avg"
+  | "min"
+  | "max";
 export interface CollectionAggregateDefinition {
   condition: any; // SQL tree condition
   groupByColumns: string[];
@@ -127,7 +132,7 @@ export interface CollectionAggregateDefinition {
 
 export interface CollectionSortDefinitionItem {
   columnName: string;
-  direction: 'ASC' | 'DESC';
+  direction: "ASC" | "DESC";
 }
 
 export type CollectionSortDefinition = CollectionSortDefinitionItem[];
@@ -158,7 +163,10 @@ export interface DataEditorTypesBehaviour {
 }
 
 export interface FilterBehaviourProvider {
-  getFilterBehaviour(dataType: string, standardFilterBehaviours: { [id: string]: FilterBehaviour }): FilterBehaviour;
+  getFilterBehaviour(
+    dataType: string,
+    standardFilterBehaviours: { [id: string]: FilterBehaviour }
+  ): FilterBehaviour;
 }
 
 export interface DatabaseHandle<TClient = any> {
@@ -171,7 +179,9 @@ export interface DatabaseHandle<TClient = any> {
   treeKeySeparator?: string;
 }
 
-export type StreamResult = stream.Readable | (stream.Readable | stream.Writable)[];
+export type StreamResult =
+  | stream.Readable
+  | (stream.Readable | stream.Writable)[];
 
 export interface CommandLineDefinition {
   command: string;
@@ -183,7 +193,7 @@ export interface CommandLineDefinition {
 interface BackupRestoreSettingsBase {
   database: string;
   options?: { [key: string]: string };
-  argsFormat: 'shell' | 'spawn';
+  argsFormat: "shell" | "spawn";
 }
 
 export interface BackupDatabaseSettings extends BackupRestoreSettingsBase {
@@ -226,14 +236,8 @@ export interface EngineDriver<TClient = any> extends FilterBehaviourProvider {
   newCollectionFormParams?: any[];
 
   supportedCreateDatabase?: boolean;
-  showConnectionField?: (
-    field: string,
-    values: any,
-    {
-      config: {},
-    }
-  ) => boolean;
-  showConnectionTab?: (tab: 'ssl' | 'sshTunnel', values: any) => boolean;
+  showConnectionField?: (field: string, values: any, { config: {} }) => boolean;
+  showConnectionTab?: (tab: "ssl" | "sshTunnel", values: any) => boolean;
   beforeConnectionSave?: (values: any) => any;
   databaseUrlPlaceholder?: string;
   defaultAuthTypeName?: string;
@@ -242,32 +246,78 @@ export interface EngineDriver<TClient = any> extends FilterBehaviourProvider {
   defaultSocketPath?: string;
   authTypeLabel?: string;
   importExportArgs?: any[];
-  connect({ server, port, user, password, database, connectionDefinition }): Promise<DatabaseHandle<TClient>>;
+  connect({
+    server,
+    port,
+    user,
+    password,
+    database,
+    connectionDefinition,
+  }): Promise<DatabaseHandle<TClient>>;
   close(dbhan: DatabaseHandle<TClient>): Promise<any>;
-  query(dbhan: DatabaseHandle<TClient>, sql: string, options?: QueryOptions): Promise<QueryResult>;
+  query(
+    dbhan: DatabaseHandle<TClient>,
+    sql: string,
+    options?: QueryOptions
+  ): Promise<QueryResult>;
   stream(dbhan: DatabaseHandle<TClient>, sql: string, options: StreamOptions);
-  readQuery(dbhan: DatabaseHandle<TClient>, sql: string, structure?: TableInfo): Promise<StreamResult>;
-  readJsonQuery(dbhan: DatabaseHandle<TClient>, query: any, structure?: TableInfo): Promise<StreamResult>;
+  readQuery(
+    dbhan: DatabaseHandle<TClient>,
+    sql: string,
+    structure?: TableInfo
+  ): Promise<StreamResult>;
+  readJsonQuery(
+    dbhan: DatabaseHandle<TClient>,
+    query: any,
+    structure?: TableInfo
+  ): Promise<StreamResult>;
   // eg. PostgreSQL COPY FROM stdin
-  writeQueryFromStream(dbhan: DatabaseHandle<TClient>, sql: string): Promise<StreamResult>;
-  writeTable(dbhan: DatabaseHandle<TClient>, name: NamedObjectInfo, options: WriteTableOptions): Promise<StreamResult>;
+  writeQueryFromStream(
+    dbhan: DatabaseHandle<TClient>,
+    sql: string
+  ): Promise<StreamResult>;
+  writeTable(
+    dbhan: DatabaseHandle<TClient>,
+    name: NamedObjectInfo,
+    options: WriteTableOptions
+  ): Promise<StreamResult>;
   analyseSingleObject(
     dbhan: DatabaseHandle<TClient>,
     name: NamedObjectInfo,
     objectTypeField: keyof DatabaseInfo
   ): Promise<TableInfo | ViewInfo | ProcedureInfo | FunctionInfo | TriggerInfo>;
-  analyseSingleTable(dbhan: DatabaseHandle<TClient>, name: NamedObjectInfo): Promise<TableInfo>;
-  getVersion(dbhan: DatabaseHandle<TClient>): Promise<{ version: string; versionText?: string }>;
+  analyseSingleTable(
+    dbhan: DatabaseHandle<TClient>,
+    name: NamedObjectInfo
+  ): Promise<TableInfo>;
+  getVersion(
+    dbhan: DatabaseHandle<TClient>
+  ): Promise<{ version: string; versionText?: string }>;
   listDatabases(dbhan: DatabaseHandle<TClient>): Promise<
     {
       name: string;
     }[]
   >;
-  loadKeys(dbhan: DatabaseHandle<TClient>, root: string, filter?: string): Promise;
-  scanKeys(dbhan: DatabaseHandle<TClient>, root: string, pattern: string, cursor: string, count: number): Promise;
+  loadKeys(
+    dbhan: DatabaseHandle<TClient>,
+    root: string,
+    filter?: string
+  ): Promise;
+  scanKeys(
+    dbhan: DatabaseHandle<TClient>,
+    root: string,
+    pattern: string,
+    cursor: string,
+    count: number
+  ): Promise;
   exportKeys(dbhan: DatabaseHandle<TClient>, options: {}): Promise;
   loadKeyInfo(dbhan: DatabaseHandle<TClient>, key): Promise;
-  loadKeyTableRange(dbhan: DatabaseHandle<TClient>, key, cursor, count): Promise;
+  loadKeyTableRange(
+    dbhan: DatabaseHandle<TClient>,
+    key,
+    cursor,
+    count
+  ): Promise;
   loadFieldValues(
     dbhan: DatabaseHandle<TClient>,
     name: NamedObjectInfo,
@@ -275,21 +325,50 @@ export interface EngineDriver<TClient = any> extends FilterBehaviourProvider {
     search: string,
     dataType: string
   ): Promise;
-  analyseFull(dbhan: DatabaseHandle<TClient>, serverVersion): Promise<DatabaseInfo>;
-  analyseIncremental(dbhan: DatabaseHandle<TClient>, structure: DatabaseInfo, serverVersion): Promise<DatabaseInfo>;
+  analyseFull(
+    dbhan: DatabaseHandle<TClient>,
+    serverVersion
+  ): Promise<DatabaseInfo>;
+  analyseIncremental(
+    dbhan: DatabaseHandle<TClient>,
+    structure: DatabaseInfo,
+    serverVersion
+  ): Promise<DatabaseInfo>;
   dialect: SqlDialect;
   dialectByVersion(version): SqlDialect;
   createDumper(options = null): SqlDumper;
-  createBackupDumper(dbhan: DatabaseHandle<TClient>, options): Promise<SqlBackupDumper>;
+  createBackupDumper(
+    dbhan: DatabaseHandle<TClient>,
+    options
+  ): Promise<SqlBackupDumper>;
   getAuthTypes(): EngineAuthType[];
-  readCollection(dbhan: DatabaseHandle<TClient>, options: ReadCollectionOptions): Promise<any>;
-  updateCollection(dbhan: DatabaseHandle<TClient>, changeSet: any): Promise<any>;
-  getCollectionUpdateScript(changeSet: any, collectionInfo: CollectionInfo): string;
+  readCollection(
+    dbhan: DatabaseHandle<TClient>,
+    options: ReadCollectionOptions
+  ): Promise<any>;
+  updateCollection(
+    dbhan: DatabaseHandle<TClient>,
+    changeSet: any
+  ): Promise<any>;
+  getCollectionUpdateScript(
+    changeSet: any,
+    collectionInfo: CollectionInfo
+  ): string;
   createDatabase(dbhan: DatabaseHandle<TClient>, name: string): Promise;
   dropDatabase(dbhan: DatabaseHandle<TClient>, name: string): Promise;
-  getQuerySplitterOptions(usage: 'stream' | 'script' | 'editor' | 'import'): any;
-  script(dbhan: DatabaseHandle<TClient>, sql: string, options?: RunScriptOptions): Promise;
-  operation(dbhan: DatabaseHandle<TClient>, operation: CollectionOperationInfo, options?: RunScriptOptions): Promise;
+  getQuerySplitterOptions(
+    usage: "stream" | "script" | "editor" | "import"
+  ): any;
+  script(
+    dbhan: DatabaseHandle<TClient>,
+    sql: string,
+    options?: RunScriptOptions
+  ): Promise;
+  operation(
+    dbhan: DatabaseHandle<TClient>,
+    operation: CollectionOperationInfo,
+    options?: RunScriptOptions
+  ): Promise;
   getNewObjectTemplates(): NewObjectTemplate[];
   // direct call of dbhan.client method, only some methods could be supported, on only some drivers
   callMethod(dbhan: DatabaseHandle<TClient>, method, args);
@@ -297,17 +376,34 @@ export interface EngineDriver<TClient = any> extends FilterBehaviourProvider {
   summaryCommand(dbhan: DatabaseHandle<TClient>, command, row): Promise<void>;
   startProfiler(dbhan: DatabaseHandle<TClient>, options): Promise<any>;
   stopProfiler(dbhan: DatabaseHandle<TClient>, profiler): Promise<void>;
-  getRedirectAuthUrl(connection, options): Promise<{ url: string; sid: string }>;
+  getRedirectAuthUrl(
+    connection,
+    options
+  ): Promise<{ url: string; sid: string }>;
   getAuthTokenFromCode(connection, options): Promise<string>;
   getAccessTokenFromAuth(connection, req): Promise<string | null>;
-  getCollectionExportQueryScript(collection: string, condition: any, sort?: CollectionSortDefinition): string;
-  getCollectionExportQueryJson(collection: string, condition: any, sort?: CollectionSortDefinition): {};
-  getScriptTemplates(objectTypeField: keyof DatabaseInfo): { label: string; scriptTemplate: string }[];
+  getCollectionExportQueryScript(
+    collection: string,
+    condition: any,
+    sort?: CollectionSortDefinition
+  ): string;
+  getCollectionExportQueryJson(
+    collection: string,
+    condition: any,
+    sort?: CollectionSortDefinition
+  ): {};
+  getScriptTemplates(
+    objectTypeField: keyof DatabaseInfo
+  ): { label: string; scriptTemplate: string }[];
   getScriptTemplateContent(scriptTemplate: string, props: any): Promise<string>;
   createSaveChangeSetScript(
     changeSet: any,
     dbinfo: DatabaseInfo,
-    defaultCreator: (changeSet: any, dbinfo: DatabaseInfo, dialect: SqlDialect) => any
+    defaultCreator: (
+      changeSet: any,
+      dbinfo: DatabaseInfo,
+      dialect: SqlDialect
+    ) => any
   ): any[];
   // adapts table info from different source (import, other database) to be suitable for this database
   adaptTableInfo(table: TableInfo): TableInfo;
@@ -327,11 +423,11 @@ export interface EngineDriver<TClient = any> extends FilterBehaviourProvider {
   transformNativeCommandMessage(
     message: {
       message: string;
-      severity: 'info' | 'error';
+      severity: "info" | "error";
     },
-    command: 'backup' | 'restore'
-  ): { message: string; severity: 'info' | 'error' | 'debug' } | null;
-  getNativeOperationFormArgs(operation: 'backup' | 'restore'): any[];
+    command: "backup" | "restore"
+  ): { message: string; severity: "info" | "error" | "debug" } | null;
+  getNativeOperationFormArgs(operation: "backup" | "restore"): any[];
   getAdvancedConnectionFields(): any[];
 
   analyserClass?: any;
@@ -348,6 +444,6 @@ export interface DatabaseModification {
   oldName?: NamedObjectInfo;
   newName?: NamedObjectInfo;
   objectId?: string;
-  action: 'add' | 'remove' | 'change' | 'all';
+  action: "add" | "remove" | "change" | "all";
   objectTypeField: keyof DatabaseInfo;
 }

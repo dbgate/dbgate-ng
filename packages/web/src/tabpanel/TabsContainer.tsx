@@ -1,6 +1,6 @@
 import type { Component } from "solid-js";
-import TabsPanel from "./TabsPanel";
 import TabContent from "./TabContent";
+import TabsPanel from "./TabsPanel";
 
 const TabsContainer: Component = () => {
   return (

@@ -45,8 +45,8 @@ export type Cloud_Profile_Request = {
   };
 };
 
-export type Cloud_Request = 
-  | Cloud_Config_Request 
-  | Cloud_Login_Request 
-  | Cloud_Logout_Request 
+export type Cloud_Request =
+  | Cloud_Config_Request
+  | Cloud_Login_Request
+  | Cloud_Logout_Request
   | Cloud_Profile_Request;

@@ -1,10 +1,15 @@
-const stableStringify = require('json-stable-stringify');
-const { extractBoolSettingsValue, extractIntSettingsValue, getLogger, extractErrorLogData } = require('dbgate-tools');
-const childProcessChecker = require('../utility/childProcessChecker');
-const requireEngineDriver = require('../utility/requireEngineDriver');
-const { connectUtility } = require('../utility/connectUtility');
-const { handleProcessCommunication } = require('../utility/processComm');
-const logger = getLogger('srvconnProcess');
+const stableStringify = require("json-stable-stringify");
+const {
+  extractBoolSettingsValue,
+  extractIntSettingsValue,
+  getLogger,
+  extractErrorLogData,
+} = require("dbgate-tools");
+const childProcessChecker = require("../utility/childProcessChecker");
+const requireEngineDriver = require("../utility/requireEngineDriver");
+const { connectUtility } = require("../utility/connectUtility");
+const { handleProcessCommunication } = require("../utility/processComm");
+const logger = getLogger("srvconnProcess");
 
 let dbhan;
 let storedConnection;
@@ -19,27 +24,32 @@ async function handleRefresh() {
     let databases = await driver.listDatabases(dbhan);
     if (storedConnection?.allowedDatabases?.trim()) {
       const allowedDatabaseList = storedConnection.allowedDatabases
-        .split('\n')
-        .map(x => x.trim().toLowerCase())
-        .filter(x => x);
-      databases = databases.filter(x => allowedDatabaseList.includes(x.name.toLocaleLowerCase()));
+        .split("\n")
+        .map((x) => x.trim().toLowerCase())
+        .filter((x) => x);
+      databases = databases.filter((x) =>
+        allowedDatabaseList.includes(x.name.toLocaleLowerCase())
+      );
     }
     if (storedConnection?.allowedDatabasesRegex?.trim()) {
-      const regex = new RegExp(storedConnection.allowedDatabasesRegex, 'i');
-      databases = databases.filter(x => regex.test(x.name));
+      const regex = new RegExp(storedConnection.allowedDatabasesRegex, "i");
+      databases = databases.filter((x) => regex.test(x.name));
     }
-    setStatusName('ok');
+    setStatusName("ok");
     const databasesString = stableStringify(databases);
-    if (lastDatabases != databasesString) {
-      process.send({ msgtype: 'databases', databases });
+    if (lastDatabases !== databasesString) {
+      process.send({ msgtype: "databases", databases });
       lastDatabases = databasesString;
     }
   } catch (err) {
     setStatus({
-      name: 'error',
+      name: "error",
       message: err.message,
     });
-    logger.error(extractErrorLogData(err), 'DBGM-00152 Error refreshing server databases');
+    logger.error(
+      extractErrorLogData(err),
+      "DBGM-00152 Error refreshing server databases"
+    );
     setTimeout(() => process.exit(1), 1000);
   }
 }
@@ -50,16 +60,19 @@ async function readVersion() {
   try {
     version = await driver.getVersion(dbhan);
   } catch (err) {
-    logger.error(extractErrorLogData(err), 'DBGM-00153 Error getting DB server version');
-    version = { version: 'Unknown' };
+    logger.error(
+      extractErrorLogData(err),
+      "DBGM-00153 Error getting DB server version"
+    );
+    version = { version: "Unknown" };
   }
-  process.send({ msgtype: 'version', version });
+  process.send({ msgtype: "version", version });
 }
 
 function setStatus(status) {
   const statusString = stableStringify(status);
-  if (lastStatus != statusString) {
-    process.send({ msgtype: 'status', status });
+  if (lastStatus !== statusString) {
+    process.send({ msgtype: "status", status });
     lastStatus = statusString;
   }
 }
@@ -71,26 +84,37 @@ function setStatusName(name) {
 async function handleConnect(connection) {
   storedConnection = connection;
   const { globalSettings } = storedConnection;
-  setStatusName('pending');
-  lastPing = new Date().getTime();
+  setStatusName("pending");
+  lastPing = Date.now();
 
   const driver = requireEngineDriver(storedConnection);
   try {
-    dbhan = await connectUtility(driver, storedConnection, 'app');
+    dbhan = await connectUtility(driver, storedConnection, "app");
     readVersion();
     handleRefresh();
-    if (extractBoolSettingsValue(globalSettings, 'connection.autoRefresh', false)) {
+    if (
+      extractBoolSettingsValue(globalSettings, "connection.autoRefresh", false)
+    ) {
       setInterval(
         handleRefresh,
-        extractIntSettingsValue(globalSettings, 'connection.autoRefreshInterval', 30, 5, 3600) * 1000
+        extractIntSettingsValue(
+          globalSettings,
+          "connection.autoRefreshInterval",
+          30,
+          5,
+          3600
+        ) * 1000
       );
     }
   } catch (err) {
     setStatus({
-      name: 'error',
+      name: "error",
       message: err.message,
     });
-    logger.error(extractErrorLogData(err), 'DBGM-00154 Error connecting to server');
+    logger.error(
+      extractErrorLogData(err),
+      "DBGM-00154 Error connecting to server"
+    );
     setTimeout(() => process.exit(1), 1000);
   }
 
@@ -108,26 +132,26 @@ function waitConnected() {
 }
 
 function handlePing() {
-  lastPing = new Date().getTime();
+  lastPing = Date.now();
 }
 
 async function handleDatabaseOp(op, { msgid, name }) {
   try {
     const driver = requireEngineDriver(storedConnection);
-    dbhan = await connectUtility(driver, storedConnection, 'app');
+    dbhan = await connectUtility(driver, storedConnection, "app");
     if (driver[op]) {
       await driver[op](dbhan, name);
     } else {
       const dmp = driver.createDumper();
       dmp[op](name);
-      logger.info({ sql: dmp.s }, 'DBGM-00043 Running script');
+      logger.info({ sql: dmp.s }, "DBGM-00043 Running script");
       await driver.query(dbhan, dmp.s, { discardResult: true });
     }
     await handleRefresh();
 
-    process.send({ msgtype: 'response', msgid, status: 'ok' });
+    process.send({ msgtype: "response", msgid, status: "ok" });
   } catch (err) {
-    process.send({ msgtype: 'response', msgid, errorMessage: err.message });
+    process.send({ msgtype: "response", msgid, errorMessage: err.message });
   }
 }
 
@@ -136,18 +160,20 @@ async function handleDriverDataCore(msgid, callMethod) {
   const driver = requireEngineDriver(storedConnection);
   try {
     const result = await callMethod(driver);
-    process.send({ msgtype: 'response', msgid, result });
+    process.send({ msgtype: "response", msgid, result });
   } catch (err) {
-    process.send({ msgtype: 'response', msgid, errorMessage: err.message });
+    process.send({ msgtype: "response", msgid, errorMessage: err.message });
   }
 }
 
 async function handleServerSummary({ msgid }) {
-  return handleDriverDataCore(msgid, driver => driver.serverSummary(dbhan));
+  return handleDriverDataCore(msgid, (driver) => driver.serverSummary(dbhan));
 }
 
 async function handleSummaryCommand({ msgid, command, row }) {
-  return handleDriverDataCore(msgid, driver => driver.summaryCommand(dbhan, command, row));
+  return handleDriverDataCore(msgid, (driver) =>
+    driver.summaryCommand(dbhan, command, row)
+  );
 }
 
 const messageHandlers = {
@@ -155,8 +181,8 @@ const messageHandlers = {
   ping: handlePing,
   serverSummary: handleServerSummary,
   summaryCommand: handleSummaryCommand,
-  createDatabase: props => handleDatabaseOp('createDatabase', props),
-  dropDatabase: props => handleDatabaseOp('dropDatabase', props),
+  createDatabase: (props) => handleDatabaseOp("createDatabase", props),
+  dropDatabase: (props) => handleDatabaseOp("dropDatabase", props),
 };
 
 async function handleMessage({ msgtype, ...other }) {
@@ -168,9 +194,9 @@ function start() {
   childProcessChecker();
 
   setInterval(async () => {
-    const time = new Date().getTime();
+    const time = Date.now();
     if (time - lastPing > 40 * 1000) {
-      logger.info('DBGM-00044 Server connection not alive, exiting');
+      logger.info("DBGM-00044 Server connection not alive, exiting");
       const driver = requireEngineDriver(storedConnection);
       if (dbhan) {
         await driver.close(dbhan);
@@ -179,16 +205,19 @@ function start() {
     }
   }, 10 * 1000);
 
-  process.on('message', async message => {
+  process.on("message", async (message) => {
     if (handleProcessCommunication(message)) return;
     try {
       await handleMessage(message);
     } catch (err) {
       setStatus({
-        name: 'error',
+        name: "error",
         message: err.message,
       });
-      logger.error(extractErrorLogData(err), `DBGM-00155 Error processing message ${message?.['msgtype']}`);
+      logger.error(
+        extractErrorLogData(err),
+        `DBGM-00155 Error processing message ${message?.msgtype}`
+      );
     }
   });
 }

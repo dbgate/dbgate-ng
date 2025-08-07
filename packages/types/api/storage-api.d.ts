@@ -39,8 +39,8 @@ export type Storage_SendAuditLog_Request = {
   response: boolean;
 };
 
-export type Storage_Request = 
-  | Storage_Connections_Request 
+export type Storage_Request =
+  | Storage_Connections_Request
   | Storage_GetConnection_Request
   | Storage_GetConnectionsForLoginPage_Request
   | Storage_ReadConfig_Request

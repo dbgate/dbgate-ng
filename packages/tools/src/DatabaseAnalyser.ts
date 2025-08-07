@@ -1,41 +1,49 @@
-import { DatabaseHandle, DatabaseInfo, DatabaseModification, EngineDriver, SqlDialect } from 'dbgate-types';
-import _sortBy from 'lodash/sortBy';
-import _groupBy from 'lodash/groupBy';
-import _pick from 'lodash/pick';
-import _compact from 'lodash/compact';
-import { getLogger } from './getLogger';
-import { type Logger } from 'pinomin';
-import { isCompositeDbName, splitCompositeDbName } from './schemaInfoTools';
-import { extractErrorLogData } from './stringTools';
+import type {
+  DatabaseHandle,
+  DatabaseInfo,
+  DatabaseModification,
+  EngineDriver,
+  SqlDialect,
+} from "dbgate-types";
+import _compact from "lodash/compact";
+import _groupBy from "lodash/groupBy";
+import _pick from "lodash/pick";
+import _sortBy from "lodash/sortBy";
+import type { Logger } from "pinomin";
+import { getLogger } from "./getLogger";
+import { isCompositeDbName, splitCompositeDbName } from "./schemaInfoTools";
+import { extractErrorLogData } from "./stringTools";
 
-const logger = getLogger('dbAnalyser');
+const logger = getLogger("dbAnalyser");
 
 const STRUCTURE_FIELDS = [
-  'tables',
-  'collections',
-  'views',
-  'matviews',
-  'functions',
-  'procedures',
-  'triggers',
-  'schedulerEvents',
+  "tables",
+  "collections",
+  "views",
+  "matviews",
+  "functions",
+  "procedures",
+  "triggers",
+  "schedulerEvents",
 ];
 
-const fp_pick = arg => array => _pick(array, arg);
+const fp_pick = (arg) => (array) => _pick(array, arg);
 
 function mergeTableRowCounts(info: DatabaseInfo, rowCounts): DatabaseInfo {
   return {
     ...info,
-    tables: (info.tables || []).map(table => ({
+    tables: (info.tables || []).map((table) => ({
       ...table,
-      tableRowCount: rowCounts.find(x => x.objectId == table.objectId)?.tableRowCount ?? table.tableRowCount,
+      tableRowCount:
+        rowCounts.find((x) => x.objectId === table.objectId)?.tableRowCount ??
+        table.tableRowCount,
     })),
   };
 }
 
 function areDifferentRowCounts(db1: DatabaseInfo, db2: DatabaseInfo) {
   for (const t1 of db1.tables || []) {
-    const t2 = (db2.tables || []).find(x => x.objectId == t1.objectId);
+    const t2 = (db2.tables || []).find((x) => x.objectId === t1.objectId);
     if (t1?.tableRowCount !== t2?.tableRowCount) {
       return true;
     }
@@ -50,8 +58,12 @@ export class DatabaseAnalyser<TClient = any> {
   dialect: SqlDialect;
   logger: Logger;
 
-  constructor(public dbhan: DatabaseHandle<TClient>, public driver: EngineDriver, version) {
-    this.dialect = (driver?.dialectByVersion && driver?.dialectByVersion(version)) || driver?.dialect;
+  constructor(
+    public dbhan: DatabaseHandle<TClient>,
+    public driver: EngineDriver,
+    version
+  ) {
+    this.dialect = driver?.dialectByVersion?.(version) || driver?.dialect;
     this.logger = logger;
   }
 
@@ -82,7 +94,7 @@ export class DatabaseAnalyser<TClient = any> {
   }
 
   async fullAnalysis() {
-    logger.debug(this.getLogDbInfo(), 'DBGM-00126 Performing full analysis');
+    logger.debug(this.getLogDbInfo(), "DBGM-00126 Performing full analysis");
     const res = this.addEngineField(await this._runAnalysis());
     // console.log('FULL ANALYSIS', res);
     return res;
@@ -95,15 +107,23 @@ export class DatabaseAnalyser<TClient = any> {
     const res = this.addEngineField(await this._runAnalysis());
     // console.log('SINGLE OBJECT RES', JSON.stringify(res, null, 2));
     const obj =
-      res[typeField]?.length == 1
-        ? res[typeField]?.find(x => x.pureName.toLowerCase() == name.pureName.toLowerCase())
-        : res[typeField]?.find(x => x.pureName == name.pureName && x.schemaName == name.schemaName);
+      res[typeField]?.length === 1
+        ? res[typeField]?.find(
+            (x) => x.pureName.toLowerCase() === name.pureName.toLowerCase()
+          )
+        : res[typeField]?.find(
+            (x) =>
+              x.pureName === name.pureName && x.schemaName === name.schemaName
+          );
     // console.log('SINGLE OBJECT', obj);
     return obj;
   }
 
   async incrementalAnalysis(structure) {
-    logger.info(this.getLogDbInfo(), 'DBGM-00127 Performing incremental analysis');
+    logger.info(
+      this.getLogDbInfo(),
+      "DBGM-00127 Performing incremental analysis"
+    );
     this.structure = structure;
 
     const modifications = await this.getModifications();
@@ -112,25 +132,39 @@ export class DatabaseAnalyser<TClient = any> {
       this.structure = null;
       return this.addEngineField(await this._runAnalysis());
     }
-    const structureModifications = modifications.filter(x => x.action != 'setTableRowCounts');
-    const setTableRowCounts = modifications.find(x => x.action == 'setTableRowCounts');
+    const structureModifications = modifications.filter(
+      (x) => x.action !== "setTableRowCounts"
+    );
+    const setTableRowCounts = modifications.find(
+      (x) => x.action === "setTableRowCounts"
+    );
 
     let structureWithRowCounts = null;
     if (setTableRowCounts) {
-      const newStructure = mergeTableRowCounts(structure, setTableRowCounts.rowCounts);
+      const newStructure = mergeTableRowCounts(
+        structure,
+        setTableRowCounts.rowCounts
+      );
       if (areDifferentRowCounts(structure, newStructure)) {
         structureWithRowCounts = newStructure;
       }
     }
 
-    if (structureModifications.length == 0) {
-      return structureWithRowCounts ? this.addEngineField(structureWithRowCounts) : null;
+    if (structureModifications.length === 0) {
+      return structureWithRowCounts
+        ? this.addEngineField(structureWithRowCounts)
+        : null;
     }
 
     this.modifications = structureModifications;
     if (structureWithRowCounts) this.structure = structureWithRowCounts;
-    logger.info({ ...this.getLogDbInfo(), modifications: this.modifications }, 'DBGM-00128 DB modifications detected');
-    return this.addEngineField(this.mergeAnalyseResult(await this._runAnalysis()));
+    logger.info(
+      { ...this.getLogDbInfo(), modifications: this.modifications },
+      "DBGM-00128 DB modifications detected"
+    );
+    return this.addEngineField(
+      this.mergeAnalyseResult(await this._runAnalysis())
+    );
   }
 
   mergeAnalyseResult(newlyAnalysed) {
@@ -144,19 +178,26 @@ export class DatabaseAnalyser<TClient = any> {
     const res = {};
     for (const field of STRUCTURE_FIELDS) {
       const removedIds = this.modifications
-        .filter(x => x.action == 'remove' && x.objectTypeField == field)
-        .map(x => x.objectId);
+        .filter((x) => x.action === "remove" && x.objectTypeField === field)
+        .map((x) => x.objectId);
       const newArray = newlyAnalysed[field] || [];
-      const addedChangedIds = newArray.map(x => x.objectId);
+      const addedChangedIds = newArray.map((x) => x.objectId);
       const removeAllIds = [...removedIds, ...addedChangedIds];
       res[field] = _sortBy(
-        [...(this.structure[field] || []).filter(x => !removeAllIds.includes(x.objectId)), ...newArray],
-        x => x.pureName
+        [
+          ...(this.structure[field] || []).filter(
+            (x) => !removeAllIds.includes(x.objectId)
+          ),
+          ...newArray,
+        ],
+        (x) => x.pureName
       );
 
       // merge missing data from old structure
       for (const item of res[field]) {
-        const original = (this.structure[field] || []).find(x => x.objectId == item.objectId);
+        const original = (this.structure[field] || []).find(
+          (x) => x.objectId === item.objectId
+        );
         if (original) {
           for (const key in original) {
             if (!item[key]) item[key] = original[key];
@@ -177,13 +218,13 @@ export class DatabaseAnalyser<TClient = any> {
   getRequestedObjectPureNames(objectTypeField, allPureNames) {
     if (this.singleObjectFilter) {
       const { typeField, pureName } = this.singleObjectFilter;
-      if (typeField == objectTypeField) return [pureName];
+      if (typeField === objectTypeField) return [pureName];
     }
     if (this.modifications) {
       return this.modifications
-        .filter(x => x.objectTypeField == objectTypeField)
-        .filter(x => x.newName)
-        .map(x => x.newName.pureName);
+        .filter((x) => x.objectTypeField === objectTypeField)
+        .filter((x) => x.newName)
+        .map((x) => x.newName.pureName);
     }
     return allPureNames;
   }
@@ -197,11 +238,14 @@ export class DatabaseAnalyser<TClient = any> {
   // }
 
   getDefaultSchemaNameCondition() {
-    return 'is not null';
+    return "is not null";
   }
 
   createQuery(template, typeFields, replacements = {}) {
-    let query = this.createQueryCore(this.processQueryReplacements(template, replacements), typeFields);
+    const query = this.createQueryCore(
+      this.processQueryReplacements(template, replacements),
+      typeFields
+    );
 
     const dbname = this.dbhan.database;
     const schemaCondition = isCompositeDbName(dbname)
@@ -224,22 +268,36 @@ export class DatabaseAnalyser<TClient = any> {
       const { typeField } = this.singleObjectFilter;
       if (!this.singleObjectId) return null;
       if (!typeFields || !typeFields.includes(typeField)) return null;
-      return template.replace(/=OBJECT_ID_CONDITION/g, ` = '${this.singleObjectId}'`);
+      return template.replace(
+        /=OBJECT_ID_CONDITION/g,
+        ` = '${this.singleObjectId}'`
+      );
     }
-    if (!this.modifications || !typeFields || this.modifications.length == 0) {
-      return template.replace(/=OBJECT_ID_CONDITION/g, ' is not null');
+    if (!this.modifications || !typeFields || this.modifications.length === 0) {
+      return template.replace(/=OBJECT_ID_CONDITION/g, " is not null");
     }
-    if (this.modifications.some(x => typeFields.includes(x.objectTypeField) && x.action == 'all')) {
+    if (
+      this.modifications.some(
+        (x) => typeFields.includes(x.objectTypeField) && x.action === "all"
+      )
+    ) {
       // do not filter objects
-      return template.replace(/=OBJECT_ID_CONDITION/g, ' is not null');
+      return template.replace(/=OBJECT_ID_CONDITION/g, " is not null");
     }
     const filterIds = this.modifications
-      .filter(x => typeFields.includes(x.objectTypeField) && (x.action == 'add' || x.action == 'change'))
-      .map(x => x.objectId);
-    if (filterIds.length == 0) {
+      .filter(
+        (x) =>
+          typeFields.includes(x.objectTypeField) &&
+          (x.action === "add" || x.action === "change")
+      )
+      .map((x) => x.objectId);
+    if (filterIds.length === 0) {
       return null;
     }
-    return template.replace(/=OBJECT_ID_CONDITION/g, ` in (${filterIds.map(x => `'${x}'`).join(',')})`);
+    return template.replace(
+      /=OBJECT_ID_CONDITION/g,
+      ` in (${filterIds.map((x) => `'${x}'`).join(",")})`
+    );
   }
 
   getDeletedObjectsForField(snapshot, objectTypeField) {
@@ -247,25 +305,25 @@ export class DatabaseAnalyser<TClient = any> {
     if (!items) return [];
     if (!this.structure[objectTypeField]) return [];
     return this.structure[objectTypeField]
-      .filter(x => !items.find(y => x.objectId == y.objectId))
-      .map(x => ({
-        oldName: _pick(x, ['schemaName', 'pureName']),
+      .filter((x) => !items.find((y) => x.objectId === y.objectId))
+      .map((x) => ({
+        oldName: _pick(x, ["schemaName", "pureName"]),
         objectId: x.objectId,
-        action: 'remove',
+        action: "remove",
         objectTypeField,
       }));
   }
 
   getDeletedObjects(snapshot) {
     return [
-      ...this.getDeletedObjectsForField(snapshot, 'tables'),
-      ...this.getDeletedObjectsForField(snapshot, 'collections'),
-      ...this.getDeletedObjectsForField(snapshot, 'views'),
-      ...this.getDeletedObjectsForField(snapshot, 'matviews'),
-      ...this.getDeletedObjectsForField(snapshot, 'procedures'),
-      ...this.getDeletedObjectsForField(snapshot, 'functions'),
-      ...this.getDeletedObjectsForField(snapshot, 'triggers'),
-      ...this.getDeletedObjectsForField(snapshot, 'schedulerEvents'),
+      ...this.getDeletedObjectsForField(snapshot, "tables"),
+      ...this.getDeletedObjectsForField(snapshot, "collections"),
+      ...this.getDeletedObjectsForField(snapshot, "views"),
+      ...this.getDeletedObjectsForField(snapshot, "matviews"),
+      ...this.getDeletedObjectsForField(snapshot, "procedures"),
+      ...this.getDeletedObjectsForField(snapshot, "functions"),
+      ...this.getDeletedObjectsForField(snapshot, "triggers"),
+      ...this.getDeletedObjectsForField(snapshot, "schedulerEvents"),
     ];
   }
 
@@ -273,7 +331,7 @@ export class DatabaseAnalyser<TClient = any> {
     if (this.dbhan.feedback) {
       this.dbhan.feedback(obj);
     }
-    if (obj && obj.analysingMessage) {
+    if (obj?.analysingMessage) {
       logger.debug(this.getLogDbInfo(), obj.analysingMessage);
     }
   }
@@ -289,7 +347,7 @@ export class DatabaseAnalyser<TClient = any> {
     for (const field in snapshot) {
       const items = snapshot[field];
       if (items === null) {
-        res.push({ objectTypeField: field, action: 'all' });
+        res.push({ objectTypeField: field, action: "all" });
         continue;
       }
       if (items === undefined) {
@@ -298,21 +356,21 @@ export class DatabaseAnalyser<TClient = any> {
       }
       for (const item of items) {
         const { objectId, schemaName, pureName, contentHash } = item;
-        const obj = this.structure[field].find(x => x.objectId == objectId);
+        const obj = this.structure[field].find((x) => x.objectId === objectId);
 
-        if (obj && contentHash && obj.contentHash == contentHash) continue;
+        if (obj && contentHash && obj.contentHash === contentHash) continue;
 
         const action = obj
           ? {
               newName: { schemaName, pureName },
-              oldName: _pick(obj, ['schemaName', 'pureName']),
-              action: 'change',
+              oldName: _pick(obj, ["schemaName", "pureName"]),
+              action: "change",
               objectTypeField: field,
               objectId,
             }
           : {
               newName: { schemaName, pureName },
-              action: 'add',
+              action: "add",
               objectTypeField: field,
               objectId,
             };
@@ -321,15 +379,15 @@ export class DatabaseAnalyser<TClient = any> {
     }
 
     const rowCounts = (snapshot.tables || [])
-      .filter(x => x.tableRowCount != null)
-      .map(x => ({
+      .filter((x) => x.tableRowCount != null)
+      .map((x) => ({
         objectId: x.objectId,
         tableRowCount: x.tableRowCount,
       }));
 
     if (rowCounts.length > 0) {
       res.push({
-        action: 'setTableRowCounts',
+        action: "setTableRowCounts",
         rowCounts,
       });
     }
@@ -355,7 +413,7 @@ export class DatabaseAnalyser<TClient = any> {
     } catch (err) {
       logger.error(
         extractErrorLogData(err, { template, ...this.getLogDbInfo() }),
-        'DBGM-00130 Error running analyser query'
+        "DBGM-00130 Error running analyser query"
       );
       return {
         rows: [],
@@ -378,33 +436,39 @@ export class DatabaseAnalyser<TClient = any> {
   }
 
   static byTableFilter(table) {
-    return x => x.pureName == table.pureName && x.schemaName == table.schemaName;
+    return (x) =>
+      x.pureName === table.pureName && x.schemaName === table.schemaName;
   }
 
   static extractPrimaryKeys(table, pkColumns) {
     const filtered = pkColumns.filter(DatabaseAnalyser.byTableFilter(table));
-    if (filtered.length == 0) return undefined;
+    if (filtered.length === 0) return undefined;
     return {
-      ..._pick(filtered[0], ['constraintName', 'schemaName', 'pureName']),
-      constraintType: 'primaryKey',
-      columns: filtered.map(fp_pick('columnName')),
+      ..._pick(filtered[0], ["constraintName", "schemaName", "pureName"]),
+      constraintType: "primaryKey",
+      columns: filtered.map(fp_pick("columnName")),
     };
   }
   static extractForeignKeys(table, fkColumns) {
-    const grouped = _groupBy(fkColumns.filter(DatabaseAnalyser.byTableFilter(table)), 'constraintName');
-    return Object.keys(grouped).map(constraintName => ({
+    const grouped = _groupBy(
+      fkColumns.filter(DatabaseAnalyser.byTableFilter(table)),
+      "constraintName"
+    );
+    return Object.keys(grouped).map((constraintName) => ({
       constraintName,
-      constraintType: 'foreignKey',
+      constraintType: "foreignKey",
       ..._pick(grouped[constraintName][0], [
-        'constraintName',
-        'schemaName',
-        'pureName',
-        'refSchemaName',
-        'refTableName',
-        'updateAction',
-        'deleteAction',
+        "constraintName",
+        "schemaName",
+        "pureName",
+        "refSchemaName",
+        "refTableName",
+        "updateAction",
+        "deleteAction",
       ]),
-      columns: grouped[constraintName].map(fp_pick(['columnName', 'refColumnName'])),
+      columns: grouped[constraintName].map(
+        fp_pick(["columnName", "refColumnName"])
+      ),
     }));
   }
 }

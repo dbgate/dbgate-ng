@@ -1,5 +1,3 @@
-import uuidv1 from 'uuid/v1';
-import _omit from 'lodash/omit';
 import type {
   ColumnInfo,
   ColumnsConstraintInfo,
@@ -9,12 +7,14 @@ import type {
   PrimaryKeyInfo,
   TableInfo,
   UniqueInfo,
-} from 'dbgate-types';
-import _ from 'lodash';
-import { parseSqlDefaultValue } from './stringTools';
+} from "dbgate-types";
+import _ from "lodash";
+import _omit from "lodash/omit";
+import uuidv1 from "uuid/v1";
+import { parseSqlDefaultValue } from "./stringTools";
 
 export interface JsonDataObjectUpdateCommand {
-  type: 'renameField' | 'deleteField' | 'setField' | 'setFieldIfNull';
+  type: "renameField" | "deleteField" | "setField" | "setFieldIfNull";
   oldField?: string;
   newField?: string;
   value?: any;
@@ -24,37 +24,45 @@ export interface EditorColumnInfo extends ColumnInfo {
   isPrimaryKey?: boolean;
 }
 
-export function fillEditorColumnInfo(column: ColumnInfo, table: TableInfo): EditorColumnInfo {
+export function fillEditorColumnInfo(
+  column: ColumnInfo,
+  table: TableInfo
+): EditorColumnInfo {
   return {
-    isPrimaryKey: !!table?.primaryKey?.columns?.find(x => x.columnName == column.columnName),
-    dataType: _.isEmpty(column) ? 'int' : undefined,
+    isPrimaryKey: !!table?.primaryKey?.columns?.find(
+      (x) => x.columnName === column.columnName
+    ),
+    dataType: _.isEmpty(column) ? "int" : undefined,
     ...column,
   };
 }
 
-export function processJsonDataUpdateCommands(obj: any, commands: JsonDataObjectUpdateCommand[] = []) {
+export function processJsonDataUpdateCommands(
+  obj: any,
+  commands: JsonDataObjectUpdateCommand[] = []
+) {
   for (const cmd of commands) {
     switch (cmd.type) {
-      case 'deleteField':
+      case "deleteField":
         obj = {
           ...obj,
         };
         delete obj[cmd.oldField];
         break;
-      case 'renameField':
+      case "renameField":
         obj = {
           ...obj,
         };
         obj[cmd.newField] = obj[cmd.oldField];
         delete obj[cmd.oldField];
         break;
-      case 'setField':
+      case "setField":
         obj = {
           ...obj,
         };
         obj[cmd.newField] = cmd.value;
         break;
-      case 'setFieldIfNull':
+      case "setFieldIfNull":
         obj = {
           ...obj,
         };
@@ -67,12 +75,16 @@ export function processJsonDataUpdateCommands(obj: any, commands: JsonDataObject
   return obj;
 }
 
-function processPrimaryKey(table: TableInfo, oldColumn: EditorColumnInfo, newColumn: EditorColumnInfo): TableInfo {
+function processPrimaryKey(
+  table: TableInfo,
+  oldColumn: EditorColumnInfo,
+  newColumn: EditorColumnInfo
+): TableInfo {
   if (!oldColumn?.isPrimaryKey && newColumn?.isPrimaryKey) {
     let primaryKey = table?.primaryKey;
     if (!primaryKey) {
       primaryKey = {
-        constraintType: 'primaryKey',
+        constraintType: "primaryKey",
         pureName: table.pureName,
         schemaName: table.schemaName,
         columns: [],
@@ -97,9 +109,11 @@ function processPrimaryKey(table: TableInfo, oldColumn: EditorColumnInfo, newCol
     if (primaryKey) {
       primaryKey = {
         ...primaryKey,
-        columns: table.primaryKey.columns.filter(x => x.columnName != oldColumn.columnName),
+        columns: table.primaryKey.columns.filter(
+          (x) => x.columnName !== oldColumn.columnName
+        ),
       };
-      if (primaryKey.columns.length == 0) {
+      if (primaryKey.columns.length === 0) {
         return {
           ...table,
           primaryKey: null,
@@ -115,11 +129,18 @@ function processPrimaryKey(table: TableInfo, oldColumn: EditorColumnInfo, newCol
   return table;
 }
 
-function defineDataCommand(table: TableInfo, cmd: () => JsonDataObjectUpdateCommand) {
-  table['__addDataCommands'] = [...(table['__addDataCommands'] || []), cmd()];
+function defineDataCommand(
+  table: TableInfo,
+  cmd: () => JsonDataObjectUpdateCommand
+) {
+  table.__addDataCommands = [...(table.__addDataCommands || []), cmd()];
 }
 
-export function editorAddColumn(table: TableInfo, column: EditorColumnInfo, addDataCommand?: boolean): TableInfo {
+export function editorAddColumn(
+  table: TableInfo,
+  column: EditorColumnInfo,
+  addDataCommand?: boolean
+): TableInfo {
   let res = {
     ...table,
     columns: [...(table?.columns || []), { ...column, pairingId: uuidv1() }],
@@ -129,7 +150,7 @@ export function editorAddColumn(table: TableInfo, column: EditorColumnInfo, addD
 
   if (addDataCommand && column.defaultValue) {
     defineDataCommand(res, () => ({
-      type: 'setField',
+      type: "setField",
       newField: column.columnName,
       value: parseSqlDefaultValue(column.defaultValue),
     }));
@@ -138,18 +159,26 @@ export function editorAddColumn(table: TableInfo, column: EditorColumnInfo, addD
   return res;
 }
 
-export function editorModifyColumn(table: TableInfo, column: EditorColumnInfo, addDataCommand?: boolean): TableInfo {
-  const oldColumn = table?.columns?.find(x => x.pairingId == column.pairingId);
+export function editorModifyColumn(
+  table: TableInfo,
+  column: EditorColumnInfo,
+  addDataCommand?: boolean
+): TableInfo {
+  const oldColumn = table?.columns?.find(
+    (x) => x.pairingId === column.pairingId
+  );
 
   let res = {
     ...table,
-    columns: table.columns.map(col => (col.pairingId == column.pairingId ? _omit(column, ['isPrimaryKey']) : col)),
+    columns: table.columns.map((col) =>
+      col.pairingId === column.pairingId ? _omit(column, ["isPrimaryKey"]) : col
+    ),
   };
   res = processPrimaryKey(res, fillEditorColumnInfo(oldColumn, table), column);
 
-  if (addDataCommand && oldColumn.columnName != column.columnName) {
+  if (addDataCommand && oldColumn.columnName !== column.columnName) {
     defineDataCommand(res, () => ({
-      type: 'renameField',
+      type: "renameField",
       oldField: oldColumn.columnName,
       newField: column.columnName,
     }));
@@ -157,7 +186,7 @@ export function editorModifyColumn(table: TableInfo, column: EditorColumnInfo, a
 
   if (addDataCommand && !oldColumn.defaultValue && column.defaultValue) {
     defineDataCommand(res, () => ({
-      type: 'setFieldIfNull',
+      type: "setFieldIfNull",
       newField: column.columnName,
       value: parseSqlDefaultValue(column.defaultValue),
     }));
@@ -166,17 +195,21 @@ export function editorModifyColumn(table: TableInfo, column: EditorColumnInfo, a
   return res;
 }
 
-export function editorDeleteColumn(table: TableInfo, column: EditorColumnInfo, addDataCommand?: boolean): TableInfo {
+export function editorDeleteColumn(
+  table: TableInfo,
+  column: EditorColumnInfo,
+  addDataCommand?: boolean
+): TableInfo {
   let res = {
     ...table,
-    columns: table.columns.filter(col => col.pairingId != column.pairingId),
+    columns: table.columns.filter((col) => col.pairingId !== column.pairingId),
   };
 
   res = processPrimaryKey(res, column, null);
 
   if (addDataCommand) {
     defineDataCommand(res, () => ({
-      type: 'deleteField',
+      type: "deleteField",
       oldField: column.columnName,
     }));
   }
@@ -184,26 +217,29 @@ export function editorDeleteColumn(table: TableInfo, column: EditorColumnInfo, a
   return res;
 }
 
-export function editorAddConstraint(table: TableInfo, constraint: ConstraintInfo): TableInfo {
+export function editorAddConstraint(
+  table: TableInfo,
+  constraint: ConstraintInfo
+): TableInfo {
   const res = {
     ...table,
   };
 
-  if (constraint.constraintType == 'primaryKey') {
+  if (constraint.constraintType === "primaryKey") {
     res.primaryKey = {
       pairingId: uuidv1(),
       ...constraint,
     } as PrimaryKeyInfo;
   }
 
-  if (constraint.constraintType == 'sortingKey') {
+  if (constraint.constraintType === "sortingKey") {
     res.sortingKey = {
       pairingId: uuidv1(),
       ...constraint,
     } as ColumnsConstraintInfo;
   }
 
-  if (constraint.constraintType == 'foreignKey') {
+  if (constraint.constraintType === "foreignKey") {
     res.foreignKeys = [
       ...(res.foreignKeys || []),
       {
@@ -213,7 +249,7 @@ export function editorAddConstraint(table: TableInfo, constraint: ConstraintInfo
     ];
   }
 
-  if (constraint.constraintType == 'index') {
+  if (constraint.constraintType === "index") {
     res.indexes = [
       ...(res.indexes || []),
       {
@@ -223,7 +259,7 @@ export function editorAddConstraint(table: TableInfo, constraint: ConstraintInfo
     ];
   }
 
-  if (constraint.constraintType == 'unique') {
+  if (constraint.constraintType === "unique") {
     res.uniques = [
       ...(res.uniques || []),
       {
@@ -236,65 +272,81 @@ export function editorAddConstraint(table: TableInfo, constraint: ConstraintInfo
   return res;
 }
 
-export function editorModifyConstraint(table: TableInfo, constraint: ConstraintInfo): TableInfo {
+export function editorModifyConstraint(
+  table: TableInfo,
+  constraint: ConstraintInfo
+): TableInfo {
   const res = {
     ...table,
   };
 
-  if (constraint.constraintType == 'primaryKey') {
+  if (constraint.constraintType === "primaryKey") {
     res.primaryKey = {
       ...res.primaryKey,
       ...constraint,
     };
   }
 
-  if (constraint.constraintType == 'sortingKey') {
+  if (constraint.constraintType === "sortingKey") {
     res.sortingKey = {
       ...res.sortingKey,
       ...constraint,
     };
   }
 
-  if (constraint.constraintType == 'foreignKey') {
-    res.foreignKeys = table.foreignKeys.map(fk =>
-      fk.pairingId == constraint.pairingId ? { ...fk, ...constraint } : fk
+  if (constraint.constraintType === "foreignKey") {
+    res.foreignKeys = table.foreignKeys.map((fk) =>
+      fk.pairingId === constraint.pairingId ? { ...fk, ...constraint } : fk
     );
   }
 
-  if (constraint.constraintType == 'index') {
-    res.indexes = table.indexes.map(fk => (fk.pairingId == constraint.pairingId ? { ...fk, ...constraint } : fk));
+  if (constraint.constraintType === "index") {
+    res.indexes = table.indexes.map((fk) =>
+      fk.pairingId === constraint.pairingId ? { ...fk, ...constraint } : fk
+    );
   }
 
-  if (constraint.constraintType == 'unique') {
-    res.uniques = table.uniques.map(fk => (fk.pairingId == constraint.pairingId ? { ...fk, ...constraint } : fk));
+  if (constraint.constraintType === "unique") {
+    res.uniques = table.uniques.map((fk) =>
+      fk.pairingId === constraint.pairingId ? { ...fk, ...constraint } : fk
+    );
   }
 
   return res;
 }
 
-export function editorDeleteConstraint(table: TableInfo, constraint: ConstraintInfo): TableInfo {
+export function editorDeleteConstraint(
+  table: TableInfo,
+  constraint: ConstraintInfo
+): TableInfo {
   const res = {
     ...table,
   };
 
-  if (constraint.constraintType == 'primaryKey') {
+  if (constraint.constraintType === "primaryKey") {
     res.primaryKey = null;
   }
 
-  if (constraint.constraintType == 'sortingKey') {
+  if (constraint.constraintType === "sortingKey") {
     res.sortingKey = null;
   }
 
-  if (constraint.constraintType == 'foreignKey') {
-    res.foreignKeys = table.foreignKeys.filter(x => x.pairingId != constraint.pairingId);
+  if (constraint.constraintType === "foreignKey") {
+    res.foreignKeys = table.foreignKeys.filter(
+      (x) => x.pairingId !== constraint.pairingId
+    );
   }
 
-  if (constraint.constraintType == 'index') {
-    res.indexes = table.indexes.filter(x => x.pairingId != constraint.pairingId);
+  if (constraint.constraintType === "index") {
+    res.indexes = table.indexes.filter(
+      (x) => x.pairingId !== constraint.pairingId
+    );
   }
 
-  if (constraint.constraintType == 'unique') {
-    res.uniques = table.uniques.filter(x => x.pairingId != constraint.pairingId);
+  if (constraint.constraintType === "unique") {
+    res.uniques = table.uniques.filter(
+      (x) => x.pairingId !== constraint.pairingId
+    );
   }
 
   return res;

@@ -1,8 +1,14 @@
-import { AlterProcessor } from './alter-processor';
-import { CallableObjectInfo, NamedObjectInfo, TableInfo } from './dbinfo';
-import { SqlDialect } from './dialect';
+import { AlterProcessor } from "./alter-processor";
+import { CallableObjectInfo, NamedObjectInfo } from "./dbinfo";
+import { SqlDialect } from "./dialect";
 
-export type TransformType = 'GROUP:YEAR' | 'GROUP:MONTH' | 'GROUP:DAY' | 'YEAR' | 'MONTH' | 'DAY'; // | 'GROUP:HOUR' | 'GROUP:MINUTE';
+export type TransformType =
+  | "GROUP:YEAR"
+  | "GROUP:MONTH"
+  | "GROUP:DAY"
+  | "YEAR"
+  | "MONTH"
+  | "DAY"; // | 'GROUP:HOUR' | 'GROUP:MINUTE';
 
 export interface SqlDumper extends AlterProcessor {
   s: string;
@@ -12,7 +18,11 @@ export interface SqlDumper extends AlterProcessor {
   put(format: string, ...args);
   putCmd(format: string, ...args);
   putValue(value: string | number | Date, dataType?: string);
-  putCollection<T>(delimiter: string, collection: T[], lambda: (item: T) => void);
+  putCollection<T>(
+    delimiter: string,
+    collection: T[],
+    lambda: (item: T) => void
+  );
   transform(type: TransformType, dumpExpr: () => void);
   createDatabase(name: string);
   dropDatabase(name: string);

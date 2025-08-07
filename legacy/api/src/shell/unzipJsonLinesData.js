@@ -1,6 +1,6 @@
-const yauzl = require('yauzl');
-const fs = require('fs');
-const { jsonLinesParse } = require('dbgate-tools');
+const yauzl = require("yauzl");
+const _fs = require("node:fs");
+const { jsonLinesParse } = require("dbgate-tools");
 
 function unzipJsonLinesData(zipPath) {
   return new Promise((resolve, reject) => {
@@ -15,7 +15,7 @@ function unzipJsonLinesData(zipPath) {
       // Start reading entries
       zipfile.readEntry();
 
-      zipfile.on('entry', entry => {
+      zipfile.on("entry", (entry) => {
         // Only process .json files
         if (/\.jsonl$/i.test(entry.fileName)) {
           zipfile.openReadStream(entry, (err, readStream) => {
@@ -24,12 +24,12 @@ function unzipJsonLinesData(zipPath) {
             }
 
             const chunks = [];
-            readStream.on('data', chunk => chunks.push(chunk));
-            readStream.on('end', () => {
+            readStream.on("data", (chunk) => chunks.push(chunk));
+            readStream.on("end", () => {
               try {
-                const fileContent = Buffer.concat(chunks).toString('utf-8');
+                const fileContent = Buffer.concat(chunks).toString("utf-8");
                 const parsedJson = jsonLinesParse(fileContent);
-                results[entry.fileName.replace(/\.jsonl$/, '')] = parsedJson;
+                results[entry.fileName.replace(/\.jsonl$/, "")] = parsedJson;
               } catch (parseError) {
                 return reject(parseError);
               }
@@ -45,12 +45,12 @@ function unzipJsonLinesData(zipPath) {
       });
 
       // Resolve when no more entries
-      zipfile.on('end', () => {
+      zipfile.on("end", () => {
         resolve(results);
       });
 
       // Catch errors from zipfile
-      zipfile.on('error', zipErr => {
+      zipfile.on("error", (zipErr) => {
         reject(zipErr);
       });
     });

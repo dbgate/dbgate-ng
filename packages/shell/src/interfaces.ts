@@ -1,12 +1,14 @@
 // Interface definitions using the generic API interface factory
-import { AsyncApiInterfaceFactory } from '../../types/api/interface-factory';
-import { Connections_Request } from '../../types/api/connections-api';
+
+import type { Connections_Request } from "../../types/api/connections-api";
+import type { AsyncApiInterfaceFactory } from "../../types/api/interface-factory";
 
 /**
  * Connection Manager Interface generated from API contracts
  * This ensures type safety between API contracts and implementation
  */
-export type ConnectionManagerInterface = AsyncApiInterfaceFactory<Connections_Request>;
+export type ConnectionManagerInterface =
+  AsyncApiInterfaceFactory<Connections_Request>;
 
 /**
  * Alternative interface with context parameter for dependency injection
@@ -21,12 +23,13 @@ export type ConnectionManagerWithContextInterface = {
 /**
  * Utility type to extract specific method signatures
  */
-export type ListConnectionsMethod = ConnectionManagerInterface['list'];
-export type GetConnectionMethod = ConnectionManagerInterface['get'];
-export type TestConnectionMethod = ConnectionManagerInterface['test'];
-export type SaveConnectionMethod = ConnectionManagerInterface['save'];
-export type DeleteConnectionMethod = ConnectionManagerInterface['delete'];
-export type NewSqliteDatabaseMethod = ConnectionManagerInterface['newSqliteDatabase'];
+export type ListConnectionsMethod = ConnectionManagerInterface["list"];
+export type GetConnectionMethod = ConnectionManagerInterface["get"];
+export type TestConnectionMethod = ConnectionManagerInterface["test"];
+export type SaveConnectionMethod = ConnectionManagerInterface["save"];
+export type DeleteConnectionMethod = ConnectionManagerInterface["delete"];
+export type NewSqliteDatabaseMethod =
+  ConnectionManagerInterface["newSqliteDatabase"];
 
 // Example of how the generated interface looks (for documentation):
 /*

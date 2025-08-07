@@ -1,11 +1,15 @@
-const path = require('path');
-const fs = require('fs');
-const { pluginsdir, packagedPluginsDir, getPluginBackendPath } = require('../utility/directories');
-const platformInfo = require('../utility/platformInfo');
-const authProxy = require('../utility/authProxy');
-const { getLogger } = require('dbgate-tools');
-// 
-const logger = getLogger('requirePlugin');
+const _path = require("node:path");
+const _fs = require("node:fs");
+const {
+  pluginsdir,
+  packagedPluginsDir,
+  getPluginBackendPath,
+} = require("../utility/directories");
+const platformInfo = require("../utility/platformInfo");
+const authProxy = require("../utility/authProxy");
+const { getLogger } = require("dbgate-tools");
+//
+const logger = getLogger("requirePlugin");
 
 const loadedPlugins = {};
 
@@ -13,13 +17,13 @@ const dbgateEnv = {
   dbgateApi: null,
   platformInfo,
   authProxy,
-  isProApp: () =>{
-    const { isProApp } = require('../utility/checkLicense');
+  isProApp: () => {
+    const { isProApp } = require("../utility/checkLicense");
     return isProApp();
-  }
+  },
 };
 function requirePlugin(packageName, requiredPlugin = null) {
-  if (!packageName) throw new Error('Missing packageName in plugin');
+  if (!packageName) throw new Error("Missing packageName in plugin");
   if (loadedPlugins[packageName]) return loadedPlugins[packageName];
 
   if (requiredPlugin == null) {
@@ -29,7 +33,7 @@ function requirePlugin(packageName, requiredPlugin = null) {
     try {
       // @ts-ignore
       module = __non_webpack_require__(modulePath);
-    } catch (err) {
+    } catch (_err) {
       // console.log('Failed load webpacked module', err.message);
       module = require(modulePath);
     }
@@ -41,7 +45,7 @@ function requirePlugin(packageName, requiredPlugin = null) {
   return requiredPlugin;
 }
 
-requirePlugin.initializeDbgateApi = value => {
+requirePlugin.initializeDbgateApi = (value) => {
   dbgateEnv.dbgateApi = value;
 };
 

@@ -1,23 +1,23 @@
-var webpack = require('webpack');
-var path = require('path');
-var getBundleExternals = require('../../common/getBundleExternals');
+var _webpack = require("webpack");
+var path = require("node:path");
+var getBundleExternals = require("../../common/getBundleExternals");
 
 var externals = getBundleExternals();
 
 var config = {
-  context: __dirname + '/src',
+  context: `${__dirname}/src`,
 
   entry: {
-    app: './index.js',
+    app: "./index.js",
   },
-  target: 'node',
+  target: "node",
   node: {
     __dirname: false,
   },
   output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'bundle.js',
-    libraryTarget: 'commonjs2',
+    path: path.resolve(__dirname, "dist"),
+    filename: "bundle.js",
+    libraryTarget: "commonjs2",
   },
 
   // optimization: {
@@ -28,7 +28,7 @@ var config = {
     rules: [
       {
         test: /\.node$/,
-        use: 'node-loader',
+        use: "node-loader",
       },
     ],
   },

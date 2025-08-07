@@ -1,7 +1,7 @@
-const { quoteFullName, fullNameToString, getLogger } = require('dbgate-tools');
-const requireEngineDriver = require('../utility/requireEngineDriver');
-const { connectUtility } = require('../utility/connectUtility');
-const logger = getLogger('tableReader');
+const { quoteFullName, fullNameToString, getLogger } = require("dbgate-tools");
+const requireEngineDriver = require("../utility/requireEngineDriver");
+const { connectUtility } = require("../utility/connectUtility");
+const logger = getLogger("tableReader");
 
 /**
  * Creates reader object for {@link copyStream} function. This reader object reads data from table or view.
@@ -13,22 +13,29 @@ const logger = getLogger('tableReader');
  * @param {string} options.schemaName - schema name
  * @returns {Promise<readerType>} - reader object
  */
-async function tableReader({ connection, systemConnection, pureName, schemaName, driver }) {
+async function tableReader({
+  connection,
+  systemConnection,
+  pureName,
+  schemaName,
+  driver,
+}) {
   if (!driver) {
     driver = requireEngineDriver(connection);
   }
-  const dbhan = systemConnection || (await connectUtility(driver, connection, 'read'));
+  const dbhan =
+    systemConnection || (await connectUtility(driver, connection, "read"));
 
   const fullName = { pureName, schemaName };
 
-  if (driver.databaseEngineTypes.includes('document')) {
+  if (driver.databaseEngineTypes.includes("document")) {
     // @ts-ignore
     logger.info(`DBGM-00064 Reading collection ${fullNameToString(fullName)}`);
     // @ts-ignore
     return await driver.readQuery(dbhan, JSON.stringify(fullName));
   }
 
-  const table = await driver.analyseSingleObject(dbhan, fullName, 'tables');
+  const table = await driver.analyseSingleObject(dbhan, fullName, "tables");
   const query = `select * from ${quoteFullName(driver.dialect, fullName)}`;
   if (table) {
     // @ts-ignore
@@ -36,7 +43,7 @@ async function tableReader({ connection, systemConnection, pureName, schemaName,
     // @ts-ignore
     return await driver.readQuery(dbhan, query, table);
   }
-  const view = await driver.analyseSingleObject(dbhan, fullName, 'views');
+  const view = await driver.analyseSingleObject(dbhan, fullName, "views");
   if (view) {
     // @ts-ignore
     logger.info(`DBGM-00066 Reading view ${fullNameToString(view)}`);

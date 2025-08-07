@@ -1,37 +1,37 @@
-const axios = require('axios');
-const jwt = require('jsonwebtoken');
-const getExpressPath = require('../utility/getExpressPath');
-const { getLogger, extractErrorLogData } = require('dbgate-tools');
-const AD = require('activedirectory2').promiseWrapper;
-const crypto = require('crypto');
-const { getTokenSecret, getTokenLifetime } = require('../auth/authCommon');
+const _axios = require("axios");
+const jwt = require("jsonwebtoken");
+const getExpressPath = require("../utility/getExpressPath");
+const { getLogger, extractErrorLogData } = require("dbgate-tools");
+const _AD = require("activedirectory2").promiseWrapper;
+const _crypto = require("node:crypto");
+const { getTokenSecret, getTokenLifetime } = require("../auth/authCommon");
 const {
   getAuthProviderFromReq,
   getAuthProviders,
   getDefaultAuthProvider,
   getAuthProviderById,
-} = require('../auth/authProvider');
-const storage = require('./storage');
-const { decryptPasswordString } = require('../utility/crypting');
+} = require("../auth/authProvider");
+const storage = require("./storage");
+const { decryptPasswordString } = require("../utility/crypting");
 const {
   createDbGateIdentitySession,
   startCloudTokenChecking,
   readCloudTokenHolder,
   readCloudTestTokenHolder,
-} = require('../utility/cloudIntf');
-const socket = require('../utility/socket');
-const { sendToAuditLog } = require('../utility/auditlog');
+} = require("../utility/cloudIntf");
+const socket = require("../utility/socket");
+const { sendToAuditLog } = require("../utility/auditlog");
 const {
   isLoginLicensed,
   LOGIN_LIMIT_ERROR,
   markTokenAsLoggedIn,
   markUserAsActive,
   markLoginAsLoggedOut,
-} = require('../utility/loginchecker');
+} = require("../utility/loginchecker");
 
-const logger = getLogger('auth');
+const logger = getLogger("auth");
 
-function unauthorizedResponse(req, res, text) {
+function unauthorizedResponse(_req, res, text) {
   // if (req.path == getExpressPath('/config/get-settings')) {
   //   return res.json({});
   // }
@@ -44,23 +44,23 @@ function unauthorizedResponse(req, res, text) {
 
 function authMiddleware(req, res, next) {
   const SKIP_AUTH_PATHS = [
-    '/config/get',
-    '/config/logout',
-    '/config/get-settings',
-    '/config/save-license-key',
-    '/auth/oauth-token',
-    '/auth/login',
-    '/auth/redirect',
-    '/stream',
-    '/storage/get-connections-for-login-page',
-    '/storage/set-admin-password',
-    '/auth/get-providers',
-    '/connections/dblogin-web',
-    '/connections/dblogin-app',
-    '/connections/dblogin-auth',
-    '/connections/dblogin-auth-token',
-    '/health',
-    '/__health',
+    "/config/get",
+    "/config/logout",
+    "/config/get-settings",
+    "/config/save-license-key",
+    "/auth/oauth-token",
+    "/auth/login",
+    "/auth/redirect",
+    "/stream",
+    "/storage/get-connections-for-login-page",
+    "/storage/set-admin-password",
+    "/auth/get-providers",
+    "/connections/dblogin-web",
+    "/connections/dblogin-app",
+    "/connections/dblogin-auth",
+    "/connections/dblogin-auth-token",
+    "/health",
+    "/__health",
   ];
 
   // console.log('********************* getAuthProvider()', getAuthProvider());
@@ -77,16 +77,18 @@ function authMiddleware(req, res, next) {
     return next();
   }
 
-  let skipAuth = !!SKIP_AUTH_PATHS.find(x => req.path == getExpressPath(x));
+  const skipAuth = !!SKIP_AUTH_PATHS.find(
+    (x) => req.path === getExpressPath(x)
+  );
 
   const authHeader = req.headers.authorization;
   if (!authHeader) {
     if (skipAuth) {
       return next();
     }
-    return unauthorizedResponse(req, res, 'missing authorization header');
+    return unauthorizedResponse(req, res, "missing authorization header");
   }
-  const token = authHeader.split(' ')[1];
+  const token = authHeader.split(" ")[1];
   try {
     const decoded = jwt.verify(token, getTokenSecret());
     req.user = decoded;
@@ -99,9 +101,12 @@ function authMiddleware(req, res, next) {
       return next();
     }
 
-    logger.error(extractErrorLogData(err), 'DBGM-00098 Sending invalid token error');
+    logger.error(
+      extractErrorLogData(err),
+      "DBGM-00098 Sending invalid token error"
+    );
 
-    return unauthorizedResponse(req, res, 'invalid token');
+    return unauthorizedResponse(req, res, "invalid token");
   }
 }
 
@@ -118,27 +123,27 @@ module.exports = {
     if (isAdminPage) {
       let adminPassword = process.env.ADMIN_PASSWORD;
       if (!adminPassword) {
-        const adminConfig = await storage.readConfig({ group: 'admin' });
+        const adminConfig = await storage.readConfig({ group: "admin" });
         adminPassword = decryptPasswordString(adminConfig?.adminPassword);
       }
-      if (adminPassword && adminPassword == password) {
+      if (adminPassword && adminPassword === password) {
         if (!(await isLoginLicensed(req, `superadmin`))) {
           return { error: LOGIN_LIMIT_ERROR };
         }
 
         sendToAuditLog(req, {
-          category: 'auth',
-          component: 'AuthController',
-          action: 'login',
-          event: 'login.admin',
-          severity: 'info',
-          message: 'Administration login successful',
+          category: "auth",
+          component: "AuthController",
+          action: "login",
+          event: "login.admin",
+          severity: "info",
+          message: "Administration login successful",
         });
 
         const licenseUid = `superadmin`;
         const accessToken = jwt.sign(
           {
-            login: 'superadmin',
+            login: "superadmin",
             permissions: await storage.loadSuperadminPermissions(),
             roleId: -3,
             licenseUid,
@@ -156,15 +161,15 @@ module.exports = {
       }
 
       sendToAuditLog(req, {
-        category: 'auth',
-        component: 'AuthController',
-        action: 'loginFail',
-        event: 'login.adminFailed',
-        severity: 'warn',
-        message: 'Administraton login failed',
+        category: "auth",
+        component: "AuthController",
+        action: "loginFail",
+        event: "login.adminFailed",
+        severity: "warn",
+        message: "Administraton login failed",
       });
 
-      return { error: 'Login failed' };
+      return { error: "Login failed" };
     }
 
     return getAuthProviderById(amoid).login(login, password, undefined, req);
@@ -173,7 +178,7 @@ module.exports = {
   getProviders_meta: true,
   getProviders() {
     return {
-      providers: getAuthProviders().map(x => x.toJson()),
+      providers: getAuthProviders().map((x) => x.toJson()),
       default: getDefaultAuthProvider()?.amoid,
     };
   },
@@ -187,10 +192,10 @@ module.exports = {
   createCloudLoginSession_meta: true,
   async createCloudLoginSession({ client, redirectUri }) {
     const res = await createDbGateIdentitySession(client, redirectUri);
-    startCloudTokenChecking(res.sid, tokenHolder => {
-      socket.emit('got-cloud-token', tokenHolder);
-      socket.emitChanged('cloud-content-changed');
-      socket.emit('cloud-content-updated');
+    startCloudTokenChecking(res.sid, (tokenHolder) => {
+      socket.emit("got-cloud-token", tokenHolder);
+      socket.emitChanged("cloud-content-changed");
+      socket.emit("cloud-content-updated");
     });
     return res;
   },
@@ -209,7 +214,7 @@ module.exports = {
 
   logoutAdmin_meta: true,
   async logoutAdmin() {
-    await markLoginAsLoggedOut('superadmin');
+    await markLoginAsLoggedOut("superadmin");
     return true;
   },
 

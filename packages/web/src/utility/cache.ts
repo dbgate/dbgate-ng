@@ -1,6 +1,6 @@
-import { apiOn, transformApiArgsInv } from './api';
-import getAsArray from './getAsArray';
-import stableStringify from 'json-stable-stringify';
+import stableStringify from "json-stable-stringify";
+import { apiOn, transformApiArgsInv } from "./api";
+import getAsArray from "./getAsArray";
 
 const cachedByKey = {};
 const cachedPromisesByKey = {};
@@ -79,7 +79,7 @@ export async function loadCachedValue(reloadTrigger, cacheKey, func) {
         return res;
       }
     } catch (err) {
-      console.error('Error when using cached promise', err);
+      console.error("Error when using cached promise", err);
       // cacheClean(cacheKey);
       cacheClean(reloadTrigger);
       const res = await func();
@@ -89,7 +89,11 @@ export async function loadCachedValue(reloadTrigger, cacheKey, func) {
   }
 }
 
-export async function subscribeCacheChange(reloadTrigger, cacheKey, reloadHandler) {
+export async function subscribeCacheChange(
+  reloadTrigger,
+  _cacheKey,
+  reloadHandler
+) {
   for (const item of getAsArray(reloadTrigger)) {
     const itemString = stableStringify(item);
     if (!subscriptionsByReloadTrigger[itemString]) {
@@ -99,15 +103,19 @@ export async function subscribeCacheChange(reloadTrigger, cacheKey, reloadHandle
   }
 }
 
-export async function unsubscribeCacheChange(reloadTrigger, cacheKey, reloadHandler) {
+export async function unsubscribeCacheChange(
+  reloadTrigger,
+  _cacheKey,
+  reloadHandler
+) {
   for (const item of getAsArray(reloadTrigger)) {
     const itemString = stableStringify(item);
     if (subscriptionsByReloadTrigger[itemString]) {
-      subscriptionsByReloadTrigger[itemString] = subscriptionsByReloadTrigger[itemString].filter(
-        x => x != reloadHandler
-      );
+      subscriptionsByReloadTrigger[itemString] = subscriptionsByReloadTrigger[
+        itemString
+      ].filter((x) => x !== reloadHandler);
     }
-    if (subscriptionsByReloadTrigger[itemString].length == 0) {
+    if (subscriptionsByReloadTrigger[itemString].length === 0) {
       delete subscriptionsByReloadTrigger[itemString];
     }
   }
@@ -135,4 +143,4 @@ export function batchDispatchCacheTriggers(predicate) {
   }
 }
 
-apiOn('changed-cache', reloadTrigger => dispatchCacheChange(reloadTrigger));
+apiOn("changed-cache", (reloadTrigger) => dispatchCacheChange(reloadTrigger));

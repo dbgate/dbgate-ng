@@ -1,4 +1,4 @@
-const requirePlugin = require('./requirePlugin');
+const requirePlugin = require("./requirePlugin");
 
 function registerPlugins(...plugins) {
   for (const plugin of plugins) {

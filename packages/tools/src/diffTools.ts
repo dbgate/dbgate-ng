@@ -9,25 +9,22 @@ import type {
   IndexInfo,
   NamedObjectInfo,
   PrimaryKeyInfo,
-  SqlDialect,
   SqlObjectInfo,
   TableInfo,
   UniqueInfo,
   ViewInfo,
-} from 'dbgate-types';
-import uuidv1 from 'uuid/v1';
-import { AlterPlan } from './alterPlan';
-import stableStringify from 'json-stable-stringify';
-import toposort from 'toposort';
-import _omit from 'lodash/omit';
-import _cloneDeep from 'lodash/cloneDeep';
-import _isEqual from 'lodash/isEqual';
-import _pick from 'lodash/pick';
-import _compact from 'lodash/compact';
-import _isString from 'lodash/isString';
-import { detectChangesInPreloadedRows } from './structureTools';
+} from "dbgate-types";
+import _cloneDeep from "lodash/cloneDeep";
+import _compact from "lodash/compact";
+import _isEqual from "lodash/isEqual";
+import _isString from "lodash/isString";
+import _pick from "lodash/pick";
+import toposort from "toposort";
+import uuidv1 from "uuid/v1";
+import { AlterPlan } from "./alterPlan";
+import { detectChangesInPreloadedRows } from "./structureTools";
 
-type DbDiffSchemaMode = 'strict' | 'ignore' | 'ignoreImplicit';
+type DbDiffSchemaMode = "strict" | "ignore" | "ignoreImplicit";
 
 export interface DbDiffOptions {
   // allowRecreateTable?: boolean;
@@ -74,23 +71,23 @@ export function generateTablePairingId(table: TableInfo): TableInfo {
         ...table.sortingKey,
         pairingId: table.sortingKey.pairingId || uuidv1(),
       },
-      columns: table.columns?.map(col => ({
+      columns: table.columns?.map((col) => ({
         ...col,
         pairingId: col.pairingId || uuidv1(),
       })),
-      foreignKeys: table.foreignKeys?.map(cnt => ({
+      foreignKeys: table.foreignKeys?.map((cnt) => ({
         ...cnt,
         pairingId: cnt.pairingId || uuidv1(),
       })),
-      checks: table.checks?.map(cnt => ({
+      checks: table.checks?.map((cnt) => ({
         ...cnt,
         pairingId: cnt.pairingId || uuidv1(),
       })),
-      indexes: table.indexes?.map(cnt => ({
+      indexes: table.indexes?.map((cnt) => ({
         ...cnt,
         pairingId: cnt.pairingId || uuidv1(),
       })),
-      uniques: table.uniques?.map(cnt => ({
+      uniques: table.uniques?.map((cnt) => ({
         ...cnt,
         pairingId: cnt.pairingId || uuidv1(),
       })),
@@ -104,23 +101,23 @@ export function removeTablePairingId(table: TableInfo): TableInfo {
   if (!table) return table;
   return {
     ...table,
-    columns: table.columns?.map(col => ({
+    columns: table.columns?.map((col) => ({
       ...col,
       pairingId: undefined,
     })),
-    foreignKeys: table.foreignKeys?.map(cnt => ({
+    foreignKeys: table.foreignKeys?.map((cnt) => ({
       ...cnt,
       pairingId: undefined,
     })),
-    checks: table.checks?.map(cnt => ({
+    checks: table.checks?.map((cnt) => ({
       ...cnt,
       pairingId: undefined,
     })),
-    indexes: table.indexes?.map(cnt => ({
+    indexes: table.indexes?.map((cnt) => ({
       ...cnt,
       pairingId: undefined,
     })),
-    uniques: table.uniques?.map(cnt => ({
+    uniques: table.uniques?.map((cnt) => ({
       ...cnt,
       pairingId: undefined,
     })),
@@ -129,8 +126,8 @@ export function removeTablePairingId(table: TableInfo): TableInfo {
 }
 
 function simplifySqlExpression(sql: string) {
-  return (sql || '')
-    .replace(/[\s\(\)\[\]\"]/g, '')
+  return (sql || "")
+    .replace(/[\s()[\]"]/g, "")
     .toLowerCase()
     .trim();
 }
@@ -160,14 +157,18 @@ export function generateDbPairingId(db: DatabaseInfo): DatabaseInfo {
   };
 }
 
-function getNameWithoutDeletedPrefix(name: string, opts: DbDiffOptions, deletedPrefix?: string) {
+function getNameWithoutDeletedPrefix(
+  name: string,
+  opts: DbDiffOptions,
+  deletedPrefix?: string
+) {
   if (deletedPrefix) {
     if (opts.ignoreCase) {
-      if ((name || '').toLowerCase().startsWith(deletedPrefix.toLowerCase())) {
+      if ((name || "").toLowerCase().startsWith(deletedPrefix.toLowerCase())) {
         return name.slice(deletedPrefix.length);
       }
     } else {
-      if ((name || '').startsWith(deletedPrefix)) {
+      if ((name || "").startsWith(deletedPrefix)) {
         return name.slice(deletedPrefix.length);
       }
     }
@@ -176,52 +177,87 @@ function getNameWithoutDeletedPrefix(name: string, opts: DbDiffOptions, deletedP
   return name;
 }
 
-export function hasDeletedPrefix(name: string, opts: DbDiffOptions, deletedPrefix?: string) {
+export function hasDeletedPrefix(
+  name: string,
+  opts: DbDiffOptions,
+  deletedPrefix?: string
+) {
   if (deletedPrefix) {
     if (opts.ignoreCase) {
-      return (name || '').toLowerCase().startsWith(deletedPrefix.toLowerCase());
+      return (name || "").toLowerCase().startsWith(deletedPrefix.toLowerCase());
     } else {
-      return (name || '').startsWith(deletedPrefix);
+      return (name || "").startsWith(deletedPrefix);
     }
   }
   return false;
 }
 
-function testEqualNames(a: string, b: string, opts: DbDiffOptions, deletedPrefix?: string) {
+function testEqualNames(
+  a: string,
+  b: string,
+  opts: DbDiffOptions,
+  deletedPrefix?: string
+) {
   a = getNameWithoutDeletedPrefix(a, opts, deletedPrefix);
   b = getNameWithoutDeletedPrefix(b, opts, deletedPrefix);
-  if (opts.ignoreCase) return (a || '').toLowerCase() == (b || '').toLowerCase();
-  return a == b;
+  if (opts.ignoreCase)
+    return (a || "").toLowerCase() === (b || "").toLowerCase();
+  return a === b;
 }
 
-function testEqualSchemas(lschema: string, rschema: string, opts: DbDiffOptions) {
-  if (opts.schemaMode == 'ignore') lschema = null;
-  if (opts.schemaMode == 'ignoreImplicit' && lschema == opts.leftImplicitSchema) lschema = null;
-  if (opts.schemaMode == 'ignore') rschema = null;
-  if (opts.schemaMode == 'ignoreImplicit' && rschema == opts.rightImplicitSchema) rschema = null;
+function testEqualSchemas(
+  lschema: string,
+  rschema: string,
+  opts: DbDiffOptions
+) {
+  if (opts.schemaMode === "ignore") lschema = null;
+  if (
+    opts.schemaMode === "ignoreImplicit" &&
+    lschema === opts.leftImplicitSchema
+  )
+    lschema = null;
+  if (opts.schemaMode === "ignore") rschema = null;
+  if (
+    opts.schemaMode === "ignoreImplicit" &&
+    rschema === opts.rightImplicitSchema
+  )
+    rschema = null;
   return testEqualNames(lschema, rschema, opts);
 }
 
-function testEqualFullNames(lft: NamedObjectInfo, rgt: NamedObjectInfo, opts: DbDiffOptions, deletedPrefix?: string) {
-  if (lft == null || rgt == null) return lft == rgt;
+function testEqualFullNames(
+  lft: NamedObjectInfo,
+  rgt: NamedObjectInfo,
+  opts: DbDiffOptions,
+  deletedPrefix?: string
+) {
+  if (lft == null || rgt == null) return lft === rgt;
   return (
     testEqualSchemas(lft.schemaName, rgt.schemaName, opts) &&
     testEqualNames(lft.pureName, rgt.pureName, opts, deletedPrefix)
   );
 }
 
-function testEqualDefaultValues(value1: string | null | undefined, value2: string | null | undefined) {
-  if (value1 == null) return value2 == null || value2 == 'NULL';
-  if (value2 == null) return value1 == null || value1 == 'NULL';
+function testEqualDefaultValues(
+  value1: string | null | undefined,
+  value2: string | null | undefined
+) {
+  if (value1 == null) return value2 == null || value2 === "NULL";
+  if (value2 == null) return value1 == null || value1 === "NULL";
   if (_isString(value1) && _isString(value2)) {
     value1 = value1.trim();
     value2 = value2.trim();
-    if (value1.startsWith("'") && value1.endsWith("'") && value2.startsWith("'") && value2.endsWith("'")) {
-      return value1 == value2;
+    if (
+      value1.startsWith("'") &&
+      value1.endsWith("'") &&
+      value2.startsWith("'") &&
+      value2.endsWith("'")
+    ) {
+      return value1 === value2;
     }
-    return value1.toLowerCase() == value2.toLowerCase();
+    return value1.toLowerCase() === value2.toLowerCase();
   }
-  return value1 == value2;
+  return value1 === value2;
 }
 
 export function testEqualColumns(
@@ -240,7 +276,7 @@ export function testEqualColumns(
   //    opts.DiffLogger.Trace("Column {0}, {1}: different domain: {2}; {3}", a, b, a.Domain, b.Domain);
   //    return false;
   //}
-  if (a.computedExpression != b.computedExpression) {
+  if (a.computedExpression !== b.computedExpression) {
     console.debug(
       `Column ${a.pureName}.${a.columnName}, ${b.pureName}.${b.columnName}: different computed expression: ${a.computedExpression}, ${b.computedExpression}`
     );
@@ -271,7 +307,7 @@ export function testEqualColumns(
       // );
       return false;
     }
-    if (a.defaultConstraint != b.defaultConstraint) {
+    if (a.defaultConstraint !== b.defaultConstraint) {
       console.debug(
         `Column ${a.pureName}.${a.columnName}, ${b.pureName}.${b.columnName}: different default constraint: ${a.defaultConstraint}, ${b.defaultConstraint}`
       );
@@ -286,7 +322,7 @@ export function testEqualColumns(
       return false;
     }
   }
-  if ((a.notNull || false) != (b.notNull || false)) {
+  if ((a.notNull || false) !== (b.notNull || false)) {
     console.debug(
       `Column ${a.pureName}.${a.columnName}, ${b.pureName}.${b.columnName}: different nullability: ${a.notNull}, ${b.notNull}`
     );
@@ -294,7 +330,7 @@ export function testEqualColumns(
     // opts.DiffLogger.Trace('Column {0}, {1}: different nullable: {2}; {3}', a, b, a.NotNull, b.NotNull);
     return false;
   }
-  if ((a.autoIncrement || false) != (b.autoIncrement || false)) {
+  if ((a.autoIncrement || false) !== (b.autoIncrement || false)) {
     console.debug(
       `Column ${a.pureName}.${a.columnName}, ${b.pureName}.${b.columnName}: different autoincrement: ${a.autoIncrement}, ${b.autoIncrement}`
     );
@@ -302,7 +338,7 @@ export function testEqualColumns(
     // opts.DiffLogger.Trace('Column {0}, {1}: different autoincrement: {2}; {3}', a, b, a.AutoIncrement, b.AutoIncrement);
     return false;
   }
-  if ((a.isSparse || false) != (b.isSparse || false)) {
+  if ((a.isSparse || false) !== (b.isSparse || false)) {
     console.debug(
       `Column ${a.pureName}.${a.columnName}, ${b.pureName}.${b.columnName}: different is_sparse: ${a.isSparse}, ${b.isSparse}`
     );
@@ -310,19 +346,19 @@ export function testEqualColumns(
     // opts.DiffLogger.Trace('Column {0}, {1}: different is_sparse: {2}; {3}', a, b, a.IsSparse, b.IsSparse);
     return false;
   }
-  if ((a.isUnsigned || false) != (b.isUnsigned || false)) {
+  if ((a.isUnsigned || false) !== (b.isUnsigned || false)) {
     console.debug(
       `Column ${a.pureName}.${a.columnName}, ${b.pureName}.${b.columnName}: different unsigned: ${a.isUnsigned}, ${b.isUnsigned}`
     );
     return false;
   }
-  if ((a.isZerofill || false) != (b.isZerofill || false)) {
+  if ((a.isZerofill || false) !== (b.isZerofill || false)) {
     console.debug(
       `Column ${a.pureName}.${a.columnName}, ${b.pureName}.${b.columnName}: different zerofill: ${a.isZerofill}, ${b.isZerofill}`
     );
     return false;
   }
-  if ((a.columnComment || '') != (b.columnComment || '')) {
+  if ((a.columnComment || "") !== (b.columnComment || "")) {
     console.debug(
       `Column ${a.pureName}.${a.columnName}, ${b.pureName}.${b.columnName}: different comment: ${a.columnComment}, ${b.columnComment}`
     );
@@ -361,65 +397,112 @@ export function testEqualColumns(
   return true;
 }
 
-function testEqualColumnRefs(a: ColumnReference[], b: ColumnReference[], opts: DbDiffOptions) {
-  if (a.length != b.length) return false;
+function testEqualColumnRefs(
+  a: ColumnReference[],
+  b: ColumnReference[],
+  opts: DbDiffOptions
+) {
+  if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) {
     if (!testEqualNames(a[i].columnName, b[i].columnName, opts)) return false;
-    if (!testEqualNames(a[i].refColumnName, b[i].refColumnName, opts)) return false;
+    if (!testEqualNames(a[i].refColumnName, b[i].refColumnName, opts))
+      return false;
   }
   return true;
 }
 
-function testEqualPrimaryKeys(a: PrimaryKeyInfo, b: PrimaryKeyInfo, opts: DbDiffOptions) {
+function testEqualPrimaryKeys(
+  a: PrimaryKeyInfo,
+  b: PrimaryKeyInfo,
+  opts: DbDiffOptions
+) {
   if (!testEqualColumnRefs(a.columns, b.columns, opts)) return false;
   return true;
 }
 
-function testEqualForeignKeys(a: ForeignKeyInfo, b: ForeignKeyInfo, opts: DbDiffOptions) {
+function testEqualForeignKeys(
+  a: ForeignKeyInfo,
+  b: ForeignKeyInfo,
+  opts: DbDiffOptions
+) {
   if (!testEqualColumnRefs(a.columns, b.columns, opts)) return false;
-  if (!opts.ignoreConstraintNames && !testEqualNames(a.constraintName, b.constraintName, opts)) return false;
+  if (
+    !opts.ignoreConstraintNames &&
+    !testEqualNames(a.constraintName, b.constraintName, opts)
+  )
+    return false;
   return true;
 }
 
 function testEqualIndex(a: IndexInfo, b: IndexInfo, opts: DbDiffOptions) {
   if (!testEqualColumnRefs(a.columns, b.columns, opts)) return false;
-  if (!!a.isUnique != !!b.isUnique) return false;
-  if (simplifySqlExpression(a.filterDefinition) != simplifySqlExpression(b.filterDefinition)) return false;
+  if (!!a.isUnique !== !!b.isUnique) return false;
+  if (
+    simplifySqlExpression(a.filterDefinition) !==
+    simplifySqlExpression(b.filterDefinition)
+  )
+    return false;
 
-  if (!opts.ignoreConstraintNames && !testEqualNames(a.constraintName, b.constraintName, opts)) return false;
+  if (
+    !opts.ignoreConstraintNames &&
+    !testEqualNames(a.constraintName, b.constraintName, opts)
+  )
+    return false;
   return true;
 }
 
 function testEqualUnique(a: UniqueInfo, b: UniqueInfo, opts: DbDiffOptions) {
   if (!testEqualColumnRefs(a.columns, b.columns, opts)) return false;
 
-  if (!opts.ignoreConstraintNames && !testEqualNames(a.constraintName, b.constraintName, opts)) return false;
+  if (
+    !opts.ignoreConstraintNames &&
+    !testEqualNames(a.constraintName, b.constraintName, opts)
+  )
+    return false;
   return true;
 }
 
 function testEqualCheck(a: CheckInfo, b: CheckInfo, opts: DbDiffOptions) {
-  if (a.definition != b.definition) return false;
-  if (!opts.ignoreConstraintNames && !testEqualNames(a.constraintName, b.constraintName, opts)) return false;
+  if (a.definition !== b.definition) return false;
+  if (
+    !opts.ignoreConstraintNames &&
+    !testEqualNames(a.constraintName, b.constraintName, opts)
+  )
+    return false;
   return true;
 }
 
-function testEqualConstraints(a: ConstraintInfo, b: ConstraintInfo, opts: DbDiffOptions = {}) {
-  if (a.constraintType != b.constraintType) {
-    console.debug(`Constraint ${a.pureName}: different constraint type: ${a.constraintType}, ${b.constraintType}`);
+function testEqualConstraints(
+  a: ConstraintInfo,
+  b: ConstraintInfo,
+  opts: DbDiffOptions = {}
+) {
+  if (a.constraintType !== b.constraintType) {
+    console.debug(
+      `Constraint ${a.pureName}: different constraint type: ${a.constraintType}, ${b.constraintType}`
+    );
     return false;
   }
 
   switch (a.constraintType) {
-    case 'primaryKey':
-    case 'sortingKey':
-      return testEqualPrimaryKeys(a as PrimaryKeyInfo, b as PrimaryKeyInfo, opts);
-    case 'foreignKey':
-      return testEqualForeignKeys(a as ForeignKeyInfo, b as ForeignKeyInfo, opts);
-    case 'index':
+    case "primaryKey":
+    case "sortingKey":
+      return testEqualPrimaryKeys(
+        a as PrimaryKeyInfo,
+        b as PrimaryKeyInfo,
+        opts
+      );
+    case "foreignKey":
+      return testEqualForeignKeys(
+        a as ForeignKeyInfo,
+        b as ForeignKeyInfo,
+        opts
+      );
+    case "index":
       return testEqualIndex(a as IndexInfo, b as IndexInfo, opts);
-    case 'unique':
+    case "unique":
       return testEqualUnique(a as UniqueInfo, b as UniqueInfo, opts);
-    case 'check':
+    case "check":
       return testEqualCheck(a as CheckInfo, b as CheckInfo, opts);
   }
 
@@ -461,12 +544,16 @@ function testEqualConstraints(a: ConstraintInfo, b: ConstraintInfo, opts: DbDiff
   // return aStringified == bStringified;
 }
 
-export function testEqualTypes(a: ColumnInfo, b: ColumnInfo, opts: DbDiffOptions = {}) {
+export function testEqualTypes(
+  a: ColumnInfo,
+  b: ColumnInfo,
+  opts: DbDiffOptions = {}
+) {
   if (opts.ignoreDataTypes) {
     return true;
   }
 
-  if (simplifySqlExpression(a.dataType) != simplifySqlExpression(b.dataType)) {
+  if (simplifySqlExpression(a.dataType) !== simplifySqlExpression(b.dataType)) {
     console.debug(
       `Column ${a.pureName}.${a.columnName}, ${b.pureName}.${b.columnName}: different data type: ${a.dataType}, ${b.dataType}`
     );
@@ -491,7 +578,9 @@ function createPairs(oldList, newList, additionalCondition = null) {
   const res = [];
   for (const a of oldList) {
     const b = newList.find(
-      x => (a.pairingId && x.pairingId == a.pairingId) || (additionalCondition && additionalCondition(a, x))
+      (x) =>
+        (a.pairingId && x.pairingId === a.pairingId) ||
+        additionalCondition?.(a, x)
     );
     if (b) {
       res.push([a, b]);
@@ -500,28 +589,43 @@ function createPairs(oldList, newList, additionalCondition = null) {
     }
   }
   for (const b of newList) {
-    if (!res.find(x => x[1] == b)) {
+    if (!res.find((x) => x[1] === b)) {
       res.push([null, b]);
     }
   }
   return res;
 }
 
-function planTablePreload(plan: AlterPlan, oldTable: TableInfo, newTable: TableInfo) {
-  const key = newTable.preloadedRowsKey || newTable.primaryKey?.columns?.map(x => x.columnName);
-  if (newTable.preloadedRows?.length > 0 && key?.length > 0 && detectChangesInPreloadedRows(oldTable, newTable)) {
+function planTablePreload(
+  plan: AlterPlan,
+  oldTable: TableInfo,
+  newTable: TableInfo
+) {
+  const key =
+    newTable.preloadedRowsKey ||
+    newTable.primaryKey?.columns?.map((x) => x.columnName);
+  if (
+    newTable.preloadedRows?.length > 0 &&
+    key?.length > 0 &&
+    detectChangesInPreloadedRows(oldTable, newTable)
+  ) {
     plan.fillPreloadedRows(
       newTable,
       oldTable?.preloadedRows,
       newTable.preloadedRows,
       key,
       newTable.preloadedRowsInsertOnly,
-      newTable.columns.find(x => x.autoIncrement)?.columnName
+      newTable.columns.find((x) => x.autoIncrement)?.columnName
     );
   }
 }
 
-function planAlterTable(plan: AlterPlan, oldTable: TableInfo, newTable: TableInfo, opts: DbDiffOptions) {
+function planAlterTable(
+  plan: AlterPlan,
+  oldTable: TableInfo,
+  newTable: TableInfo,
+  opts: DbDiffOptions
+) {
   // if (oldTable.primaryKey)
 
   const columnPairs = createPairs(oldTable.columns, newTable.columns);
@@ -529,8 +633,9 @@ function planAlterTable(plan: AlterPlan, oldTable: TableInfo, newTable: TableInf
     getTableConstraints(oldTable),
     getTableConstraints(newTable),
     (a, b) =>
-      (a.constraintType == 'primaryKey' && b.constraintType == 'primaryKey') ||
-      (a.constraintType == 'sortingKey' && b.constraintType == 'sortingKey')
+      (a.constraintType === "primaryKey" &&
+        b.constraintType === "primaryKey") ||
+      (a.constraintType === "sortingKey" && b.constraintType === "sortingKey")
   );
   // console.log('constraintPairs OLD TABLE', oldTable);
   // console.log('constraintPairs NEW TABLE', newTable);
@@ -539,18 +644,24 @@ function planAlterTable(plan: AlterPlan, oldTable: TableInfo, newTable: TableInf
   // console.log('constraintPairs', constraintPairs);
 
   if (!opts.noDropConstraint) {
-    constraintPairs.filter(x => x[1] == null).forEach(x => plan.dropConstraint(x[0]));
+    constraintPairs
+      .filter((x) => x[1] == null)
+      .forEach((x) => plan.dropConstraint(x[0]));
   }
   if (opts.deletedColumnPrefix) {
     columnPairs
-      .filter(x => x[1] == null)
-      .forEach(x => {
-        if (!hasDeletedPrefix(x[0].columnName, opts, opts.deletedColumnPrefix)) {
+      .filter((x) => x[1] == null)
+      .forEach((x) => {
+        if (
+          !hasDeletedPrefix(x[0].columnName, opts, opts.deletedColumnPrefix)
+        ) {
           plan.renameColumn(x[0], opts.deletedColumnPrefix + x[0].columnName);
         }
       });
   } else if (!opts.noDropColumn) {
-    columnPairs.filter(x => x[1] == null).forEach(x => plan.dropColumn(x[0]));
+    columnPairs
+      .filter((x) => x[1] == null)
+      .forEach((x) => plan.dropColumn(x[0]));
   }
 
   if (!testEqualFullNames(oldTable, newTable, opts) && !opts.noRenameTable) {
@@ -561,13 +672,15 @@ function planAlterTable(plan: AlterPlan, oldTable: TableInfo, newTable: TableInf
     plan.renameTable(oldTable, newTable.pureName);
   }
 
-  columnPairs.filter(x => x[0] == null).forEach(x => plan.createColumn(x[1]));
+  columnPairs
+    .filter((x) => x[0] == null)
+    .forEach((x) => plan.createColumn(x[1]));
 
   columnPairs
-    .filter(x => x[0] && x[1])
-    .forEach(x => {
+    .filter((x) => x[0] && x[1])
+    .forEach((x) => {
       let srccol: ColumnInfo = x[0];
-      let dstcol: ColumnInfo = x[1];
+      const dstcol: ColumnInfo = x[1];
       if (hasDeletedPrefix(srccol.columnName, opts, opts.deletedColumnPrefix)) {
         plan.renameColumn(srccol, dstcol.columnName);
         // rename is already done
@@ -578,7 +691,10 @@ function planAlterTable(plan: AlterPlan, oldTable: TableInfo, newTable: TableInf
       }
 
       if (!testEqualColumns(srccol, dstcol, true, true, opts)) {
-        if (testEqualColumns(srccol, dstcol, false, true, opts) && !opts.noRenameColumn) {
+        if (
+          testEqualColumns(srccol, dstcol, false, true, opts) &&
+          !opts.noRenameColumn
+        ) {
           // console.log('PLAN RENAME COLUMN')
           plan.renameColumn(srccol, dstcol.columnName);
         } else {
@@ -589,15 +705,17 @@ function planAlterTable(plan: AlterPlan, oldTable: TableInfo, newTable: TableInf
     });
 
   constraintPairs
-    .filter(x => x[0] && x[1])
-    .forEach(x => {
+    .filter((x) => x[0] && x[1])
+    .forEach((x) => {
       if (!testEqualConstraints(x[0], x[1], opts)) {
         // console.log('PLAN CHANGE CONSTRAINT', x[0], x[1]);
         plan.changeConstraint(x[0], x[1]);
       }
     });
 
-  constraintPairs.filter(x => x[0] == null).forEach(x => plan.createConstraint(x[1]));
+  constraintPairs
+    .filter((x) => x[0] == null)
+    .forEach((x) => plan.createConstraint(x[1]));
 
   planChangeTableOptions(plan, oldTable, newTable, opts);
 
@@ -606,14 +724,20 @@ function planAlterTable(plan: AlterPlan, oldTable: TableInfo, newTable: TableInf
   // console.log('plan.operations', plan.operations);
 }
 
-function planChangeTableOptions(plan: AlterPlan, oldTable: TableInfo, newTable: TableInfo, opts: DbDiffOptions) {
-  for (const option of plan.dialect?.getTableFormOptions?.('sqlAlterTable') || []) {
+function planChangeTableOptions(
+  plan: AlterPlan,
+  oldTable: TableInfo,
+  newTable: TableInfo,
+  _opts: DbDiffOptions
+) {
+  for (const option of plan.dialect?.getTableFormOptions?.("sqlAlterTable") ||
+    []) {
     if (option.disabled) {
       continue;
     }
     const name = option.name;
     if (
-      oldTable[name] != newTable[name] &&
+      oldTable[name] !== newTable[name] &&
       (oldTable[name] || newTable[name]) &&
       (newTable[name] || option.allowEmptyValue)
     ) {
@@ -646,8 +770,14 @@ export function testEqualTables(
   return true;
 }
 
-export function testEqualSqlObjects(a: SqlObjectInfo, b: SqlObjectInfo, opts: DbDiffOptions) {
-  return a.createSql?.trim()?.toLowerCase() == b.createSql?.trim()?.toLowerCase();
+export function testEqualSqlObjects(
+  a: SqlObjectInfo,
+  b: SqlObjectInfo,
+  _opts: DbDiffOptions
+) {
+  return (
+    a.createSql?.trim()?.toLowerCase() === b.createSql?.trim()?.toLowerCase()
+  );
 }
 
 export function createAlterTablePlan(
@@ -691,7 +821,7 @@ function sortViewsByDependency(views: ViewInfo[]): ViewInfo[] {
     const viewText = viewDict[viewName];
     for (const otherView of viewNames) {
       if (otherView === viewName) continue;
-      if ((' ' + viewText + ' ').match('[\\W]' + otherView + '[\\W]')) {
+      if (` ${viewText} `.match(`[\\W]${otherView}[\\W]`)) {
         edges.push([otherView, viewName]);
       }
     }
@@ -701,7 +831,7 @@ function sortViewsByDependency(views: ViewInfo[]): ViewInfo[] {
 
   const res: ViewInfo[] = [];
   for (const viewName of ordered) {
-    res.push(...views.filter(x => x.pureName == viewName));
+    res.push(...views.filter((x) => x.pureName === viewName));
   }
   return res;
 }
@@ -717,19 +847,24 @@ export function createAlterDatabasePlan(
   const plan = new AlterPlan(wholeOldDb, wholeNewDb, driver.dialect, opts);
 
   for (const objectTypeField of [
-    'tables',
-    'views',
-    'procedures',
-    'matviews',
-    'functions',
-    'triggers',
-    'schedulerEvents',
+    "tables",
+    "views",
+    "procedures",
+    "matviews",
+    "functions",
+    "triggers",
+    "schedulerEvents",
   ]) {
     for (const oldobj of oldDb[objectTypeField] || []) {
-      const newobj = (newDb[objectTypeField] || []).find(x => x.pairingId == oldobj.pairingId);
-      if (objectTypeField == 'tables') {
+      const newobj = (newDb[objectTypeField] || []).find(
+        (x) => x.pairingId === oldobj.pairingId
+      );
+      if (objectTypeField === "tables") {
         if (newobj == null) {
-          if (opts.deletedTablePrefix && !hasDeletedPrefix(oldobj.pureName, opts, opts.deletedTablePrefix)) {
+          if (
+            opts.deletedTablePrefix &&
+            !hasDeletedPrefix(oldobj.pureName, opts, opts.deletedTablePrefix)
+          ) {
             plan.renameTable(oldobj, opts.deletedTablePrefix + oldobj.pureName);
           } else if (!opts.noDropTable) {
             plan.dropTable(oldobj);
@@ -743,15 +878,28 @@ export function createAlterDatabasePlan(
           if (
             opts.deletedSqlObjectPrefix &&
             driver.dialect.renameSqlObject &&
-            !hasDeletedPrefix(oldobj.pureName, opts, opts.deletedSqlObjectPrefix)
+            !hasDeletedPrefix(
+              oldobj.pureName,
+              opts,
+              opts.deletedSqlObjectPrefix
+            )
           ) {
-            plan.renameSqlObject(oldobj, opts.deletedSqlObjectPrefix + oldobj.pureName);
+            plan.renameSqlObject(
+              oldobj,
+              opts.deletedSqlObjectPrefix + oldobj.pureName
+            );
           } else if (!opts.noDropSqlObject) {
             plan.dropSqlObject(oldobj);
           }
         } else {
-          if (opts.deletedSqlObjectPrefix && hasDeletedPrefix(oldobj.pureName, opts, opts.deletedSqlObjectPrefix)) {
-            if (driver.dialect.renameSqlObject && testEqualSqlObjects(oldobj, newobj, opts)) {
+          if (
+            opts.deletedSqlObjectPrefix &&
+            hasDeletedPrefix(oldobj.pureName, opts, opts.deletedSqlObjectPrefix)
+          ) {
+            if (
+              driver.dialect.renameSqlObject &&
+              testEqualSqlObjects(oldobj, newobj, opts)
+            ) {
               plan.renameSqlObject(oldobj, newobj.pureName);
             } else {
               plan.dropSqlObject(oldobj);
@@ -769,13 +917,15 @@ export function createAlterDatabasePlan(
     }
 
     let newList = newDb[objectTypeField] || [];
-    if (objectTypeField == 'views') {
+    if (objectTypeField === "views") {
       newList = sortViewsByDependency(newList);
     }
 
     for (const newobj of newList) {
-      const oldobj = (oldDb[objectTypeField] || []).find(x => x.pairingId == newobj.pairingId);
-      if (objectTypeField == 'tables') {
+      const oldobj = (oldDb[objectTypeField] || []).find(
+        (x) => x.pairingId === newobj.pairingId
+      );
+      if (objectTypeField === "tables") {
         if (oldobj == null) {
           plan.createTable(newobj);
           planTablePreload(plan, null, newobj);
@@ -798,10 +948,17 @@ export function getAlterTableScript(
   driver: EngineDriver
 ) {
   if ((!oldTable && !newTable) || !driver) {
-    return { sql: '', recreates: [] };
+    return { sql: "", recreates: [] };
   }
 
-  const plan = createAlterTablePlan(oldTable, newTable, opts, wholeOldDb, wholeNewDb, driver);
+  const plan = createAlterTablePlan(
+    oldTable,
+    newTable,
+    opts,
+    wholeOldDb,
+    wholeNewDb,
+    driver
+  );
   const dmp = driver.createDumper({ useHardSeparator: true });
   plan.run(dmp);
   return {
@@ -819,7 +976,14 @@ export function getAlterDatabaseScript(
   driver: EngineDriver,
   transformPlan: (plan: AlterPlan) => void = null
 ) {
-  const plan = createAlterDatabasePlan(oldDb, newDb, opts, wholeOldDb, wholeNewDb, driver);
+  const plan = createAlterDatabasePlan(
+    oldDb,
+    newDb,
+    opts,
+    wholeOldDb,
+    wholeNewDb,
+    driver
+  );
   if (transformPlan) {
     transformPlan(plan);
   }
@@ -828,60 +992,83 @@ export function getAlterDatabaseScript(
   return {
     sql: dmp.s,
     recreates: plan.recreates,
-    isEmpty: plan.operations.length == 0,
+    isEmpty: plan.operations.length === 0,
   };
 }
 
-export function matchPairedObjects(db1: DatabaseInfo, db2: DatabaseInfo, opts: DbDiffOptions): DatabaseInfo {
+export function matchPairedObjects(
+  db1: DatabaseInfo,
+  db2: DatabaseInfo,
+  opts: DbDiffOptions
+): DatabaseInfo {
   if (!db1 || !db2) return null;
 
   const res = _cloneDeep(db2);
 
-  for (const objectTypeField of ['tables', 'views', 'procedures', 'matviews', 'functions']) {
+  for (const objectTypeField of [
+    "tables",
+    "views",
+    "procedures",
+    "matviews",
+    "functions",
+  ]) {
     for (const obj2 of res[objectTypeField] || []) {
-      const obj1 = db1[objectTypeField].find(x =>
+      const obj1 = db1[objectTypeField].find((x) =>
         testEqualFullNames(
           x,
           obj2,
           opts,
-          objectTypeField == 'tables' ? opts.deletedTablePrefix : opts.deletedSqlObjectPrefix
+          objectTypeField === "tables"
+            ? opts.deletedTablePrefix
+            : opts.deletedSqlObjectPrefix
         )
       );
       if (obj1) {
         obj2.pairingId = obj1.pairingId;
 
-        if (objectTypeField == 'tables') {
+        if (objectTypeField === "tables") {
           for (const col2 of obj2.columns) {
-            const col1 = obj1.columns.find(x =>
-              testEqualNames(x.columnName, col2.columnName, opts, opts.deletedColumnPrefix)
+            const col1 = obj1.columns.find((x) =>
+              testEqualNames(
+                x.columnName,
+                col2.columnName,
+                opts,
+                opts.deletedColumnPrefix
+              )
             );
             if (col1) col2.pairingId = col1.pairingId;
           }
 
           for (const fk2 of obj2.foreignKeys) {
             const fk1 = obj1.foreignKeys.find(
-              x =>
+              (x) =>
                 testEqualNames(x.refTableName, fk2.refTableName, opts) &&
                 _isEqual(
-                  x.columns.map(y => _pick(y, ['columnName', 'refColumnName'])),
-                  fk2.columns.map(y => _pick(y, ['columnName', 'refColumnName']))
+                  x.columns.map((y) =>
+                    _pick(y, ["columnName", "refColumnName"])
+                  ),
+                  fk2.columns.map((y) =>
+                    _pick(y, ["columnName", "refColumnName"])
+                  )
                 )
             );
             if (fk1) fk2.pairingId = fk1.pairingId;
           }
 
           for (const uq2 of obj2.uniques) {
-            const uq1 = obj1.uniques.find(x =>
+            const uq1 = obj1.uniques.find((x) =>
               _isEqual(
-                x.columns.map(y => _pick(y, ['columnName'])),
-                uq2.columns.map(y => _pick(y, ['columnName']))
+                x.columns.map((y) => _pick(y, ["columnName"])),
+                uq2.columns.map((y) => _pick(y, ["columnName"]))
               )
             );
             if (uq1) uq2.pairingId = uq1.pairingId;
           }
 
           for (const ix2 of obj2.indexes) {
-            const ix1 = obj1.indexes.find(x => testEqualNames(x.constraintName, ix2.constraintName, opts));
+            const ix1 = obj1.indexes.find((x) =>
+              testEqualNames(x.constraintName, ix2.constraintName, opts)
+            );
             if (ix1) ix2.pairingId = ix1.pairingId;
           }
         }

@@ -44,8 +44,8 @@ export type Auth_OauthToken_Request = {
   };
 };
 
-export type Auth_Request = 
-  | Auth_Login_Request 
-  | Auth_Logout_Request 
-  | Auth_RefreshToken_Request 
+export type Auth_Request =
+  | Auth_Login_Request
+  | Auth_Logout_Request
+  | Auth_RefreshToken_Request
   | Auth_OauthToken_Request;

@@ -1,19 +1,19 @@
-const crypto = require('crypto');
-const _ = require('lodash');
-const connections = require('./connections');
-const socket = require('../utility/socket');
-const { fork } = require('child_process');
-const jsldata = require('./jsldata');
-const path = require('path');
-const { handleProcessCommunication } = require('../utility/processComm');
-const processArgs = require('../utility/processArgs');
-const { appdir } = require('../utility/directories');
-const { getLogger, extractErrorLogData } = require('dbgate-tools');
-const pipeForkLogs = require('../utility/pipeForkLogs');
-const config = require('./config');
-const { sendToAuditLog } = require('../utility/auditlog');
+const crypto = require("node:crypto");
+const _ = require("lodash");
+const connections = require("./connections");
+const socket = require("../utility/socket");
+const { fork } = require("node:child_process");
+const jsldata = require("./jsldata");
+const path = require("node:path");
+const { handleProcessCommunication } = require("../utility/processComm");
+const processArgs = require("../utility/processArgs");
+const { appdir } = require("../utility/directories");
+const { getLogger, extractErrorLogData } = require("dbgate-tools");
+const pipeForkLogs = require("../utility/pipeForkLogs");
+const config = require("./config");
+const { sendToAuditLog } = require("../utility/auditlog");
 
-const logger = getLogger('sessions');
+const logger = getLogger("sessions");
 
 module.exports = {
   /** @type {import('dbgate-types').OpenedSession[]} */
@@ -37,13 +37,13 @@ module.exports = {
       socket.emit(`session-info-${sesid}`, {
         message,
         time: new Date(),
-        severity: 'info',
+        severity: "info",
       });
     }
     if (_.isPlainObject(message)) {
       socket.emit(`session-info-${sesid}`, {
         time: new Date(),
-        severity: 'info',
+        severity: "info",
         ...message,
       });
     }
@@ -58,17 +58,20 @@ module.exports = {
     socket.emit(`session-done-${sesid}`);
     if (!props.skipFinishedMessage) {
       if (props.controlCommand) {
-        this.dispatchMessage(sesid, `${_.startCase(props.controlCommand)} finished`);
+        this.dispatchMessage(
+          sesid,
+          `${_.startCase(props.controlCommand)} finished`
+        );
       } else {
-        this.dispatchMessage(sesid, 'Query execution finished');
+        this.dispatchMessage(sesid, "Query execution finished");
       }
     }
-    const session = this.opened.find(x => x.sesid == sesid);
+    const session = this.opened.find((x) => x.sesid === sesid);
     if (session.loadingReader_jslid) {
       socket.emit(`session-jslid-done-${session.loadingReader_jslid}`);
     }
     if (props.autoCommit) {
-      this.executeControlCommand({ sesid, command: 'commitTransaction' });
+      this.executeControlCommand({ sesid, command: "commitTransaction" });
     }
     if (session.killOnDone) {
       this.kill({ sesid });
@@ -80,7 +83,7 @@ module.exports = {
     socket.emit(`session-recordset-${sesid}`, { jslid, resultIndex });
   },
 
-  handle_stats(sesid, stats) {
+  handle_stats(_sesid, stats) {
     jsldata.notifyChangedStats(stats);
   },
 
@@ -89,7 +92,7 @@ module.exports = {
     socket.emit(`session-charts-${sesid}`, { jslid, resultIndex, charts });
   },
 
-  handle_initializeFile(sesid, props) {
+  handle_initializeFile(_sesid, props) {
     const { jslid } = props;
     socket.emit(`session-initialize-file-${jslid}`);
   },
@@ -101,16 +104,16 @@ module.exports = {
     const sesid = crypto.randomUUID();
     const connection = await connections.getCore({ conid });
     const subprocess = fork(
-      global['API_PACKAGE'] || process.argv[1],
+      global.API_PACKAGE || process.argv[1],
       [
-        '--is-forked-api',
-        '--start-process',
-        'sessionProcess',
+        "--is-forked-api",
+        "--start-process",
+        "sessionProcess",
         ...processArgs.getPassArgs(),
         // ...process.argv.slice(3),
       ],
       {
-        stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+        stdio: ["ignore", "pipe", "pipe", "ipc"],
       }
     );
     pipeForkLogs(subprocess);
@@ -122,94 +125,100 @@ module.exports = {
       sesid,
     };
     this.opened.push(newOpened);
-    subprocess.on('message', message => {
+    subprocess.on("message", (message) => {
       // @ts-ignore
       const { msgtype } = message;
       if (handleProcessCommunication(message, subprocess)) return;
       this[`handle_${msgtype}`](sesid, message);
     });
-    subprocess.on('exit', () => {
-      this.opened = this.opened.filter(x => x.sesid != sesid);
-      this.dispatchMessage(sesid, 'Query session closed');
+    subprocess.on("exit", () => {
+      this.opened = this.opened.filter((x) => x.sesid !== sesid);
+      this.dispatchMessage(sesid, "Query session closed");
       socket.emit(`session-closed-${sesid}`);
     });
-    subprocess.on('error', () => {
-      this.opened = this.opened.filter(x => x.sesid != sesid);
+    subprocess.on("error", () => {
+      this.opened = this.opened.filter((x) => x.sesid !== sesid);
     });
 
     subprocess.send({
-      msgtype: 'connect',
+      msgtype: "connect",
       ...connection,
       database,
       globalSettings: await config.getSettings(),
     });
-    return _.pick(newOpened, ['conid', 'database', 'sesid']);
+    return _.pick(newOpened, ["conid", "database", "sesid"]);
   },
 
   executeQuery_meta: true,
-  async executeQuery({ sesid, sql, autoCommit, autoDetectCharts, limitRows, frontMatter }, req) {
-    const session = this.opened.find(x => x.sesid == sesid);
+  async executeQuery(
+    { sesid, sql, autoCommit, autoDetectCharts, limitRows, frontMatter },
+    req
+  ) {
+    const session = this.opened.find((x) => x.sesid === sesid);
     if (!session) {
-      throw new Error('Invalid session');
+      throw new Error("Invalid session");
     }
 
     sendToAuditLog(req, {
-      category: 'dbop',
-      component: 'SessionController',
-      action: 'executeQuery',
-      event: 'query.execute',
-      severity: 'info',
+      category: "dbop",
+      component: "SessionController",
+      action: "executeQuery",
+      event: "query.execute",
+      severity: "info",
       detail: sql,
       conid: session.conid,
       database: session.database,
-      message: 'Executing query',
+      message: "Executing query",
     });
 
-    logger.info({ sesid, sql }, 'DBGM-00019 Processing query');
-    this.dispatchMessage(sesid, 'Query execution started');
+    logger.info({ sesid, sql }, "DBGM-00019 Processing query");
+    this.dispatchMessage(sesid, "Query execution started");
     session.subprocess.send({
-      msgtype: 'executeQuery',
+      msgtype: "executeQuery",
       sql,
       autoCommit,
-      autoDetectCharts: autoDetectCharts || !!frontMatter?.['selected-chart'],
+      autoDetectCharts: autoDetectCharts || !!frontMatter?.["selected-chart"],
       limitRows,
       frontMatter,
     });
 
-    return { state: 'ok' };
+    return { state: "ok" };
   },
 
   executeControlCommand_meta: true,
   async executeControlCommand({ sesid, command }) {
-    const session = this.opened.find(x => x.sesid == sesid);
+    const session = this.opened.find((x) => x.sesid === sesid);
     if (!session) {
-      throw new Error('Invalid session');
+      throw new Error("Invalid session");
     }
 
-    logger.info({ sesid, command }, 'DBGM-00020 Processing control command');
+    logger.info({ sesid, command }, "DBGM-00020 Processing control command");
     this.dispatchMessage(sesid, `${_.startCase(command)} started`);
-    session.subprocess.send({ msgtype: 'executeControlCommand', command });
+    session.subprocess.send({ msgtype: "executeControlCommand", command });
 
-    return { state: 'ok' };
+    return { state: "ok" };
   },
 
   executeReader_meta: true,
   async executeReader({ conid, database, sql, queryName, appFolder }) {
     const { sesid } = await this.create({ conid, database });
-    const session = this.opened.find(x => x.sesid == sesid);
+    const session = this.opened.find((x) => x.sesid === sesid);
     session.killOnDone = true;
     const jslid = crypto.randomUUID();
     session.loadingReader_jslid = jslid;
-    const fileName = queryName && appFolder ? path.join(appdir(), appFolder, `${queryName}.query.sql`) : null;
+    const fileName =
+      queryName && appFolder
+        ? path.join(appdir(), appFolder, `${queryName}.query.sql`)
+        : null;
 
-    session.subprocess.send({ msgtype: 'executeReader', sql, fileName, jslid });
+    session.subprocess.send({ msgtype: "executeReader", sql, fileName, jslid });
 
     return { jslid };
   },
 
   stopLoadingReader_meta: true,
   async stopLoadingReader({ jslid }) {
-    const session = this.opened.find(x => x.loadingReader_jslid == jslid);
+    const session = this.opened.find((x) => x.loadingReader_jslid === jslid);
     if (session) {
       this.kill({ sesid: session.sesid });
     }
@@ -219,26 +228,26 @@ module.exports = {
   startProfiler_meta: true,
   async startProfiler({ sesid }) {
     const jslid = crypto.randomUUID();
-    const session = this.opened.find(x => x.sesid == sesid);
+    const session = this.opened.find((x) => x.sesid === sesid);
     if (!session) {
-      throw new Error('Invalid session');
+      throw new Error("Invalid session");
     }
 
-    logger.info({ sesid }, 'DBGM-00021 Starting profiler');
+    logger.info({ sesid }, "DBGM-00021 Starting profiler");
     session.loadingReader_jslid = jslid;
-    session.subprocess.send({ msgtype: 'startProfiler', jslid });
+    session.subprocess.send({ msgtype: "startProfiler", jslid });
 
-    return { state: 'ok', jslid };
+    return { state: "ok", jslid };
   },
 
   stopProfiler_meta: true,
   async stopProfiler({ sesid }) {
-    const session = this.opened.find(x => x.sesid == sesid);
+    const session = this.opened.find((x) => x.sesid === sesid);
     if (!session) {
-      throw new Error('Invalid session');
+      throw new Error("Invalid session");
     }
-    session.subprocess.send({ msgtype: 'stopProfiler' });
-    return { state: 'ok' };
+    session.subprocess.send({ msgtype: "stopProfiler" });
+    return { state: "ok" };
   },
 
   // cancel_meta: true,
@@ -253,33 +262,36 @@ module.exports = {
 
   kill_meta: true,
   async kill({ sesid }) {
-    const session = this.opened.find(x => x.sesid == sesid);
+    const session = this.opened.find((x) => x.sesid === sesid);
     if (!session) {
-      throw new Error('Invalid session');
+      throw new Error("Invalid session");
     }
     session.subprocess.kill();
-    this.dispatchMessage(sesid, 'Connection closed');
-    return { state: 'ok' };
+    this.dispatchMessage(sesid, "Connection closed");
+    return { state: "ok" };
   },
 
   ping_meta: true,
   async ping({ sesid }) {
-    const session = this.opened.find(x => x.sesid == sesid);
+    const session = this.opened.find((x) => x.sesid === sesid);
     if (!session) {
-      throw new Error('Invalid session');
+      throw new Error("Invalid session");
     }
     try {
-      session.subprocess.send({ msgtype: 'ping' });
+      session.subprocess.send({ msgtype: "ping" });
     } catch (err) {
-      logger.error(extractErrorLogData(err), 'DBGM-00145 Error pinging session');
+      logger.error(
+        extractErrorLogData(err),
+        "DBGM-00145 Error pinging session"
+      );
 
       return {
-        status: 'error',
-        message: 'Ping failed',
+        status: "error",
+        message: "Ping failed",
       };
     }
 
-    return { state: 'ok' };
+    return { state: "ok" };
   },
 
   // runCommand_meta: true,

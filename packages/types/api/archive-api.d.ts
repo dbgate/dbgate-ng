@@ -17,4 +17,6 @@ export type Archive_CreateFolder_Request = {
   response: boolean;
 };
 
-export type Archive_Request = Archive_Folders_Request | Archive_CreateFolder_Request;
+export type Archive_Request =
+  | Archive_Folders_Request
+  | Archive_CreateFolder_Request;

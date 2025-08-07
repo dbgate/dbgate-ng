@@ -1,62 +1,67 @@
-const portfinder = require('portfinder');
-const stableStringify = require('json-stable-stringify');
-const _ = require('lodash');
-const AsyncLock = require('async-lock');
+const portfinder = require("portfinder");
+const stableStringify = require("json-stable-stringify");
+const _ = require("lodash");
+const AsyncLock = require("async-lock");
 const lock = new AsyncLock();
-const { fork } = require('child_process');
-const processArgs = require('../utility/processArgs');
-const { getLogger, extractErrorLogData } = require('dbgate-tools');
-const pipeForkLogs = require('./pipeForkLogs');
-const logger = getLogger('sshTunnel');
+const { fork } = require("node:child_process");
+const processArgs = require("../utility/processArgs");
+const { getLogger, extractErrorLogData } = require("dbgate-tools");
+const pipeForkLogs = require("./pipeForkLogs");
+const logger = getLogger("sshTunnel");
 
 const sshTunnelCache = {};
 
 const CONNECTION_FIELDS = [
-  'sshHost',
-  'sshPort',
-  'sshLogin',
-  'sshPassword',
-  'sshMode',
-  'sshKeyfile',
-  'sshBastionHost',
-  'sshKeyfilePassword',
+  "sshHost",
+  "sshPort",
+  "sshLogin",
+  "sshPassword",
+  "sshMode",
+  "sshKeyfile",
+  "sshBastionHost",
+  "sshKeyfilePassword",
 ];
-const TUNNEL_FIELDS = [...CONNECTION_FIELDS, 'server', 'port'];
+const TUNNEL_FIELDS = [...CONNECTION_FIELDS, "server", "port"];
 
 function callForwardProcess(connection, tunnelConfig, tunnelCacheKey) {
-  let subprocess = fork(
-    global['API_PACKAGE'] || process.argv[1],
-    ['--is-forked-api', '--start-process', 'sshForwardProcess', ...processArgs.getPassArgs()],
+  const subprocess = fork(
+    global.API_PACKAGE || process.argv[1],
+    [
+      "--is-forked-api",
+      "--start-process",
+      "sshForwardProcess",
+      ...processArgs.getPassArgs(),
+    ],
     {
-      stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+      stdio: ["ignore", "pipe", "pipe", "ipc"],
     }
   );
   pipeForkLogs(subprocess);
 
   try {
     subprocess.send({
-      msgtype: 'connect',
+      msgtype: "connect",
       connection,
       tunnelConfig,
     });
   } catch (err) {
-    logger.error(extractErrorLogData(err), 'DBGM-00174 Error connecting SSH');
+    logger.error(extractErrorLogData(err), "DBGM-00174 Error connecting SSH");
   }
   return new Promise((resolve, reject) => {
     let promiseHandled = false;
-    subprocess.on('message', resp => {
+    subprocess.on("message", (resp) => {
       // @ts-ignore
       const { msgtype, errorMessage } = resp;
-      if (msgtype == 'connected') {
+      if (msgtype === "connected") {
         resolve(subprocess);
         promiseHandled = true;
       }
-      if (msgtype == 'error') {
+      if (msgtype === "error") {
         reject(new Error(errorMessage));
         promiseHandled = true;
       }
     });
-    subprocess.on('exit', code => {
+    subprocess.on("exit", (code) => {
       logger.info(`DBGM-00090 SSH forward process exited with code ${code}`);
       delete sshTunnelCache[tunnelCacheKey];
       if (!promiseHandled) {
@@ -67,8 +72,11 @@ function callForwardProcess(connection, tunnelConfig, tunnelCacheKey) {
         );
       }
     });
-    subprocess.on('error', error => {
-      logger.error(extractErrorLogData(error), 'DBGM-00092 SSH forward process error');
+    subprocess.on("error", (error) => {
+      logger.error(
+        extractErrorLogData(error),
+        "DBGM-00092 SSH forward process error"
+      );
       delete sshTunnelCache[tunnelCacheKey];
       if (!promiseHandled) {
         reject(error);
@@ -78,17 +86,20 @@ function callForwardProcess(connection, tunnelConfig, tunnelCacheKey) {
 }
 
 async function getSshTunnel(connection) {
-  const config = require('../controllers/config');
+  const config = require("../controllers/config");
 
   const tunnelCacheKey = stableStringify(_.pick(connection, TUNNEL_FIELDS));
   const globalSettings = await config.getSettings();
 
   return await lock.acquire(tunnelCacheKey, async () => {
     if (sshTunnelCache[tunnelCacheKey]) return sshTunnelCache[tunnelCacheKey];
-    const localPort = await portfinder.getPortPromise({ port: 10000, stopPort: 60000 });
-    const localHost = globalSettings?.['connection.sshBindHost'] || '127.0.0.1';
+    const localPort = await portfinder.getPortPromise({
+      port: 10000,
+      stopPort: 60000,
+    });
+    const localHost = globalSettings?.["connection.sshBindHost"] || "127.0.0.1";
     // workaround for `getPortPromise` not releasing the port quickly enough
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
     const tunnelConfig = {
       fromPort: localPort,
       fromHost: localHost,
@@ -100,24 +111,31 @@ async function getSshTunnel(connection) {
         `DBGM-00093 Creating SSH tunnel to ${connection.sshHost}-${connection.server}:${connection.port}, using local port ${localPort}`
       );
 
-      const subprocess = await callForwardProcess(connection, tunnelConfig, tunnelCacheKey);
+      const subprocess = await callForwardProcess(
+        connection,
+        tunnelConfig,
+        tunnelCacheKey
+      );
 
       logger.info(
         `DBGM-00094 Created SSH tunnel to ${connection.sshHost}-${connection.server}:${connection.port}, using local port ${localPort}`
       );
 
       sshTunnelCache[tunnelCacheKey] = {
-        state: 'ok',
+        state: "ok",
         localPort,
         localHost,
         subprocess,
       };
       return sshTunnelCache[tunnelCacheKey];
     } catch (err) {
-      logger.error(extractErrorLogData(err), 'DBGM-00095 Error creating SSH tunnel:');
+      logger.error(
+        extractErrorLogData(err),
+        "DBGM-00095 Error creating SSH tunnel:"
+      );
       // error is not cached
       return {
-        state: 'error',
+        state: "error",
         message: err.message,
       };
     }

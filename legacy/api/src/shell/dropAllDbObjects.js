@@ -1,9 +1,9 @@
-const executeQuery = require('./executeQuery');
-const requireEngineDriver = require('../utility/requireEngineDriver');
-const { connectUtility } = require('../utility/connectUtility');
-const { getLogger, extendDatabaseInfo } = require('dbgate-tools');
+const executeQuery = require("./executeQuery");
+const requireEngineDriver = require("../utility/requireEngineDriver");
+const { connectUtility } = require("../utility/connectUtility");
+const { getLogger, extendDatabaseInfo } = require("dbgate-tools");
 
-const logger = getLogger('dropAllDbObjects');
+const _logger = getLogger("dropAllDbObjects");
 
 /**
  * Drops all database objects
@@ -14,10 +14,16 @@ const logger = getLogger('dropAllDbObjects');
  * @param {object} options.analysedStructure - analysed structure of the database. If not provided, it will be loaded
  * @returns {Promise}
  */
-async function dropAllDbObjects({ connection, systemConnection, driver, analysedStructure }) {
+async function dropAllDbObjects({
+  connection,
+  systemConnection,
+  driver,
+  analysedStructure,
+}) {
   if (!driver) driver = requireEngineDriver(connection);
 
-  const dbhan = systemConnection || (await connectUtility(driver, connection, 'write'));
+  const dbhan =
+    systemConnection || (await connectUtility(driver, connection, "write"));
 
   if (!analysedStructure) {
     analysedStructure = await driver.analyseFull(dbhan);
@@ -43,7 +49,13 @@ async function dropAllDbObjects({ connection, systemConnection, driver, analysed
     }
   }
 
-  await executeQuery({ connection, systemConnection, driver, sql: dmp.s, logScriptItems: true });
+  await executeQuery({
+    connection,
+    systemConnection,
+    driver,
+    sql: dmp.s,
+    logScriptItems: true,
+  });
 }
 
 module.exports = dropAllDbObjects;

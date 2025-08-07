@@ -1,7 +1,13 @@
-import _isNaN from 'lodash/isNaN';
-import _isNumber from 'lodash/isNumber';
+import _isNaN from "lodash/isNaN";
+import _isNumber from "lodash/isNumber";
 
-export function extractIntSettingsValue(settings, name, defaultValue, min = null, max = null) {
+export function extractIntSettingsValue(
+  settings,
+  name,
+  defaultValue,
+  min = null,
+  max = null
+) {
   const parsed = parseInt(settings[name]);
   if (_isNaN(parsed)) {
     return defaultValue;

@@ -8,7 +8,7 @@ export function getLocalStorage(key, defaultValue = undefined) {
       const res = JSON.parse(item);
       cache[key] = res;
       return res;
-    } catch (e) {
+    } catch (_e) {
       return defaultValue;
     }
   }
