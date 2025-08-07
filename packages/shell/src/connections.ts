@@ -1,5 +1,4 @@
 // Connections management functionality for DBGate Shell
-import crypto from 'crypto';
 import { Connection, ConnectionConfig, EnvironmentConnectionConfig, ConnectionTestResult } from './types';
 
 /**
