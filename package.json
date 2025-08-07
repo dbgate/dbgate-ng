@@ -1,4 +1,14 @@
 {
   "private": true,
-  "name": "dbgate-ng"
+  "name": "dbgate-all",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "esbuild"
+    ]
+  },
+  "scripts": {
+    "dev:web": "pnpm -r --filter dbgate-web dev",
+    "dev:app": "pnpm -r --filter dbgate dev"
+  }
 }
