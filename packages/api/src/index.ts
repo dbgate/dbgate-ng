@@ -1,5 +1,6 @@
 import express, { Express } from 'express';
 import cors from 'cors';
+import connectionsRoutes from './routes/connections';
 
 const app: Express = express();
 const PORT = process.env.PORT || 3001;
@@ -25,11 +26,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// API routes placeholder
-app.use('/api', (req, res, next) => {
-  // Future API routes will be added here
-  next();
-});
+// API routes
+app.use('/api/connections', connectionsRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
