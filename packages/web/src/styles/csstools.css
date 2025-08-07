@@ -1,17 +1,16 @@
 .horizontal-split-handle {
-  background-color: var(--theme-border);
   width: var(--dim-splitter-thickness);
   cursor: col-resize;
+  transition: background-color 300ms ease-in-out;
 }
 .horizontal-split-handle:hover {
-  background-color: var(--theme-face-3);
+  background-color: var(--theme-selected);
 }
 
 .vertical-split-handle {
-  background-color: var(--theme-border);
   height: var(--dim-splitter-thickness);
   cursor: row-resize;
 }
 .vertical-split-handle:hover {
-  background-color: var(--theme-face-3);
+  background-color: var(--theme-selected);
 }

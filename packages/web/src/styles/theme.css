@@ -18,6 +18,7 @@
   --theme-face-5: var(--color-gray-400);
 
   --theme-border: var(--color-gray-100);
+  --theme-selected: var(--color-sky-500);
 }
 
 .when-theme-dark {
@@ -36,6 +37,7 @@
   --theme-face-5: var(--color-gray-500);
 
   --theme-border: var(--color-gray-800);
+  --theme-selected: var(--color-sky-500);
 }
 
 .when-theme-common {
