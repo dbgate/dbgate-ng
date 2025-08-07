@@ -1,14 +1,8 @@
 import { Component, JSX } from 'solid-js';
 
-interface TabContentProps {
-    active?: boolean;
-    children?: JSX.Element;
-}
-
-const TabContent: Component<TabContentProps> = (props) => {
+const TabContent: Component = () => {
     return (
-        <div style={{ display: props.active ? 'block' : 'none' }}>
-            XXX
+        <div class='w-full h-full theme-face-0'>
         </div>
     );
 };
