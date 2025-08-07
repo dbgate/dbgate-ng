@@ -33,6 +33,16 @@ class DbGateLocalDb extends Dexie {
 export const dbgateLocalDb = new DbGateLocalDb();
 
 export const openedTabs = createDexieArrayQuery(
-  () => dbgateLocalDb.tabs.toArray(),
+  () => dbgateLocalDb.tabs.filter((tab) => tab.closedTime == null).toArray(),
   "tabid"
 );
+
+export async function closeOpenedTab(tabid: string) {
+  await dbgateLocalDb.tabs.update(tabid, { closedTime: Date.now() });
+}
+
+export async function setSelectedTab(tabid: string) {
+  await dbgateLocalDb.tabs.toCollection().modify((tab) => {
+    tab.selected = tab.tabid === tabid;
+  });
+}
