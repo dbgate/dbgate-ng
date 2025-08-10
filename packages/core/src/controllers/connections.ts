@@ -142,7 +142,7 @@ export function getSupportedEngines(): string[] {
  * Connection manager class for managing multiple connections
  * Implements the interface generated from API contracts for type safety
  */
-export class ConnectionManager implements ConnectionsControllerContract {
+export class ConnectionsControllerImpl implements ConnectionsControllerContract {
   private connections: StoredConnection[] = [];
 
   constructor(initialConnections: StoredConnection[] = []) {
@@ -289,3 +289,5 @@ export class ConnectionManager implements ConnectionsControllerContract {
     return connection;
   }
 }
+
+export const connectionsController = new ConnectionsControllerImpl();
