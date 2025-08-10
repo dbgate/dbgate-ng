@@ -227,10 +227,10 @@ export class ConnectionManager implements ConnectionsControllerContract {
   /**
    * Get specific connection (API contract method)
    */
-  async get(conid: string): Promise<StoredConnection> {
-    const connection = this.getById(conid);
+  async get(params: { conid: string }): Promise<StoredConnection> {
+    const connection = this.getById(params.conid);
     if (!connection) {
-      throw new Error(`Connection not found: ${conid}`);
+      throw new Error(`Connection not found: ${params.conid}`);
     }
     return connection;
   }
@@ -238,26 +238,26 @@ export class ConnectionManager implements ConnectionsControllerContract {
   /**
    * Test connection (API contract method)
    */
-  async test(values: Partial<StoredConnection>): Promise<{ msgtype: "connected" | "error"; message?: string }> {
-    return await testConnection(values);
+  async test(params: { values: Partial<StoredConnection> }): Promise<{ msgtype: "connected" | "error"; message?: string }> {
+    return await testConnection(params.values);
   }
 
   /**
    * Save connection (API contract method)
    */
-  async save(values: Partial<StoredConnection>): Promise<StoredConnection> {
+  async save(params: { values: Partial<StoredConnection> }): Promise<StoredConnection> {
     const connection: StoredConnection = {
       _id: crypto.randomUUID(),
-      conid: values.conid || `conn_${crypto.randomUUID()}`,
-      server: values.server || '',
-      engine: values.engine || '',
-      ...values
+      conid: params.values.conid || `conn_${crypto.randomUUID()}`,
+      server: params.values.server || '',
+      engine: params.values.engine || '',
+      ...params.values
     };
 
-    if (values.conid && this.getById(values.conid)) {
+    if (params.values.conid && this.getById(params.values.conid)) {
       // Update existing connection
-      this.update(values.conid, values);
-      return this.getById(values.conid)!;
+      this.update(params.values.conid, params.values);
+      return this.getById(params.values.conid)!;
     } else {
       // Add new connection
       this.add(connection);
@@ -275,8 +275,8 @@ export class ConnectionManager implements ConnectionsControllerContract {
   /**
    * Create new SQLite database (API contract method)
    */
-  async newSqliteDatabase(params: { file: string }): Promise<Connection> {
-    const connection: Connection = {
+  async newSqliteDatabase(params: { file: string }): Promise<StoredConnection> {
+    const connection: StoredConnection = {
       _id: crypto.randomUUID(),
       conid: `sqlite_${crypto.randomUUID()}`,
       server: params.file,
