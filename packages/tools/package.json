@@ -3,6 +3,7 @@
   "name": "dbgate-tools",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
+  "type": "module",
   "homepage": "https://dbgate.org/",
   "repository": {
     "type": "git",

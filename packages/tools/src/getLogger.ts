@@ -1,4 +1,4 @@
-import pinomin, { Logger, type LogConfig } from 'pinomin';
+import { default as pinomin, Logger, type LogConfig } from 'pinomin';
 
 let _logConfig: LogConfig;
 let _name: string = null;

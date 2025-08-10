@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "target": "ES2018",
-    "module": "commonjs",
     "declaration": true,
     "skipLibCheck": true,
     "outDir": "lib",
@@ -9,6 +8,7 @@
     "esModuleInterop": true,
     "composite": true,
     "incremental": true,
+    "moduleResolution": "node",
     "rootDir": "src"
    },
   "include": [
