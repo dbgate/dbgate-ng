@@ -8,8 +8,9 @@
     "preserveWatchOutput": true,
     "esModuleInterop": true,
     "composite": true,
-    "incremental": true
-  },
+    "incremental": true,
+    "rootDir": "src"
+   },
   "include": [
     "src/**/*"
   ],

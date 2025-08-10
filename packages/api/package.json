@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
+    "dbgate-core": "workspace:*",
     "express": "^4.18.2"
   }
 }

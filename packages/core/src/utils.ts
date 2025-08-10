@@ -94,24 +94,24 @@ export async function retry<T>(
   } = {}
 ): Promise<T> {
   const { maxAttempts = 3, delay = 1000, backoffMultiplier = 2 } = options;
-  
+
   let lastError: Error;
-  
+
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       return await fn();
     } catch (error) {
       lastError = error as Error;
-      
+
       if (attempt === maxAttempts) {
         throw lastError;
       }
-      
+
       const waitTime = delay * Math.pow(backoffMultiplier, attempt - 1);
       await sleep(waitTime);
     }
   }
-  
+
   throw lastError!;
 }
 
@@ -120,13 +120,13 @@ export async function retry<T>(
  */
 export function formatBytes(bytes: number, decimals: number = 2): string {
   if (bytes === 0) return '0 Bytes';
-  
+
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-  
+
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
@@ -170,17 +170,26 @@ export function extractErrorMessage(error: unknown): string {
  * Create a logger with different levels
  */
 export interface Logger {
-  debug: (message: string, ...args: any[]) => void;
-  info: (message: string, ...args: any[]) => void;
-  warn: (message: string, ...args: any[]) => void;
-  error: (message: string, ...args: any[]) => void;
+  debug: (message: any, ...args: any[]) => void;
+  info: (message: any, ...args: any[]) => void;
+  warn: (message: any, ...args: any[]) => void;
+  error: (message: any, ...args: any[]) => void;
 }
 
-export function createLogger(prefix: string = 'DBGate'): Logger {
+export function getLogger(prefix: string = 'DBGate'): Logger {
   return {
-    debug: (message: string, ...args: any[]) => console.debug(`[${prefix}] ${message}`, ...args),
-    info: (message: string, ...args: any[]) => console.info(`[${prefix}] ${message}`, ...args),
-    warn: (message: string, ...args: any[]) => console.warn(`[${prefix}] ${message}`, ...args),
-    error: (message: string, ...args: any[]) => console.error(`[${prefix}] ${message}`, ...args),
+    debug: (message: any, ...args: any[]) => console.debug(`[${prefix}] ${message}`, ...args),
+    info: (message: any, ...args: any[]) => console.info(`[${prefix}] ${message}`, ...args),
+    warn: (message: any, ...args: any[]) => console.warn(`[${prefix}] ${message}`, ...args),
+    error: (message: any, ...args: any[]) => console.error(`[${prefix}] ${message}`, ...args),
   };
+}
+
+export function getExpressPath(path: string) {
+  path = path.replace(/\/*$/, '').replace(/^\/*/, '');
+  const root = (process.env.WEB_ROOT || '').replace(/^\/*/, '').replace(/\/*$/, '');
+  if (root) {
+    return `/${root}/${path}`;
+  }
+  return `/${path}`;
 }

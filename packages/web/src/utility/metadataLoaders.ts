@@ -1,19 +1,24 @@
 import _ from 'lodash';
 import { loadCachedValue, subscribeCacheChange, unsubscribeCacheChange } from './cache';
 import stableStringify from 'json-stable-stringify';
+// @ts-ignore
 import { extendDatabaseInfo } from 'dbgate-tools';
 import { setLocalStorage } from '../utility/storageCache';
-import { apiCall, apiOff, apiOn } from './api';
+import { apiCall } from './api';
+import { createEffect, createResource, onCleanup, Resource, ResourceReturn } from 'solid-js';
+import { ConfigResponse, DatabaseInfo, StoredConnection } from 'dbgate-types';
 
 const databaseInfoLoader = ({ conid, database, modelTransFile }) => ({
-  url: 'database-connections/structure',
+  controller: 'databaseConnections',
+  action: 'structure',
   params: { conid, database, modelTransFile },
   reloadTrigger: { key: `database-structure-changed`, conid, database },
   transform: extendDatabaseInfo,
 });
 
 const schemaListLoader = ({ conid, database }) => ({
-  url: 'database-connections/schema-list',
+  controller: 'databaseConnections',
+  action: 'schemaList',
   params: { conid, database },
   reloadTrigger: { key: `schema-list-changed`, conid, database },
 });
@@ -31,31 +36,36 @@ const schemaListLoader = ({ conid, database }) => ({
 // });
 
 const connectionInfoLoader = ({ conid }) => ({
-  url: 'connections/get',
+  controller: 'connections',
+  action: 'get',
   params: { conid },
   reloadTrigger: { key: 'connection-list-changed' },
 });
 
 const configLoader = () => ({
-  url: 'config/get',
+  controller: 'config',
+  action: 'get',
   params: {},
   reloadTrigger: { key: 'config-changed' },
 });
 
 const settingsLoader = () => ({
-  url: 'config/get-settings',
+  controller: 'config',
+  action: 'get-settings',
   params: {},
   reloadTrigger: { key: 'settings-changed' },
 });
 
 const platformInfoLoader = () => ({
-  url: 'config/platform-info',
+  controller: 'config',
+  action: 'platform-info',
   params: {},
   reloadTrigger: { key: 'platform-info-changed' },
 });
 
 const favoritesLoader = () => ({
-  url: 'files/favorites',
+  controller: 'files',
+  action: 'favorites',
   params: {},
   reloadTrigger: { key: 'files-changed-favorites' },
 });
@@ -67,13 +77,15 @@ const favoritesLoader = () => ({
 // });
 
 const databaseStatusLoader = ({ conid, database }) => ({
-  url: 'database-connections/status',
+  controller: 'databaseConnections',
+  action: 'status',
   params: { conid, database },
   reloadTrigger: { key: `database-status-changed`, conid, database },
 });
 
 const databaseListLoader = ({ conid }) => ({
-  url: 'server-connections/list-databases',
+  controller: 'serverConnections',
+  action: 'list-databases',
   params: { conid },
   reloadTrigger: { key: `database-list-changed`, conid },
   onLoaded: value => {
@@ -83,37 +95,43 @@ const databaseListLoader = ({ conid }) => ({
 });
 
 const serverVersionLoader = ({ conid }) => ({
-  url: 'server-connections/version',
+  controller: 'serverConnections',
+  action: 'version',
   params: { conid },
   reloadTrigger: { key: `server-version-changed`, conid },
 });
 
 const databaseServerVersionLoader = ({ conid, database }) => ({
-  url: 'database-connections/server-version',
+  controller: 'databaseConnections',
+  action: 'server-version',
   params: { conid, database },
   reloadTrigger: { key: `database-server-version-changed`, conid, database },
 });
 
 const archiveFoldersLoader = () => ({
-  url: 'archive/folders',
+  controller: 'archive',
+  action: 'folders',
   params: {},
   reloadTrigger: { key: `archive-folders-changed` },
 });
 
 const archiveFilesLoader = ({ folder }) => ({
-  url: 'archive/files',
+  controller: 'archive',
+  action: 'files',
   params: { folder },
   reloadTrigger: { key: `archive-files-changed`, folder },
 });
 
 const appFoldersLoader = () => ({
-  url: 'apps/folders',
+  controller: 'apps',
+  action: 'folders',
   params: {},
   reloadTrigger: { key: `app-folders-changed` },
 });
 
 const appFilesLoader = ({ folder }) => ({
-  url: 'apps/files',
+  controller: 'apps',
+  action: 'files',
   params: { folder },
   reloadTrigger: { key: `app-files-changed`, app: folder },
 });
@@ -125,63 +143,72 @@ const appFilesLoader = ({ folder }) => ({
 // });
 
 const usedAppsLoader = ({ conid, database }) => ({
-  url: 'apps/get-used-apps',
+  controller: 'apps',
+  action: 'get-used-apps',
   params: {},
   reloadTrigger: { key: `used-apps-changed` },
 });
 
 const serverStatusLoader = () => ({
-  url: 'server-connections/server-status',
+  controller: 'serverConnections',
+  action: 'server-status',
   params: {},
   reloadTrigger: { key: `server-status-changed` },
 });
 
 const connectionListLoader = () => ({
-  url: 'connections/list',
+  controller: 'connections',
+  action: 'list',
   params: {},
   reloadTrigger: { key: `connection-list-changed` },
 });
 
 const installedPluginsLoader = () => ({
-  url: 'plugins/installed',
+  controller: 'plugins',
+  action: 'installed',
   params: {},
   reloadTrigger: { key: `installed-plugins-changed` },
 });
 
 const filesLoader = ({ folder }) => ({
-  url: 'files/list',
+  controller: 'files',
+  action: 'list',
   params: { folder },
   reloadTrigger: { key: `files-changed`, folder },
 });
 const allFilesLoader = () => ({
-  url: 'files/list-all',
+  controller: 'files',
+  action: 'list-all',
   params: {},
   reloadTrigger: { key: `all-files-changed` },
 });
 const authTypesLoader = ({ engine }) => ({
-  url: 'plugins/auth-types',
+  controller: 'plugins',
+  action: 'auth-types',
   params: { engine },
   reloadTrigger: { key: `installed-plugins-changed` },
   errorValue: null,
 });
 
 const publicCloudFilesLoader = () => ({
-  url: 'cloud/public-files',
+  controller: 'cloud',
+  action: 'public-files',
   params: {},
   reloadTrigger: { key: `public-cloud-changed` },
 });
 const cloudContentListLoader = () => ({
-  url: 'cloud/content-list',
+  controller: 'cloud',
+  action: 'content-list',
   params: {},
   reloadTrigger: { key: `cloud-content-changed` },
 });
 
 async function getCore(loader, args) {
-  const { url, params, reloadTrigger, transform, onLoaded, errorValue } = loader(args);
-  const key = stableStringify({ url, ...params });
+  const { controller, action, params, reloadTrigger, transform, onLoaded, errorValue } = loader(args);
+  const key = stableStringify({ controller, action, ...params });
 
   async function doLoad() {
-    const resp = await apiCall(url, params);
+    const resp = await apiCall(controller, action, params);
     if (resp?.errorMessage && errorValue !== undefined) {
       if (onLoaded) onLoaded(errorValue);
       return errorValue;
@@ -195,35 +222,32 @@ async function getCore(loader, args) {
   return res;
 }
 
-function useCore(loader, args) {
-  const { url, params, reloadTrigger, transform, onLoaded } = loader(args);
-  const cacheKey = stableStringify({ url, ...params });
-  let openedCount = 0;
+export function useCore<T>(loader, args): Resource<T> {
+  const { controller, action, params, reloadTrigger, transform, onLoaded } = loader(args);
+  const cacheKey = stableStringify({ controller, action, ...params });
 
-  return {
-    subscribe: onChange => {
-      async function handleReload() {
-        const res = await getCore(loader, args);
-        if (openedCount > 0) {
-          onChange(res);
-        }
-      }
-      openedCount += 1;
-      handleReload();
+  // Any value that changes here will refetch
+  const source = () => [cacheKey, reloadTrigger?.version?.() ?? reloadTrigger ?? 0];
 
-      if (reloadTrigger) {
-        subscribeCacheChange(reloadTrigger, cacheKey, handleReload);
-        return () => {
-          openedCount -= 1;
-          unsubscribeCacheChange(reloadTrigger, cacheKey, handleReload);
-        };
-      } else {
-        return () => {
-          openedCount -= 1;
-        };
-      }
-    },
-  };
+  const [resource, { refetch, mutate }] = createResource(
+    source,
+    async () => {
+      const res = await getCore(loader, args);
+      const out = transform ? transform(res) : res;
+      onLoaded?.(out);
+      return out;
+    }
+  );
+
+  // Hook your external cache bus
+  createEffect(() => {
+    if (!reloadTrigger) return;
+    const handler = () => refetch();
+    subscribeCacheChange(reloadTrigger, cacheKey, handler);
+    onCleanup(() => unsubscribeCacheChange(reloadTrigger, cacheKey, handler));
+  });
+
+  return resource;
 }
 
 /** @returns {Promise<import('dbgate-types').DatabaseInfo>} */
@@ -233,7 +257,7 @@ export function getDatabaseInfo(args) {
 
 /** @returns {import('dbgate-types').DatabaseInfo} */
 export function useDatabaseInfo(args) {
-  return useCore(databaseInfoLoader, args);
+  return useCore<DatabaseInfo>(databaseInfoLoader, args);
 }
 
 export async function getDbCore(args, objectTypeField = undefined) {
@@ -245,23 +269,22 @@ export async function getDbCore(args, objectTypeField = undefined) {
 }
 
 export function useDbCore(args, objectTypeField = undefined) {
-  const dbStore = useDatabaseInfo(args);
-  if (!dbStore) return null;
-  return derived(dbStore, db => {
-    if (!db) return null;
-    if (_.isArray(objectTypeField)) {
-      for (const field of objectTypeField) {
-        const res = db[field || args.objectTypeField].find(
-          x => x.pureName == args.pureName && x.schemaName == args.schemaName
-        );
-        if (res) return res;
-      }
-    } else {
-      return db[objectTypeField || args.objectTypeField].find(
-        x => x.pureName == args.pureName && x.schemaName == args.schemaName
-      );
-    }
-  });
+  return null
+  // const dbStore = useDatabaseInfo(args);
+  // if (!dbStore) return null;
+  // if (_.isArray(objectTypeField)) {
+  //   for (const field of objectTypeField) {
+  //     const res = dbStore[field || args.objectTypeField].find(
+  //       x => x.pureName == args.pureName && x.schemaName == args.schemaName
+  //     );
+  //     if (res) return res;
+  //   }
+  // } else {
+  //   return db[objectTypeField || args.objectTypeField].find(
+  //     x => x.pureName == args.pureName && x.schemaName == args.schemaName
+  //   );
+  // }
+
 }
 
 /** @returns {Promise<import('dbgate-types').TableInfo>} */
@@ -297,13 +320,11 @@ export function useSqlObjectInfo(args) {
   return useDbCore(args);
 }
 
-/** @returns {Promise<import('dbgate-types').StoredConnection>} */
-export function getConnectionInfo(args) {
+export function getConnectionInfo(args): Promise<StoredConnection> {
   return getCore(connectionInfoLoader, args);
 }
 
-/** @returns {import('dbgate-types').StoredConnection} */
-export function useConnectionInfo(args) {
+export function useConnectionInfo(args): Resource<StoredConnection> {
   return useCore(connectionInfoLoader, args);
 }
 
@@ -349,24 +370,24 @@ export function useServerStatus() {
   return useCore(serverStatusLoader, {});
 }
 
-export function getConnectionList() {
+export function getConnectionList(): Promise<StoredConnection[]> {
   return getCore(connectionListLoader, {});
 }
-export function useConnectionList() {
+export function useConnectionList(): Resource<StoredConnection[]> {
   return useCore(connectionListLoader, {});
 }
 
-export function getConfig() {
+export function getConfig(): Promise<ConfigResponse> {
   return getCore(configLoader, {});
 }
-export function useConfig() {
+export function useConfig(): Resource<ConfigResponse> {
   return useCore(configLoader, {});
 }
 
-export function getSettings() {
+export function getSettings(): Promise<Record<string, any>> {
   return getCore(settingsLoader, {});
 }
-export function useSettings() {
+export function useSettings(): Resource<Record<string, any>> {
   return useCore(settingsLoader, {});
 }
 

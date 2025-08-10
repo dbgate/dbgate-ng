@@ -15,7 +15,8 @@
     "tailwindcss": "^4.0.7",
     "typescript": "^5.7.2",
     "vite": "^6.0.0",
-    "vite-plugin-solid": "^2.11.6"
+    "vite-plugin-solid": "^2.11.6",
+    "dbgate-types": "workspace:*"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
@@ -23,6 +24,7 @@
     "dexie": "^4.0.11",
     "json-stable-stringify": "^1.3.0",
     "lodash": "^4.17.21",
-    "solid-js": "^1.9.5"
+    "solid-js": "^1.9.5",
+    "dbgate-tools": "workspace:*"
   }
 }

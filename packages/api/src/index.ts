@@ -1,6 +1,6 @@
 import express, { Express } from 'express';
 import cors from 'cors';
-import connectionsRoutes from './routes/connections';
+import { useAllControllers } from 'dbgate-core/src/useControllers';
 
 const app: Express = express();
 const PORT = process.env.PORT || 3001;
@@ -26,8 +26,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// API routes
-app.use('/api/connections', connectionsRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -45,6 +43,8 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
     message: err.message
   });
 });
+
+useAllControllers(app, null);
 
 app.listen(PORT, () => {
   console.log(`🚀 DBGate API server running on http://localhost:${PORT}`);

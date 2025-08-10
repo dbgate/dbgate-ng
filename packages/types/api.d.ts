@@ -181,8 +181,14 @@ export type DbGateApiContract = {
     serverConnections: ServerConnectionsControllerContract;
 };
 
-export type ApiCallFunction<T extends DbGateApiContract> = <
+export type AddMetaFields<T> = T & {
+    [K in keyof T as `${string & K}_meta`]: true;
+};
+
+export type ApiCallFunctionGeneric<T extends DbGateApiContract> = <
     K extends keyof T,
     M extends keyof T[K] & string,
-    F extends T[K][M] & ((...args: any[]) => any)
->(controller: K, action: M, params: Parameters<F>[0]) => ReturnType<F>;
+    F extends T[K][M] & ((args: Parameters<F>) => any)
+>(controller: K, action: M, params: Parameters<F>) => ReturnType<F>;
+
+export type ApiCallFunction = ApiCallFunctionGeneric<DbGateApiContract>;

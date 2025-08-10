@@ -79,6 +79,9 @@ importers:
       cors:
         specifier: ^2.8.5
         version: 2.8.5
+      dbgate-core:
+        specifier: workspace:*
+        version: link:../core
       express:
         specifier: ^4.18.2
         version: 4.21.2
@@ -104,10 +107,22 @@ importers:
 
   packages/core:
     dependencies:
+      dbgate-tools:
+        specifier: workspace:*
+        version: link:../tools
+      express:
+        specifier: ^4.21.2
+        version: 4.21.2
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
     devDependencies:
+      '@types/express':
+        specifier: ^4.17.23
+        version: 4.17.23
+      '@types/lodash':
+        specifier: ^4.17.20
+        version: 4.17.20
       '@types/node':
         specifier: ^20.19.9
         version: 20.19.9
@@ -212,6 +227,9 @@ importers:
       '@tailwindcss/vite':
         specifier: ^4.0.7
         version: 4.1.11(vite@6.3.5(@types/node@22.17.0)(jiti@2.5.1)(lightningcss@1.30.1)(tsx@4.20.3))
+      dbgate-types:
+        specifier: workspace:*
+        version: link:../types
       tailwindcss:
         specifier: ^4.0.7
         version: 4.1.11

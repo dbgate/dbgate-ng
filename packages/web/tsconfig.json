@@ -12,5 +12,8 @@
     "isolatedModules": true,
     "composite": true,
     "incremental": true
-  }
+  },
+  "references": [
+    { "path": "../tools" }
+  ] 
 }

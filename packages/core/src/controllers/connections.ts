@@ -1,6 +1,6 @@
 // Connections management functionality for DBGate Shell
 import * as crypto from 'crypto';
-import { ConnectionsControllerContract, StoredConnection } from 'dbgate-types';
+import { AddMetaFields, ConnectionsControllerContract, StoredConnection } from 'dbgate-types';
 
 /**
  * Parse connections from environment variables
@@ -142,12 +142,19 @@ export function getSupportedEngines(): string[] {
  * Connection manager class for managing multiple connections
  * Implements the interface generated from API contracts for type safety
  */
-export class ConnectionsControllerImpl implements ConnectionsControllerContract {
+export class ConnectionsControllerImpl implements AddMetaFields<ConnectionsControllerContract> {
   private connections: StoredConnection[] = [];
 
   constructor(initialConnections: StoredConnection[] = []) {
     this.connections = [...initialConnections];
   }
+  list_meta = true as const;
+  get_meta = true as const;
+  save_meta = true as const;
+  delete_meta = true as const;
+  test_meta = true as const;
+  newSqliteDatabase_meta = true as const;
+
 
   /**
    * Load connections from environment variables
