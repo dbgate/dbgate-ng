@@ -15,6 +15,7 @@
   "devDependencies": {
     "@types/node": "^20.19.9",
     "rimraf": "^5.0.5",
+    "dbgate-types": "workspace:*",
     "typescript": "^5.7.2"
   },
   "dependencies": {

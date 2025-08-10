@@ -1,14 +1,13 @@
 // Connections management functionality for DBGate Shell
 import * as crypto from 'crypto';
-import { Connection, ConnectionConfig, EnvironmentConnectionConfig, ConnectionTestResult } from './types';
-import { ConnectionManagerInterface } from './interfaces';
+import { ConnectionsControllerContract, StoredConnection } from 'dbgate-types';
 
 /**
  * Parse connections from environment variables
  * Format: CONNECTION_1_SERVER=localhost, CONNECTION_1_ENGINE=mysql, etc.
  */
-export function parseConnectionsFromEnv(env: EnvironmentConnectionConfig = process.env): Connection[] {
-  const connections: Connection[] = [];
+export function parseConnectionsFromEnv(env = process.env): StoredConnection[] {
+  const connections: StoredConnection[] = [];
   const envKeys = Object.keys(env);
   const connectionNumbers = new Set<string>();
 
@@ -26,7 +25,7 @@ export function parseConnectionsFromEnv(env: EnvironmentConnectionConfig = proce
     const engine = env[`CONNECTION_${num}_ENGINE`];
 
     if (server && engine) {
-      const connection: Connection = {
+      const connection: StoredConnection = {
         _id: crypto.randomUUID(),
         conid: `env_${num}`,
         server,
@@ -59,14 +58,14 @@ export function parseConnectionsFromEnv(env: EnvironmentConnectionConfig = proce
 /**
  * Find a connection by its connection ID
  */
-export function findConnectionById(connections: Connection[], conid: string): Connection | undefined {
+export function findConnectionById(connections: StoredConnection[], conid: string): StoredConnection | undefined {
   return connections.find((c) => c.conid === conid);
 }
 
 /**
  * Validate connection configuration
  */
-export function validateConnection(config: Partial<ConnectionConfig>): { isValid: boolean; errors: string[] } {
+export function validateConnection(config: Partial<StoredConnection>): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
 
   if (!config.server) {
@@ -93,9 +92,9 @@ export function validateConnection(config: Partial<ConnectionConfig>): { isValid
 /**
  * Test a connection (simplified implementation)
  */
-export async function testConnection(config: Partial<ConnectionConfig>): Promise<ConnectionTestResult> {
+export async function testConnection(config: Partial<StoredConnection>): Promise<{ msgtype: "connected" | "error"; message?: string }> {
   const validation = validateConnection(config);
-  
+
   if (!validation.isValid) {
     return {
       msgtype: 'error',
@@ -114,7 +113,7 @@ export async function testConnection(config: Partial<ConnectionConfig>): Promise
 /**
  * Mask sensitive information from a connection (for security)
  */
-export function maskConnection(connection: Connection): Connection {
+export function maskConnection(connection: StoredConnection): StoredConnection {
   return {
     ...connection,
     password: connection.password ? '***' : undefined,
@@ -143,38 +142,38 @@ export function getSupportedEngines(): string[] {
  * Connection manager class for managing multiple connections
  * Implements the interface generated from API contracts for type safety
  */
-export class ConnectionManager implements ConnectionManagerInterface {
-  private connections: Connection[] = [];
+export class ConnectionManager implements ConnectionsControllerContract {
+  private connections: StoredConnection[] = [];
 
-  constructor(initialConnections: Connection[] = []) {
+  constructor(initialConnections: StoredConnection[] = []) {
     this.connections = [...initialConnections];
   }
 
   /**
    * Load connections from environment variables
    */
-  loadFromEnvironment(env: EnvironmentConnectionConfig = process.env): void {
+  loadFromEnvironment(env = process.env): void {
     this.connections = parseConnectionsFromEnv(env);
   }
 
   /**
    * Get all connections
    */
-  getAll(): Connection[] {
+  getAll(): StoredConnection[] {
     return [...this.connections];
   }
 
   /**
    * Get connection by ID
    */
-  getById(conid: string): Connection | undefined {
+  getById(conid: string): StoredConnection | undefined {
     return findConnectionById(this.connections, conid);
   }
 
   /**
    * Add a new connection
    */
-  add(connection: Connection): void {
+  add(connection: StoredConnection): void {
     this.connections.push(connection);
   }
 
@@ -193,7 +192,7 @@ export class ConnectionManager implements ConnectionManagerInterface {
   /**
    * Update a connection
    */
-  update(conid: string, updates: Partial<Connection>): boolean {
+  update(conid: string, updates: Partial<StoredConnection>): boolean {
     const index = this.connections.findIndex(c => c.conid === conid);
     if (index !== -1) {
       this.connections[index] = { ...this.connections[index], ...updates };
@@ -217,21 +216,21 @@ export class ConnectionManager implements ConnectionManagerInterface {
   }
 
   // Interface methods from ConnectionManagerInterface
-  
+
   /**
    * List all connections (API contract method)
    */
-  async list(params: {}): Promise<Connection[]> {
+  async list(params: {}): Promise<StoredConnection[]> {
     return this.getAll();
   }
 
   /**
    * Get specific connection (API contract method)
    */
-  async get(params: { conid: string }): Promise<Connection> {
-    const connection = this.getById(params.conid);
+  async get(conid: string): Promise<StoredConnection> {
+    const connection = this.getById(conid);
     if (!connection) {
-      throw new Error(`Connection not found: ${params.conid}`);
+      throw new Error(`Connection not found: ${conid}`);
     }
     return connection;
   }
@@ -239,26 +238,26 @@ export class ConnectionManager implements ConnectionManagerInterface {
   /**
    * Test connection (API contract method)
    */
-  async test(params: { values: Partial<Connection> }): Promise<{ msgtype: "connected" | "error"; message?: string }> {
-    return await testConnection(params.values);
+  async test(values: Partial<StoredConnection>): Promise<{ msgtype: "connected" | "error"; message?: string }> {
+    return await testConnection(values);
   }
 
   /**
    * Save connection (API contract method)
    */
-  async save(params: { values: Partial<Connection> }): Promise<Connection> {
-    const connection: Connection = {
+  async save(values: Partial<StoredConnection>): Promise<StoredConnection> {
+    const connection: StoredConnection = {
       _id: crypto.randomUUID(),
-      conid: params.values.conid || `conn_${crypto.randomUUID()}`,
-      server: params.values.server || '',
-      engine: params.values.engine || '',
-      ...params.values
+      conid: values.conid || `conn_${crypto.randomUUID()}`,
+      server: values.server || '',
+      engine: values.engine || '',
+      ...values
     };
-    
-    if (params.values.conid && this.getById(params.values.conid)) {
+
+    if (values.conid && this.getById(values.conid)) {
       // Update existing connection
-      this.update(params.values.conid, params.values);
-      return this.getById(params.values.conid)!;
+      this.update(values.conid, values);
+      return this.getById(values.conid)!;
     } else {
       // Add new connection
       this.add(connection);
@@ -285,7 +284,7 @@ export class ConnectionManager implements ConnectionManagerInterface {
       displayName: `SQLite - ${params.file}`,
       database: params.file
     };
-    
+
     this.add(connection);
     return connection;
   }

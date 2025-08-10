@@ -1,4 +1,6 @@
-export type Connection = {
+import { DatabaseInfo } from "./dbinfo";
+
+export type StoredConnection = {
     _id?: string;
     conid?: string;
     server: string;
@@ -22,7 +24,7 @@ export type Connection = {
     defaultDatabase?: string;
 };
 
-type ConfigResponse = {
+export type ConfigResponse = {
     login?: string;
     permissions?: string[];
     isUserLoggedIn: boolean;
@@ -39,32 +41,22 @@ type ConfigResponse = {
     authProviders?: any[];
 };
 
-type CloudUser = {
+export type CloudUser = {
     login: string;
     name?: string;
     email?: string;
 };
 
-type DatabaseInfo = {
-    name: string;
-    tables?: any[];
-    views?: any[];
-    procedures?: any[];
-    functions?: any[];
-    triggers?: any[];
-    schemas?: any[];
-};
-
-type AppsControllerContract = {
+export type AppsControllerContract = {
     get(): { installed: string[]; available: string[]; };
 };
 
-type ArchiveControllerContract = {
+export type ArchiveControllerContract = {
     folders(): { name: string; type: "jsonl" | "archive"; }[];
     createFolder(folder: string): boolean;
 };
 
-type AuthControllerContract = {
+export type AuthControllerContract = {
     login(params: { user?: string; password?: string; authType?: string; }): { accessToken?: string; refreshToken?: string; permissions?: string[]; };
     logout(): boolean;
     refreshToken(refreshToken: string): { accessToken: string; };
@@ -78,23 +70,23 @@ type CloudControllerContract = {
     profile(): CloudUser;
 };
 
-type ConfigControllerContract = {
+export type ConfigControllerContract = {
     get(): ConfigResponse;
     getSettings(): Record<string, any>;
     updateSettings(values: Record<string, any>): boolean;
     saveLicenseKey(licenseKey: string): { status: string; message?: string };
 };
 
-type ConnectionControllerContract = {
-    list(): Connection[];
-    get(conid: string): Connection;
-    save(values: Partial<Connection>): Connection;
+export type ConnectionsControllerContract = {
+    list(): StoredConnection[];
+    get(conid: string): StoredConnection;
+    save(values: Partial<StoredConnection>): StoredConnection;
     delete(conid: string): boolean;
-    test(values: Partial<Connection>): { msgtype: "connected" | "error"; message?: string };
-    newSqliteDatabase(file: string): Connection;
+    test(values: Partial<StoredConnection>): { msgtype: "connected" | "error"; message?: string };
+    newSqliteDatabase(file: string): StoredConnection;
 };
 
-type DatabaseConnectionsControllerContract = {
+export type DatabaseConnectionsControllerContract = {
     status(conid: string, database: string): { name: string; status: "ok" | "pending" | "error"; connection?: any; structure?: DatabaseInfo; };
     connect(conid: string, database: string): boolean;
     disconnect(conid: string, database: string): boolean;
@@ -102,14 +94,14 @@ type DatabaseConnectionsControllerContract = {
     loadDatabase(conid: string, database: string): DatabaseInfo;
 };
 
-type FileInfo = {
+export type FileInfo = {
     name: string;
     size?: number;
     isDirectory: boolean;
     modifiedTime?: string;
 };
 
-type FilesControllerContract = {
+export type FilesControllerContract = {
     list(folder?: string): FileInfo[];
     read(file: string, encoding?: string): string;
     write(file: string, data: string, encoding?: string): boolean;
@@ -118,17 +110,17 @@ type FilesControllerContract = {
     rename(file: string, newName: string): boolean;
 };
 
-type JslDataControllerContract = {
+export type JslDataControllerContract = {
     getInfo(jslid: string): { name: string; structure: any; };
 };
 
-type MetadataControllerContract = {
+export type MetadataControllerContract = {
     listObjects(conid: string, database: string): any[];
     tableInfo(conid: string, database: string, pureName: string, schemaName?: string): any;
     sqlObjectInfo(conid: string, database: string, pureName: string, objectTypeField: string, schemaName?: string): any;
 };
 
-type PluginsControllerContract = {
+export type PluginsControllerContract = {
     script(packageName: string, scriptName: string): string;
     search(query?: string): any[];
     info(packageName: string): any;
@@ -140,12 +132,12 @@ type PluginsControllerContract = {
     authTypes(): string[];
 };
 
-type QueryHistoryControllerContract = {
+export type QueryHistoryControllerContract = {
     read(): any[];
     write(entry: any): boolean;
 };
 
-type RunnersControllerContract = {
+export type RunnersControllerContract = {
     start(script: string, args?: any): { runid: string; };
     getNodeScript(script: string): string;
     cancel(runid: string): boolean;
@@ -171,13 +163,13 @@ type ServerConnectionsControllerContract = {
     summaryCommand(conid: string, command: string): any;
 };
 
-type DbGateApiContract = {
+export type DbGateApiContract = {
     apps: AppsControllerContract;
     archive: ArchiveControllerContract;
     auth: AuthControllerContract;
     cloud: CloudControllerContract;
     config: ConfigControllerContract;
-    connection: ConnectionControllerContract;
+    connections: ConnectionsControllerContract;
     databaseConnections: DatabaseConnectionsControllerContract;
     files: FilesControllerContract;
     jslData: JslDataControllerContract;
@@ -189,7 +181,7 @@ type DbGateApiContract = {
     serverConnections: ServerConnectionsControllerContract;
 };
 
-type ApiCallFunction<T extends DbGateApiContract> = <
+export type ApiCallFunction<T extends DbGateApiContract> = <
     K extends keyof T,
     M extends keyof T[K] & string,
     F extends T[K][M] & ((...args: any[]) => any)

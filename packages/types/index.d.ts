@@ -29,21 +29,21 @@ export interface OpenedRunner {
   subprocess: ChildProcess;
 }
 
-export interface StoredConnection {
-  engine: string;
-  server: string;
-  port?: number;
-  user: string;
-  password: string;
-  displayName: string;
-}
+// export interface StoredConnection {
+//   engine: string;
+//   server: string;
+//   port?: number;
+//   user: string;
+//   password: string;
+//   displayName: string;
+// }
 
 export * from './engines';
 export * from './dbinfo';
 export * from './query';
 export * from './dialect';
 export * from './dumper';
-export * from './dbtypes';
+export * from './api';
 export * from './extensions';
 export * from './alter-processor';
 export * from './appdefs';
