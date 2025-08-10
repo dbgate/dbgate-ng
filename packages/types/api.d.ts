@@ -158,4 +158,39 @@ type SchedulerControllerContract = {
     list(): any[];
 };
 
-type ApiCallFunction = (controller: string, action: string, params: any) => any;
+type ServerConnectionsControllerContract = {
+    disconnect(conid: string): boolean;
+    listDatabases(conid: string): string[];
+    version(conid: string): { version: string; versionText?: string; };
+    serverStatus(conid: string): any;
+    ping(conid: string): boolean;
+    refresh(conid: string): boolean;
+    createDatabase(conid: string, name: string): boolean;
+    dropDatabase(conid: string, name: string): boolean;
+    serverSummary(conid: string): any;
+    summaryCommand(conid: string, command: string): any;
+};
+
+type DbGateApiContract = {
+    apps: AppsControllerContract;
+    archive: ArchiveControllerContract;
+    auth: AuthControllerContract;
+    cloud: CloudControllerContract;
+    config: ConfigControllerContract;
+    connection: ConnectionControllerContract;
+    databaseConnections: DatabaseConnectionsControllerContract;
+    files: FilesControllerContract;
+    jslData: JslDataControllerContract;
+    metadata: MetadataControllerContract;
+    plugins: PluginsControllerContract;
+    queryHistory: QueryHistoryControllerContract;
+    runners: RunnersControllerContract;
+    scheduler: SchedulerControllerContract;
+    serverConnections: ServerConnectionsControllerContract;
+};
+
+type ApiCallFunction<T extends DbGateApiContract> = <
+    K extends keyof T,
+    M extends keyof T[K] & string,
+    F extends T[K][M] & ((...args: any[]) => any)
+>(controller: K, action: M, params: Parameters<F>[0]) => ReturnType<F>;
