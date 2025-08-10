@@ -211,6 +211,9 @@ importers:
       '@solid-primitives/keyed':
         specifier: ^1.5.2
         version: 1.5.2(solid-js@1.9.8)
+      dbgate-tools:
+        specifier: workspace:*
+        version: link:../tools
       dexie:
         specifier: ^4.0.11
         version: 4.0.11

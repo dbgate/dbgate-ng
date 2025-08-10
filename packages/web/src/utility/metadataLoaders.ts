@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import { loadCachedValue, subscribeCacheChange, unsubscribeCacheChange } from './cache';
 import stableStringify from 'json-stable-stringify';
-// @ts-ignore
 import { extendDatabaseInfo } from 'dbgate-tools';
 import { setLocalStorage } from '../utility/storageCache';
 import { apiCall } from './api';
