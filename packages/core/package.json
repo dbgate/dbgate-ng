@@ -1,7 +1,7 @@
 {
-  "name": "dbgate-shell",
+  "name": "dbgate-core",
   "version": "0.0.0",
-  "description": "Core TypeScript library for DBGate functionality without Express dependencies",
+  "description": "Core TypeScript library for DBGate functionality without Express invocation",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
