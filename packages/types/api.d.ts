@@ -3,8 +3,8 @@ import { DatabaseInfo } from "./dbinfo";
 export type StoredConnection = {
     _id?: string;
     conid?: string;
-    server: string;
-    engine: string;
+    server?: string;
+    engine?: string;
     user?: string;
     password?: string;
     port?: number;
