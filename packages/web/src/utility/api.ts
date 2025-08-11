@@ -4,7 +4,7 @@ export const strmid = crypto.randomUUID();
 
 // @ts-ignore
 export const apiCall: ApiCallFunction =async (controller, method, args) => {
-  const resp = await fetch(`/api/${controller}/${method}`, {
+  const resp = await fetch(`http://localhost:3001/${controller}/${method}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

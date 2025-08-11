@@ -19,12 +19,14 @@ app.get('/', (req, res) => {
   });
 });
 
-app.get('/api/health', (req, res) => {
+app.get('/health', (req, res) => {
   res.json({ 
     status: 'healthy',
     timestamp: new Date().toISOString()
   });
 });
+
+useAllControllers(app, null);
 
 
 // 404 handler
@@ -43,8 +45,6 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
     message: err.message
   });
 });
-
-useAllControllers(app, null);
 
 app.listen(PORT, () => {
   console.log(`🚀 DBGate API server running on http://localhost:${PORT}`);
