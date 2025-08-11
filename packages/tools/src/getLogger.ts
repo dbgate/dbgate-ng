@@ -1,4 +1,4 @@
-import { default as pinomin, Logger, type LogConfig } from 'pinomin';
+import { createLogger, Logger, type LogConfig } from 'pinomin';
 
 let _logConfig: LogConfig;
 let _name: string = null;
@@ -16,7 +16,7 @@ export function setLoggerName(value) {
 }
 
 export function getLogger(caller?: string): Logger {
-  return pinomin({
+  return createLogger({
     getConfig: () => {
       const config = _logConfig || defaultLogConfig;
 

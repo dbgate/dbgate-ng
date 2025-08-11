@@ -2,6 +2,7 @@
     "compilerOptions": {
       "declaration": true,
       "skipLibCheck": true,
+      "target": "ES2018",
       "outDir": "lib",
       "preserveWatchOutput": true,
       "esModuleInterop": true,
