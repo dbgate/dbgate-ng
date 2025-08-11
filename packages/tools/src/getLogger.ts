@@ -4,7 +4,8 @@ let _logConfig: LogConfig;
 let _name: string = null;
 
 const defaultLogConfig: LogConfig = {
-  base: { pid: global?.process?.pid },
+  // base: { pid: global?.process?.pid },
+  base: {},
   targets: [{ type: 'console', level: 'info' }],
 };
 

@@ -2,6 +2,7 @@
     "compilerOptions": {
       "declaration": true,
       "skipLibCheck": true,
+      "moduleResolution": "node",
       "target": "ES2018",
       "outDir": "lib",
       "preserveWatchOutput": true,
@@ -12,5 +13,5 @@
     },
     "include": [
       "src/**/*"
-    ]
+    ]  
   }
