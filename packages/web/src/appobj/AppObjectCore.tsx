@@ -168,9 +168,9 @@ const AppObjectCore: Component<AppObjectCoreProps> = (props) => {
         class="p-1.5 cursor-pointer whitespace-nowrap font-normal relative flex items-center group"
         classList={{
           'font-bold': props.isBold,
-          'text-gray-500': props.isGrayed,
-          'bg-blue-100': props.isChoosed,
-          'hover:bg-gray-100': !props.disableHover
+          'theme-pen-3': props.isGrayed,
+          'theme-face-selected': props.isChoosed,
+          'hover:theme-face-4': !props.disableHover
         }}
         draggable={true}
         onClick={handleClick}
