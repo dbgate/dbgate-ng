@@ -165,7 +165,7 @@ const AppObjectCore: Component<AppObjectCoreProps> = (props) => {
     <>
       <div
         ref={domDiv}
-        class="p-1.5 cursor-pointer whitespace-nowrap font-normal relative flex items-center group"
+        class="p-1.5 text-sm cursor-pointer whitespace-nowrap font-normal relative flex items-center group"
         classList={{
           'font-bold': props.isBold,
           'theme-pen-3': props.isGrayed,
