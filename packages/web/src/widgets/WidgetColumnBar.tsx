@@ -6,7 +6,7 @@ import FontIcon from '../elements/FontIcon';
 export interface WidgetColumnBarItemProps {
   title: string;
   name: string;
-  initialHeight?: string;
+  initialHeight?: string; // percentage of parent height (40%) or pixels (20px)
   renderBody: () => JSX.Element;
   defaultExpanded?: boolean;
 }
@@ -38,14 +38,64 @@ export const WidgetColumnBar = (props: WidgetColumnBarProps) => {
 
   const isExpanded = (name: string) => expandedItems().has(name);
 
-  // Calculate available height for expanded items
-  const availableHeight = createMemo(() => {
+  // Parse height string (e.g., "40%", "200px") to pixels
+  const parseHeight = (heightStr: string | undefined, totalHeight: number): number => {
+    if (!heightStr) return 0;
+    
+    if (heightStr.endsWith('%')) {
+      const percentage = parseFloat(heightStr.slice(0, -1));
+      return (totalHeight * percentage) / 100;
+    } else if (heightStr.endsWith('px')) {
+      return parseFloat(heightStr.slice(0, -2));
+    } else {
+      // Assume pixels if no unit specified
+      return parseFloat(heightStr) || 0;
+    }
+  };
+
+  // Calculate height for each item
+  const getItemHeight = createMemo(() => {
     const totalHeight = bounds.height || 0;
     const titleHeight = 40; // Approximate height of each title
-    const expandedCount = expandedItems().size;
     const totalTitleHeight = props.children.length * titleHeight;
+    const availableContentHeight = totalHeight - totalTitleHeight;
     
-    return expandedCount > 0 ? (totalHeight - totalTitleHeight) / expandedCount : 0;
+    const itemHeights = new Map<string, number>();
+    const expandedItemNames = Array.from(expandedItems());
+    
+    // If only one item is expanded, give it full height
+    if (expandedItemNames.length === 1) {
+      itemHeights.set(expandedItemNames[0], availableContentHeight);
+      return itemHeights;
+    }
+    
+    // Calculate heights for items with specific initialHeight
+    let usedHeight = 0;
+    let itemsWithoutHeight = 0;
+    
+    props.children.forEach(item => {
+      if (expandedItems().has(item.name)) {
+        if (item.initialHeight) {
+          const height = parseHeight(item.initialHeight, availableContentHeight);
+          itemHeights.set(item.name, height);
+          usedHeight += height;
+        } else {
+          itemsWithoutHeight++;
+        }
+      }
+    });
+    
+    // Distribute remaining height among items without specific height
+    const remainingHeight = Math.max(0, availableContentHeight - usedHeight);
+    const defaultHeight = itemsWithoutHeight > 0 ? remainingHeight / itemsWithoutHeight : 0;
+    
+    props.children.forEach(item => {
+      if (expandedItems().has(item.name) && !item.initialHeight) {
+        itemHeights.set(item.name, defaultHeight);
+      }
+    });
+    
+    return itemHeights;
   });
 
   return (
@@ -78,7 +128,7 @@ export const WidgetColumnBar = (props: WidgetColumnBarProps) => {
               <div
                 class="overflow-hidden transition-all duration-300 ease-in-out"
                 style={{
-                  height: expanded() ? `${availableHeight()}px` : '0px',
+                  height: expanded() ? `${getItemHeight().get(itemData.name) || 0}px` : '0px',
                   'min-height': expanded() ? '100px' : '0px'
                 }}
               >
