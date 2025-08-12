@@ -13,6 +13,7 @@ const DatabaseWidget: Component = () => {
         {
           title: 'Connections',
           name: 'connections',
+          initialHeight: '40%',
           renderBody: () => <For each={databaseList()}>{item => <ConnectionAppObject data={item} />}</For>,
         },
         {

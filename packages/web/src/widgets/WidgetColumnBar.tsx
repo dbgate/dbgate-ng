@@ -5,6 +5,7 @@ import WidgetTitle from './WidgetTitle';
 export interface WidgetColumnBarItemProps {
   title: string;
   name: string;
+  initialHeight?: string;
   renderBody: () => JSX.Element;
 }
 
