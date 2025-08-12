@@ -24,7 +24,7 @@ interface DynamicProps {
   visibleItemsCount: number;
 }
 
-const WidgetColumnBarItem: Component<WidgetColumnBarItemProps> = (props) => {
+const WidgetColumnBarItem: Component<WidgetColumnBarItemProps> = props => {
   const [size, setSize] = createSignal(0);
   const [visible, setVisible] = createSignal(
     props.storageName && getLocalStorage(props.storageName) && getLocalStorage(props.storageName).visible != null
@@ -38,54 +38,54 @@ const WidgetColumnBarItem: Component<WidgetColumnBarItemProps> = (props) => {
   });
 
   // Context functions - these would need to be provided by parent components
-//   const pushWidgetItemDefinition = useContext(PushWidgetItemDefinitionContext);
-//   const updateWidgetItemDefinition = useContext(UpdateWidgetItemDefinitionContext);
-//   const widgetColumnBarHeight = useContext(WidgetColumnBarHeightContext);
+  //   const pushWidgetItemDefinition = useContext(PushWidgetItemDefinitionContext);
+  //   const updateWidgetItemDefinition = useContext(UpdateWidgetItemDefinitionContext);
+  //   const widgetColumnBarHeight = useContext(WidgetColumnBarHeightContext);
 
   let widgetItemIndex: number;
 
-//   onMount(() => {
-//     if (pushWidgetItemDefinition) {
-//       widgetItemIndex = pushWidgetItemDefinition(
-//         {
-//           collapsed: props.collapsed,
-//           height: props.height,
-//           skip: props.skip,
-//           positiveCondition: props.positiveCondition,
-//         },
-//         { get: () => dynamicProps, set: setDynamicProps }
-//       );
-//     }
-//   });
+  //   onMount(() => {
+  //     if (pushWidgetItemDefinition) {
+  //       widgetItemIndex = pushWidgetItemDefinition(
+  //         {
+  //           collapsed: props.collapsed,
+  //           height: props.height,
+  //           skip: props.skip,
+  //           positiveCondition: props.positiveCondition,
+  //         },
+  //         { get: () => dynamicProps, set: setDynamicProps }
+  //       );
+  //     }
+  //   });
 
-//   // Update widget item definition when props change
-//   createEffect(() => {
-//     if (updateWidgetItemDefinition && widgetItemIndex !== undefined) {
-//       updateWidgetItemDefinition(widgetItemIndex, {
-//         collapsed: !visible(),
-//         height: props.height,
-//         skip: props.skip,
-//         positiveCondition: props.positiveCondition,
-//       });
-//     }
-//   });
+  //   // Update widget item definition when props change
+  //   createEffect(() => {
+  //     if (updateWidgetItemDefinition && widgetItemIndex !== undefined) {
+  //       updateWidgetItemDefinition(widgetItemIndex, {
+  //         collapsed: !visible(),
+  //         height: props.height,
+  //         skip: props.skip,
+  //         positiveCondition: props.positiveCondition,
+  //       });
+  //     }
+  //   });
 
-//   // Set initial size when height or parent height changes
-//   createEffect(() => {
-//     const parentHeight = widgetColumnBarHeight?.() || 0;
-//     setInitialSize(props.height, parentHeight);
-//   });
+  //   // Set initial size when height or parent height changes
+  //   createEffect(() => {
+  //     const parentHeight = widgetColumnBarHeight?.() || 0;
+  //     setInitialSize(props.height, parentHeight);
+  //   });
 
-//   // Save to localStorage when size or visibility changes
-//   createEffect(() => {
-//     const parentHeight = widgetColumnBarHeight?.() || 0;
-//     if (props.storageName && parentHeight > 0) {
-//       setLocalStorage(props.storageName, {
-//         relativeHeight: size() / parentHeight,
-//         visible: visible(),
-//       });
-//     }
-//   });
+  //   // Save to localStorage when size or visibility changes
+  //   createEffect(() => {
+  //     const parentHeight = widgetColumnBarHeight?.() || 0;
+  //     if (props.storageName && parentHeight > 0) {
+  //       setLocalStorage(props.storageName, {
+  //         relativeHeight: size() / parentHeight,
+  //         visible: visible(),
+  //       });
+  //     }
+  //   });
 
   const setInitialSize = (initialSize: string | number | null, parentHeight: number) => {
     if (props.storageName) {
@@ -95,7 +95,7 @@ const WidgetColumnBarItem: Component<WidgetColumnBarItemProps> = (props) => {
         return;
       }
     }
-    
+
     if (_.isString(initialSize) && initialSize.endsWith('px')) {
       setSize(parseInt(initialSize.slice(0, -2)));
     } else if (_.isString(initialSize) && initialSize.endsWith('%')) {
@@ -130,20 +130,20 @@ const WidgetColumnBarItem: Component<WidgetColumnBarItemProps> = (props) => {
         {props.title}
       </WidgetTitle>
 
-      <Show when={visible()}>
-        <div
-          ref={wrapperRef!}
-          class="overflow-hidden relative flex-col flex"
-          style={
-            dynamicProps.splitterVisible
-              ? { height: `${size()}px` }
-              : { flex: '1 1 0' }
-          }
-          data-testid={props['data-testid'] ? `${props['data-testid']}_content` : undefined}
-        >
-          {props.children}
-        </div>
+      <div
+        ref={wrapperRef!}
+        class="overflow-hidden relative flex-col flex duration-300 transition-[height]"
+        classList={{
+          'h-0': !visible(),
+          'h-30': visible(),
+        }}
+        // style={dynamicProps.splitterVisible ? { height: `${size()}px` } : { flex: '1 1 0' }}
+        data-testid={props['data-testid'] ? `${props['data-testid']}_content` : undefined}
+      >
+        {props.children}
+      </div>
 
+      <Show when={visible()}>
         <Show when={dynamicProps.splitterVisible}>
           <div
             class="vertical-split-handle"

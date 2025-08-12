@@ -211,6 +211,9 @@ importers:
       '@mdi/font':
         specifier: ^7.4.47
         version: 7.4.47
+      '@solid-primitives/bounds':
+        specifier: ^0.1.3
+        version: 0.1.3(solid-js@1.9.8)
       '@solid-primitives/keyed':
         specifier: ^1.5.2
         version: 1.5.2(solid-js@1.9.8)
@@ -997,8 +1000,38 @@ packages:
   '@sinonjs/fake-timers@9.1.2':
     resolution: {integrity: sha512-BPS4ynJW/o92PUR4wgriz2Ud5gpST5vz6GQfMixEDK0Z8ZCUv2M7SkBLykH56T++Xs+8ln9zTGbOvNGIe02/jw==}
 
+  '@solid-primitives/bounds@0.1.3':
+    resolution: {integrity: sha512-UbiyKMdSPmtijcEDnYLQL3zzaejpwWDAJJ4Gt5P0hgVs6A72piov0GyNw7V2SroH7NZFwxlYS22YmOr8A5xc1Q==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
+  '@solid-primitives/event-listener@2.4.3':
+    resolution: {integrity: sha512-h4VqkYFv6Gf+L7SQj+Y6puigL/5DIi7x5q07VZET7AWcS+9/G3WfIE9WheniHWJs51OEkRB43w6lDys5YeFceg==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
   '@solid-primitives/keyed@1.5.2':
     resolution: {integrity: sha512-BgoEdqPw48URnI+L5sZIHdF4ua4Las1eWEBBPaoSFs42kkhnHue+rwCBPL2Z9ebOyQ75sUhUfOETdJfmv0D6Kg==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
+  '@solid-primitives/resize-observer@2.1.3':
+    resolution: {integrity: sha512-zBLje5E06TgOg93S7rGPldmhDnouNGhvfZVKOp+oG2XU8snA+GoCSSCz1M+jpNAg5Ek2EakU5UVQqL152WmdXQ==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
+  '@solid-primitives/rootless@1.5.2':
+    resolution: {integrity: sha512-9HULb0QAzL2r47CCad0M+NKFtQ+LrGGNHZfteX/ThdGvKIg2o2GYhBooZubTCd/RTu2l2+Nw4s+dEfiDGvdrrQ==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
+  '@solid-primitives/static-store@0.1.2':
+    resolution: {integrity: sha512-ReK+5O38lJ7fT+L6mUFvUr6igFwHBESZF+2Ug842s7fvlVeBdIVEdTCErygff6w7uR6+jrr7J8jQo+cYrEq4Iw==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
+  '@solid-primitives/utils@6.3.2':
+    resolution: {integrity: sha512-hZ/M/qr25QOCcwDPOHtGjxTD8w2mNyVAYvcfgwzBHq2RwNqHNdDNsMZYap20+ruRwW4A3Cdkczyoz0TSxLCAPQ==}
     peerDependencies:
       solid-js: ^1.6.12
 
@@ -4728,7 +4761,42 @@ snapshots:
     dependencies:
       '@sinonjs/commons': 1.8.6
 
+  '@solid-primitives/bounds@0.1.3(solid-js@1.9.8)':
+    dependencies:
+      '@solid-primitives/event-listener': 2.4.3(solid-js@1.9.8)
+      '@solid-primitives/resize-observer': 2.1.3(solid-js@1.9.8)
+      '@solid-primitives/static-store': 0.1.2(solid-js@1.9.8)
+      '@solid-primitives/utils': 6.3.2(solid-js@1.9.8)
+      solid-js: 1.9.8
+
+  '@solid-primitives/event-listener@2.4.3(solid-js@1.9.8)':
+    dependencies:
+      '@solid-primitives/utils': 6.3.2(solid-js@1.9.8)
+      solid-js: 1.9.8
+
   '@solid-primitives/keyed@1.5.2(solid-js@1.9.8)':
+    dependencies:
+      solid-js: 1.9.8
+
+  '@solid-primitives/resize-observer@2.1.3(solid-js@1.9.8)':
+    dependencies:
+      '@solid-primitives/event-listener': 2.4.3(solid-js@1.9.8)
+      '@solid-primitives/rootless': 1.5.2(solid-js@1.9.8)
+      '@solid-primitives/static-store': 0.1.2(solid-js@1.9.8)
+      '@solid-primitives/utils': 6.3.2(solid-js@1.9.8)
+      solid-js: 1.9.8
+
+  '@solid-primitives/rootless@1.5.2(solid-js@1.9.8)':
+    dependencies:
+      '@solid-primitives/utils': 6.3.2(solid-js@1.9.8)
+      solid-js: 1.9.8
+
+  '@solid-primitives/static-store@0.1.2(solid-js@1.9.8)':
+    dependencies:
+      '@solid-primitives/utils': 6.3.2(solid-js@1.9.8)
+      solid-js: 1.9.8
+
+  '@solid-primitives/utils@6.3.2(solid-js@1.9.8)':
     dependencies:
       solid-js: 1.9.8
 
