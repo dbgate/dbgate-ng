@@ -4,7 +4,7 @@ import { useAllControllers } from 'dbgate-core/src/useControllers';
 import dotenv from 'dotenv';
 
 // Load environment variables from .env file
-dotenv.config({ path: '.env' });
+dotenv.config();
 
 const app: Express = express();
 const PORT = process.env.PORT || 3001;

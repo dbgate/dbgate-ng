@@ -1,4 +1,4 @@
-import { connectionsController, ConnectionsControllerImpl } from './controllers/connections';
+import { getConnectionsController } from './controllers/connections';
 import express from 'express';
 import _ from 'lodash';
 import { extractErrorLogData } from 'dbgate-tools';
@@ -123,7 +123,7 @@ function useController(app: any, electron: any, route: any, controller: any) {
 }
 
 export function useAllControllers(app: any, electron: any) {
-  useController(app, electron, '/connections', connectionsController);
+  useController(app, electron, '/connections', getConnectionsController());
   // useController(app, electron, '/server-connections', serverConnections);
   // useController(app, electron, '/database-connections', databaseConnections);
   // useController(app, electron, '/metadata', metadata);

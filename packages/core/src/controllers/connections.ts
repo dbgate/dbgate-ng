@@ -346,4 +346,10 @@ export class ConnectionsControllerImpl implements AddMetaFields<ConnectionsContr
   }
 }
 
-export const connectionsController = new ConnectionsControllerImpl();
+let connectionsController: ConnectionsControllerImpl;
+export function getConnectionsController() {
+  if (!connectionsController) {
+    connectionsController = new ConnectionsControllerImpl();
+  }
+  return connectionsController;
+}
