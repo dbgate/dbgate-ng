@@ -4,7 +4,7 @@ import FontIcon from "../elements/FontIcon";
 
 const TabsPanel: Component = () => {
   return (
-    <div class="flex dbgate-tab h-full w-full items-center">
+    <div class="flex dbgate-tab h-full w-full items-center text-nowrap overflow-x-auto">
       <For each={openedTabs}>
         {(tab) => (
           <div
