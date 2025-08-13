@@ -1,7 +1,7 @@
 import { Component, createEffect, createSignal, JSX, Show, onMount } from 'solid-js';
 import { createStore } from 'solid-js/store';
 import FontIcon from '../elements/FontIcon';
-import { AppObjectElement } from './AppObjectTreeContract';
+import { AppObjectElement } from './AppObjectTreeBase';
 
 // Placeholder components - these would need to be implemented or imported
 const CheckboxField: Component<{ checked: boolean; onChange: (e: Event) => void }> = (props) => (
@@ -29,6 +29,7 @@ export interface AppObjectTreeNodeProps {
   element: AppObjectElement;
   indentLevel?: number;
   filter?: string;
+  onClick?: () => void;
 }
 
 const AppObjectTreeNode: Component<AppObjectTreeNodeProps> = (props) => {
@@ -38,6 +39,7 @@ const AppObjectTreeNode: Component<AppObjectTreeNodeProps> = (props) => {
       <div
         class="p-1.5 text-sm cursor-pointer whitespace-nowrap font-normal relative flex items-center group dbgate-list"
         draggable={true}
+        onClick={props.onClick}
       >
 
         <Show when={props.element.expandIcon}>

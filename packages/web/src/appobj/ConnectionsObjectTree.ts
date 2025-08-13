@@ -1,26 +1,36 @@
 import { Accessor } from "solid-js";
-import { AppObjectElement, AppObjectTreeNodeBase, AppObjectTreeBase } from "./AppObjectTreeContract";
+import { AppObjectElement, AppObjectTreeNodeBase, AppObjectTreeBase } from "./AppObjectTreeBase";
 import { useConnectionList } from "../utility/metadataLoaders";
 import { StoredConnection } from "dbgate-types";
+import { openedConnections, setOpenedConnections } from "../core/appstate";
 
-export class ConnectionTreeNode implements AppObjectTreeNodeBase {
-    element: AppObjectElement;
-    children: Accessor<AppObjectTreeNodeBase[]>;
+export class ConnectionTreeNode extends AppObjectTreeNodeBase {
 
     constructor(public data: StoredConnection) {
-        this.element = {
+        console.log('CREATE')
+        super()
+        this.element = () => ({
             icon: "icon connection",
             title: this.data.displayName,
-            extInfo: this.data.engine,
-        };
-        this.children = () => [];
+            extInfo: this.isOpened ? 'OPENED' : this.data.engine,
+        });
+    }
+
+    get isOpened() {
+        return openedConnections().includes(this.data._id);
+    }
+
+    onClick() {
+        if (!this.isOpened) {
+            setOpenedConnections((x) => [...x, this.data._id]);
+        }
     }
 }
 
-export class ConnectionsObjectTree implements AppObjectTreeBase {
+export class ConnectionsObjectTree extends AppObjectTreeBase {
     private connections = useConnectionList();
 
     get children(): Accessor<AppObjectTreeNodeBase[]> {
-        return () => this.connections()?.map(conn => new ConnectionTreeNode(conn)) ?? [];
+        return () => this.connections()?.map(conn => this.getOrCreateNode(conn._id, () => new ConnectionTreeNode(conn))) ?? [];
     }
 }

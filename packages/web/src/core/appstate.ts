@@ -15,6 +15,9 @@ export const [leftPanelWidth, setLeftPanelWidth] = createStoredSignal<number>(
   300
 );
 
+export const [openedConnections, setOpenedConnections] = createSignal<string[]>([]);
+export const [expandedConnections, setExpandedConnections] = createSignal<string[]>([]);
+
 const darkModeMediaQuery = window.matchMedia
   ? window.matchMedia("(prefers-color-scheme: dark)")
   : null;

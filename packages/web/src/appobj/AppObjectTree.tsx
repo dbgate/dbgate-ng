@@ -1,5 +1,5 @@
 import { For, Component, createSignal } from 'solid-js';
-import { AppObjectTreeBase } from './AppObjectTreeContract';
+import { AppObjectTreeBase } from './AppObjectTreeBase';
 import AppObjectTreeNode from './AppObjectTreeNode';
 
 export type AppObjectTreeProps = {
@@ -21,9 +21,10 @@ const AppObjectTree: Component<AppObjectTreeProps> = props => {
     <div class="app-object-tree">
       <For each={props.model.children()}>
         {item => <AppObjectTreeNode
-          element={item.element}
+          element={item.element()}
           indentLevel={0}
           filter={''}
+          onClick={() => item.onClick()}
         />
         }
       </For>
