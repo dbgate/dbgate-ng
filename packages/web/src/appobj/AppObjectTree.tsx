@@ -1,19 +1,12 @@
 import { For, Component, JSX, createSignal } from 'solid-js';
+import { AppObjectTreeContract } from './AppObjectTreeContract';
+import AppObjectCore from './AppObjectCore';
 
 export type AppObjectTreeProps = {
-  items: any[];
-  groupFunc: (item: any) => string;
-  module: any;
-  checkedObjectsStore?: any;
-  disableContextMenu?: boolean;
-  passProps?: any;
-  onDropOnGroup?: (group: string, data: any) => void;
-  groupContextMenu?: any;
-  collapsedGroupNames?: string[];
-  filter?: (item: any) => boolean;
+  model: AppObjectTreeContract
 };
 
-export const AppObjectTree: Component<AppObjectTreeProps> = props => {
+const AppObjectTree: Component<AppObjectTreeProps> = props => {
   const [expandedGroups, setExpandedGroups] = createSignal<string[]>([]);
 
   const toggleGroup = (group: string) => {
@@ -26,23 +19,16 @@ export const AppObjectTree: Component<AppObjectTreeProps> = props => {
 
   return (
     <div class="app-object-tree">
-      <For each={props.items}>
-        {item => {
-          const group = props.groupFunc(item);
-          const isExpanded = expandedGroups().includes(group);
-
-          return (
-            <div class="group">
-              <div class="group-header" onClick={() => toggleGroup(group)}>
-                {isExpanded ? '-' : '+'} {group}
-              </div>
-              <div class={isExpanded ? 'group-content' : 'group-content hidden'}>
-                TODO
-              </div>
-            </div>
-          );
-        }}
+      <For each={props.model.children()}>
+        {item => <AppObjectCore
+          title={item.element.title}
+          icon={item.element.icon}
+          data={item.element.data}
+        />
+        }
       </For>
     </div>
   );
 };
+
+export default AppObjectTree;

@@ -22,7 +22,7 @@ const WidgetTitle: Component<WidgetTitleProps> = (props) => {
     <div
       onClick={local.onClick}
       classList={{
-        'p-1.5 font-bold uppercase dbgate-sidebar-section flex items-center justify-between': true,
+        'p-1.5 font-bold uppercase dbgate-sidebar-section flex items-center justify-between text-sm': true,
         'cursor-pointer select-none': local.clickable
       }}
       {...others}
