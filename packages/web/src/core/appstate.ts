@@ -29,7 +29,7 @@ export const currentThemeDefaulted = () => {
 };
 
 export const currentThemeClass = () => {
-  return `when-theme-common when-theme-${currentThemeDefaulted()}`;
+  return `when-theme-${currentThemeDefaulted()}`;
 };
 
 subscribeCssVariable(selectedWidget, x => (x ? 1 : 0), '--dim-visible-left-panel');

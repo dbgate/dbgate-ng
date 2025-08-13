@@ -4,7 +4,7 @@ import { currentTheme, setCurrentTheme } from "../core/appstate";
 const StatusBar: Component = () => {
   return (
     <div
-      class="w-full h-full px-3 flex items-center text-xs theme-statusbar"
+      class="w-full h-full px-3 flex items-center text-xs dbgate-statusbar"
       onClick={() =>
         setCurrentTheme(currentTheme() === "dark" ? "light" : "dark")
       }

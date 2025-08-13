@@ -3,5 +3,9 @@
 @import '../../node_modules/@mdi/font/css/materialdesignicons.css';
 
 @import './dimensions.css';
-@import './theme.css';
+
+@import './theme-common.css';
+@import './theme-dark.css';
+@import './theme-light.css';
+
 @import './csstools.css';

@@ -40,7 +40,7 @@ const Screen: Component = () => {
 
       <Show when={selectedWidget()}>
         <div
-          class="fixed top-0 left-[var(--dim-main-splitter-left)] bottom-[var(--dim-statusbar-height)] horizontal-split-handle theme-face-1"
+          class="fixed top-0 left-[var(--dim-main-splitter-left)] bottom-[var(--dim-statusbar-height)] dbgate-horizontal-split-handle dbgate-sidebar"
           //@ts-ignore
           use:splitterDrag={"clientX"}
           on:resizeSplitter={handleResizeSplitter}

@@ -165,10 +165,10 @@ const AppObjectCore: Component<AppObjectCoreProps> = (props) => {
     <>
       <div
         ref={domDiv}
-        class="p-1.5 text-sm cursor-pointer whitespace-nowrap font-normal relative flex items-center group"
+        class="p-1.5 text-sm cursor-pointer whitespace-nowrap font-normal relative flex items-center group dbgate-list"
         classList={{
           'font-bold': props.isBold,
-          'theme-pen-3': props.isGrayed,
+          'dbgate-graytext': props.isGrayed,
           'theme-face-selected': props.isChoosed,
           'hover:theme-face-4': !props.disableHover
         }}
@@ -239,7 +239,7 @@ const AppObjectCore: Component<AppObjectCoreProps> = (props) => {
         </Show>
         
         <Show when={props.extInfo}>
-          <span class="font-normal ml-1 text-gray-500">
+          <span class="font-normal ml-1 dbgate-graytext">
             <TokenizedFilteredText text={props.extInfo!} filter={props.filter} />
           </span>
         </Show>

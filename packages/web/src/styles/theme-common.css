@@ -1,0 +1,12 @@
+.when-theme-light,
+.when-theme-dark {
+    --theme-statusbar-bg: oklch(68.5% 0.169 237.323);
+    --theme-statusbar-fg: white;
+
+    --theme-widget-panel-bg: var(--color-gray-800);
+    --theme-widget-panel-fg: var(--color-gray-500);
+    --theme-widget-icon-active-bg: var(--color-gray-600);
+    --theme-widget-icon-active-fg: white;
+
+    --theme-splitter-active: var(--color-sky-500);
+}

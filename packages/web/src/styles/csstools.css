@@ -1,17 +1,83 @@
-.horizontal-split-handle {
+.dbgate-horizontal-split-handle {
   width: var(--dim-splitter-thickness);
   cursor: col-resize;
   transition: background-color 300ms ease-in-out;
 
 }
-.horizontal-split-handle:hover {
-  background-color: var(--theme-selected);
+.dbgate-horizontal-split-handle:hover {
+  background-color: var(--theme-splitter-active);
 }
 
-.vertical-split-handle {
+.dbgate-vertical-split-handle {
   height: var(--dim-splitter-thickness);
   cursor: row-resize;
 }
-.vertical-split-handle:hover {
-  background-color: var(--theme-selected);
+.dbgate-vertical-split-handle:hover {
+  background-color: var(--theme-splitter-active);
+}
+
+.dbgate-statusbar {
+  background-color: var(--theme-statusbar-bg);
+  color: var(--theme-statusbar-fg);
+}
+
+.dbgate-widget-panel {
+  background-color: var(--theme-widget-panel-bg);
+}
+
+.dbgate-widget-icon {
+  color: var(--theme-widget-panel-fg);
+}
+
+.dbgate-widget-icon:hover {
+  color: var(--theme-widget-icon-active-fg);
+}
+
+.dbgate-widget-icon-active {
+  background-color: var(--theme-widget-icon-active-bg);
+  color: var(--theme-widget-icon-active-fg);
+  border-left-color: var(--theme-widget-icon-active-fg);
+}
+
+.dbgate-sidebar {
+  background-color: var(--theme-sidebar-bg);
+  color: var(--theme-sidebar-fg);
+}
+
+.dbgate-sidebar-section {
+  background-color: var(--theme-sidebar-section-bg);
+  color: var(--theme-sidebar-section-fg);
+}
+
+.dbgate-list:hover {
+  background-color: var(--theme-list-hover-bg);
+}
+
+.dbgate-action-icon {
+  color: var(--theme-action-icon);
+}
+
+.dbgate-action-icon:hover {
+  color: var(--theme-action-icon-hover);
+}
+
+.dbgate-graytext {
+  color: var(--theme-graytext);
+}
+
+.dbgate-content {
+  background-color: var(--theme-content-bg);
+  color: var(--theme-content-fg);
+}
+
+.dbgate-tab {
+  background-color: var(--theme-tab-bg);
+  border-color: var(--theme-tab-border);
+  color: var(--theme-tab-fg);
+}
+
+.dbgate-tab-active {
+  background-color: var(--theme-tab-active-bg);
+  color: var(--theme-tab-active-fg);
+  border-top-color: var(--theme-tab-active-border-top);
 }

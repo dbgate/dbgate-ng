@@ -60,11 +60,6 @@ const widgets = [
     title: "Premium promo",
     isPremiumPromo: true,
   },
-  {
-    name: "theme-palette",
-    title: "Theme Palette",
-    icon: "mdi mdi-palette",
-  },
   // {
   //   icon: 'icon settings',
   //   name: 'settings',
@@ -77,7 +72,7 @@ const widgets = [
 
 const WidgetIconPanel: Component = () => {
   const widgetIcon =
-    "text-3xl py-1 cursor-pointer transition-colors duration-150 w-full text-center border-l-2 border-r-2 border-transparent theme-widget-icon";
+    "text-3xl py-1 cursor-pointer transition-colors duration-150 w-full text-center border-l-2 border-r-2 border-transparent dbgate-widget-icon";
 
   const handleAddTab = () => {
     dbgateLocalDb.tabs.add({
@@ -90,13 +85,13 @@ const WidgetIconPanel: Component = () => {
   };
 
   return (
-    <div class="w-full h-full flex flex-col items-center justify-start theme-widget-panel">
+    <div class="w-full h-full flex flex-col items-center justify-start dbgate-widget-panel">
       <For each={widgets}>
         {(widget) => (
           <div
             class={widgetIcon}
             classList={{
-              "theme-widget-icon-active": selectedWidget() === widget.name,
+              "dbgate-widget-icon-active": selectedWidget() === widget.name,
             }}
             onClick={() =>
               setSelectedWidget((old) =>
