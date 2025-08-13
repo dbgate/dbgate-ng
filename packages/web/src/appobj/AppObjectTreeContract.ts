@@ -3,14 +3,17 @@ import { Accessor } from 'solid-js';
 export interface AppObjectElement {
   icon: string;
   title: string;
-  data?: any;
+  expandIcon?: string;
+  isBusy?: boolean;
+  colorMark?: string;
+  extInfo?: string;
 }
 
-export interface AppObjectTreeNode {
+export interface AppObjectTreeNodeBase {
   element: AppObjectElement;
-  children: Accessor<AppObjectTreeNode[]>;
+  children: Accessor<AppObjectTreeNodeBase[]>;
 }
 
-export interface AppObjectTreeContract {
-  children: Accessor<AppObjectTreeNode[]>;
+export interface AppObjectTreeBase {
+  children: Accessor<AppObjectTreeNodeBase[]>;
 }
