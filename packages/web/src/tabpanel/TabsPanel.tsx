@@ -8,7 +8,7 @@ const TabsPanel: Component = () => {
       <For each={openedTabs}>
         {(tab) => (
           <div
-            class="pl-3 text-sm border-r last:border-none h-full flex items-center cursor-pointer group dbgate-tab "
+            class="pl-3 text-sm border-r last:border-r-0 h-full flex items-center cursor-pointer group dbgate-tab "
             classList={{ "dbgate-tab-active border-t": tab.selected }}
             onClick={() => setSelectedTab(tab.tabid)}
           >
