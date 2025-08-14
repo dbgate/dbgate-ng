@@ -17,40 +17,40 @@
 }
 
 .dbgate-statusbar {
-  background-color: var(--theme-statusbar-bg);
-  color: var(--theme-statusbar-fg);
+  background-color: var(--theme-statusbar-background);
+  color: var(--theme-statusbar-foreground);
 }
 
 .dbgate-widget-panel {
-  background-color: var(--theme-widget-panel-bg);
+  background-color: var(--theme-widget-panel-background);
 }
 
 .dbgate-widget-icon {
-  color: var(--theme-widget-panel-fg);
+  color: var(--theme-widget-panel-foreground);
 }
 
 .dbgate-widget-icon:hover {
-  color: var(--theme-widget-icon-active-fg);
+  color: var(--theme-widget-icon-active-foreground);
 }
 
 .dbgate-widget-icon-active {
-  background-color: var(--theme-widget-icon-active-bg);
-  color: var(--theme-widget-icon-active-fg);
-  border-left-color: var(--theme-widget-icon-active-fg);
+  background-color: var(--theme-widget-icon-active-background);
+  color: var(--theme-widget-icon-active-foreground);
+  border-left-color: var(--theme-widget-icon-active-foreground);
 }
 
 .dbgate-sidebar {
-  background-color: var(--theme-sidebar-bg);
-  color: var(--theme-sidebar-fg);
+  background-color: var(--theme-sidebar-background);
+  color: var(--theme-sidebar-foreground);
 }
 
 .dbgate-sidebar-section {
-  background-color: var(--theme-sidebar-section-bg);
-  color: var(--theme-sidebar-section-fg);
+  background-color: var(--theme-sidebar-section-background);
+  color: var(--theme-sidebar-section-foreground);
 }
 
 .dbgate-list:hover {
-  background-color: var(--theme-list-hover-bg);
+  background-color: var(--theme-list-hover-background);
 }
 
 .dbgate-action-icon {
@@ -66,18 +66,18 @@
 }
 
 .dbgate-content {
-  background-color: var(--theme-content-bg);
-  color: var(--theme-content-fg);
+  background-color: var(--theme-content-background);
+  color: var(--theme-content-foreground);
 }
 
 .dbgate-tab {
-  background-color: var(--theme-tab-bg);
+  background-color: var(--theme-tab-background);
   border-color: var(--theme-tab-border);
-  color: var(--theme-tab-fg);
+  color: var(--theme-tab-foreground);
 }
 
 .dbgate-tab-active {
-  background-color: var(--theme-tab-active-bg);
-  color: var(--theme-tab-active-fg);
+  background-color: var(--theme-tab-active-background);
+  color: var(--theme-tab-active-foreground);
   border-top-color: var(--theme-tab-active-border-top);
 }
