@@ -152,7 +152,7 @@ export type SchedulerControllerContract = {
 
 export type ServerConnectionsControllerContract = {
     disconnect(params: { conid: string }): Promise<boolean>;
-    listDatabases(params: { conid: string }): Promise<string[]>;
+    listDatabases(params: { conid: string }): Promise<{ name: string }[]>;
     version(params: { conid: string }): Promise<{ version: string; versionText?: string; }>;
     serverStatus(params: { conid: string }): Promise<any>;
     ping(params: { conid: string }): Promise<boolean>;
