@@ -1,6 +1,6 @@
 import express, { Express } from 'express';
 import cors from 'cors';
-import { useAllControllers } from 'dbgate-core/src/useControllers';
+import { useAllControllers } from 'dbgate-api-core';
 import dotenv from 'dotenv';
 
 // Load environment variables from .env file

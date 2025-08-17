@@ -1,0 +1,29 @@
+{
+  "name": "dbgate-api-core",
+  "version": "0.0.0",
+  "description": "Core API controllers and middleware for DBGate",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rimraf dist",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/express": "^4.17.23",
+    "@types/lodash": "^4.17.20",
+    "@types/node": "^20.19.9",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "dbgate-core": "workspace:*",
+    "dbgate-tools": "workspace:*",
+    "dbgate-types": "workspace:*",
+    "express": "^4.21.2",
+    "lodash": "^4.17.21"
+  }
+}

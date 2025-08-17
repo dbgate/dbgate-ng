@@ -79,6 +79,9 @@ importers:
       cors:
         specifier: ^2.8.5
         version: 2.8.5
+      dbgate-api-core:
+        specifier: workspace:*
+        version: link:../dbgate-api-core
       dbgate-core:
         specifier: workspace:*
         version: link:../dbgate-core
@@ -108,8 +111,45 @@ importers:
         specifier: ^5.7.2
         version: 5.9.2
 
+  packages/dbgate-api-core:
+    dependencies:
+      dbgate-core:
+        specifier: workspace:*
+        version: link:../dbgate-core
+      dbgate-tools:
+        specifier: workspace:*
+        version: link:../dbgate-tools
+      dbgate-types:
+        specifier: workspace:*
+        version: link:../dbgate-types
+      express:
+        specifier: ^4.21.2
+        version: 4.21.2
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+    devDependencies:
+      '@types/express':
+        specifier: ^4.17.23
+        version: 4.17.23
+      '@types/lodash':
+        specifier: ^4.17.20
+        version: 4.17.20
+      '@types/node':
+        specifier: ^20.19.9
+        version: 20.19.9
+      rimraf:
+        specifier: ^5.0.5
+        version: 5.0.10
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.2
+
   packages/dbgate-core:
     dependencies:
+      dbgate-api-core:
+        specifier: workspace:*
+        version: link:../dbgate-api-core
       dbgate-tools:
         specifier: workspace:*
         version: link:../dbgate-tools

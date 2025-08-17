@@ -2,3 +2,4 @@
 // This package contains shared functionality without Express dependencies
 
 export * from './utils';
+export * from './utility/exceptions';
