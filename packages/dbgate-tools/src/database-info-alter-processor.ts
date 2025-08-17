@@ -12,7 +12,7 @@ import {
   SqlObjectInfo,
   NamedObjectInfo,
   ColumnsConstraintInfo,
-} from '../../types';
+} from 'dbgate-types';
 
 export class DatabaseInfoAlterProcessor {
   constructor(public db: DatabaseInfo) {}
