@@ -4,8 +4,8 @@
     // { "path": "packages/types" },
     // { "path": "app" },
     // { "path": "packages/web" },
-    { "path": "packages/sqltree" },
-    { "path": "packages/tools" },
-    { "path": "packages/core" },
+    { "path": "packages/dbgate-sqltree" },
+    { "path": "packages/dbgate-tools" },
+    { "path": "packages/dbgate-core" },
   ]
 }

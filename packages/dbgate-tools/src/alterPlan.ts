@@ -9,7 +9,7 @@ import {
   SqlDialect,
   TableInfo,
   NamedObjectInfo,
-} from '../../types';
+} from 'dbgate-types';
 import { DatabaseInfoAlterProcessor } from './database-info-alter-processor';
 import { DatabaseAnalyser } from './DatabaseAnalyser';
 
