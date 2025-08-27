@@ -9,16 +9,7 @@ export interface AppObjectElement {
   extInfo?: string;
 }
 
-export abstract class AppObjectTreeNodeBase {
-  element: Accessor<AppObjectElement>;
-  get children(): Accessor<AppObjectTreeNodeBase[]> { return () => [] }
-  onClick() { }
-  get isExpanded(): Accessor<boolean> {
-    return () => false;
-  }
-}
-
-export abstract class AppObjectTreeBase {
+class AppObjectTreeNodeChildrenHolder {
   childCache: { [key: string]: AppObjectTreeNodeBase } = {};
   getOrCreateNode(key: string, factory: () => AppObjectTreeNodeBase): AppObjectTreeNodeBase {
     if (!this.childCache[key]) {
@@ -26,5 +17,16 @@ export abstract class AppObjectTreeBase {
     }
     return this.childCache[key];
   }
-  abstract get children(): Accessor<AppObjectTreeNodeBase[]>;
+  get children(): Accessor<AppObjectTreeNodeBase[]> { return () => [] }
+}
+
+export abstract class AppObjectTreeNodeBase extends AppObjectTreeNodeChildrenHolder {
+  element: Accessor<AppObjectElement>;
+  onClick() { }
+  get isExpanded(): Accessor<boolean> {
+    return () => false;
+  }
+}
+
+export abstract class AppObjectTreeBase extends AppObjectTreeNodeChildrenHolder {
 }

@@ -84,7 +84,7 @@ const databaseStatusLoader = ({ conid, database }) => ({
 
 const databaseListLoader = ({ conid }) => ({
   controller: 'serverConnections',
-  action: 'list-databases',
+  action: 'listDatabases',
   params: { conid },
   reloadTrigger: { key: `database-list-changed`, conid },
   onLoaded: value => {
@@ -341,10 +341,10 @@ export function useDatabaseStatus(args) {
   return useCore(databaseStatusLoader, args);
 }
 
-export function getDatabaseList(args) {
+export function getDatabaseList(args): Promise<{ name: string }[]> {
   return getCore(databaseListLoader, args);
 }
-export function useDatabaseList(args) {
+export function useDatabaseList(args): Resource<{ name: string }[]> {
   return useCore(databaseListLoader, args);
 }
 

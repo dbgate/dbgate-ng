@@ -1,10 +1,12 @@
-import { Accessor } from "solid-js";
+import { Accessor, Resource } from "solid-js";
 import { AppObjectElement, AppObjectTreeNodeBase, AppObjectTreeBase } from "./AppObjectTreeBase";
 import { useConnectionList } from "../utility/metadataLoaders";
 import { StoredConnection } from "dbgate-types";
 import { openedConnections, setOpenedConnections } from "../core/appstate";
+import { useDatabaseList } from "../utility/metadataLoaders";
 
 export class ConnectionTreeNode extends AppObjectTreeNodeBase {
+    private databases: Resource<{ name: string }[]> = null;
 
     constructor(public data: StoredConnection) {
         console.log('CREATE')
@@ -14,7 +16,7 @@ export class ConnectionTreeNode extends AppObjectTreeNodeBase {
             title: this.data.displayName,
             extInfo: this.isOpened ? 'OPENED' : this.data.engine,
         });
-    }
+    }       
 
     get isOpened() {
         return openedConnections().includes(this.data._id);
@@ -31,19 +33,19 @@ export class ConnectionTreeNode extends AppObjectTreeNodeBase {
     }
 
     get children(): Accessor<AppObjectTreeNodeBase[]> {
-        return () => [
-            new DatabaseTreeNode(),
-            new DatabaseTreeNode(),
-        ];
+        if (!this.databases) {
+            this.databases = useDatabaseList({ conid: this.data._id });
+        }
+        return () => this.databases()?.map(db => this.getOrCreateNode(db.name, () => new DatabaseTreeNode(db))) ?? [];
     }
 }
 
 export class DatabaseTreeNode extends AppObjectTreeNodeBase {
-    constructor() {
+    constructor(public data: { name: string }) {
         super()
         this.element = () => ({
             icon: "icon database",
-            title: 'DB XXX',
+            title: this.data.name,
         });
     }
 }

@@ -7,5 +7,7 @@
     { "path": "packages/dbgate-sqltree" },
     { "path": "packages/dbgate-tools" },
     { "path": "packages/dbgate-core" },
+    { "path": "packages/dbgate-api-core" },
+    { "path": "packages/dbgate-api" },
   ]
 }

@@ -4,6 +4,7 @@ import _ from 'lodash';
 import { extractErrorLogData } from 'dbgate-tools';
 import { getExpressPath, getLogger } from 'dbgate-core';
 import { MissingCredentialsError } from 'dbgate-core';
+import { getServerConnectionsController } from './controllers/serverConnections';
 
 const logger = getLogger('useController');
 
@@ -43,8 +44,6 @@ function useController(app: any, electron: any, route: any, controller: any) {
     if (!_.isFunction(obj)) continue;
     const meta = controller[`${methodName}_meta`];
     if (!meta) continue;
-
-    const routeAction = `/${_.kebabCase(methodName)}`;
 
     if (electron) {
       if (meta === true) {
@@ -88,10 +87,11 @@ function useController(app: any, electron: any, route: any, controller: any) {
 
     if (raw) {
       // @ts-ignore
-      router[method](routeAction, (req, res) => controller[methodName](req, res));
+      router[method](methodName, (req, res) => controller[methodName](req, res));
     } else {
+      console.log(`Registering route: ${route}/${methodName}`)
       // @ts-ignore
-      router[method](routeAction, async (req, res) => {
+      router[method](methodName, async (req, res) => {
         // if (controller._init && !controller._init_called) {
         //   await controller._init();
         //   controller._init_called = true;
@@ -124,7 +124,7 @@ function useController(app: any, electron: any, route: any, controller: any) {
 
 export function useAllControllers(app: any, electron: any) {
   useController(app, electron, '/connections', getConnectionsController());
-  // useController(app, electron, '/server-connections', serverConnections);
+  useController(app, electron, '/serverConnections', getServerConnectionsController());
   // useController(app, electron, '/database-connections', databaseConnections);
   // useController(app, electron, '/metadata', metadata);
   // useController(app, electron, '/sessions', sessions);
