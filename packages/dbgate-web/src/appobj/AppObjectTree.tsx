@@ -1,10 +1,21 @@
 import { For, Component, createSignal } from 'solid-js';
-import { AppObjectTreeBase } from './AppObjectTreeBase';
+import { AppObjectTreeBase, AppObjectTreeNodeBase } from './AppObjectTreeBase';
 import AppObjectTreeNode from './AppObjectTreeNode';
 
 export type AppObjectTreeProps = {
   model: AppObjectTreeBase
 };
+
+function getFlatChildrenList(list: AppObjectTreeNodeBase[], result: { node: AppObjectTreeNodeBase, indentLevel: number }[] = [], indentLevel = 0): { node: AppObjectTreeNodeBase, indentLevel: number }[] {
+  for (const child of list) {
+    result.push({ node: child, indentLevel });
+    if (child.isExpanded()) {
+      getFlatChildrenList(child.children(), result, indentLevel + 1);
+    }
+  }
+
+  return result;
+}
 
 const AppObjectTree: Component<AppObjectTreeProps> = props => {
   const [expandedGroups, setExpandedGroups] = createSignal<string[]>([]);
@@ -19,12 +30,12 @@ const AppObjectTree: Component<AppObjectTreeProps> = props => {
 
   return (
     <div class="app-object-tree">
-      <For each={props.model.children()}>
+      <For each={getFlatChildrenList(props.model.children())}>
         {item => <AppObjectTreeNode
-          element={item.element()}
-          indentLevel={0}
+          element={item.node.element()}
+          indentLevel={item.indentLevel}
           filter={''}
-          onClick={() => item.onClick()}
+          onClick={() => item.node.onClick()}
         />
         }
       </For>

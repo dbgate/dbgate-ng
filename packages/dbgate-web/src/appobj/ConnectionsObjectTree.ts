@@ -20,10 +20,31 @@ export class ConnectionTreeNode extends AppObjectTreeNodeBase {
         return openedConnections().includes(this.data._id);
     }
 
+    get isExpanded(): Accessor<boolean> {
+        return () => this.isOpened;
+    }
+
     onClick() {
         if (!this.isOpened) {
             setOpenedConnections((x) => [...x, this.data._id]);
         }
+    }
+
+    get children(): Accessor<AppObjectTreeNodeBase[]> {
+        return () => [
+            new DatabaseTreeNode(),
+            new DatabaseTreeNode(),
+        ];
+    }
+}
+
+export class DatabaseTreeNode extends AppObjectTreeNodeBase {
+    constructor() {
+        super()
+        this.element = () => ({
+            icon: "icon database",
+            title: 'DB XXX',
+        });
     }
 }
 

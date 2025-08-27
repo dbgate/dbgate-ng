@@ -13,6 +13,9 @@ export abstract class AppObjectTreeNodeBase {
   element: Accessor<AppObjectElement>;
   get children(): Accessor<AppObjectTreeNodeBase[]> { return () => [] }
   onClick() { }
+  get isExpanded(): Accessor<boolean> {
+    return () => false;
+  }
 }
 
 export abstract class AppObjectTreeBase {
