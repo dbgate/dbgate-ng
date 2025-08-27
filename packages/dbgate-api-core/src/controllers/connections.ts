@@ -115,7 +115,7 @@ function getPortalCollections(): StoredConnection[] | undefined {
  * Find a connection by its connection ID
  */
 export function findConnectionById(connections: StoredConnection[], conid: string): StoredConnection | undefined {
-  return connections.find(c => c.conid === conid);
+  return connections.find(c => c._id === conid);
 }
 
 /**

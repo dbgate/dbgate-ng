@@ -5,5 +5,6 @@ export * from './utils';
 export * from './utility/exceptions';
 export * from './process/ProcessBase';
 export * from './process/ProcessWorker';
+export * from './process/processClassRegistry';
 export * from './process/ProcessProxy';
 export * from './utility/ProcessContainerProxy';

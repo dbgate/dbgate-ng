@@ -24,13 +24,14 @@ export class ProcessContainerProxy {
   private initializeWorkerContainer() {
     // Fork the dbgate-workers process
     const workerPath = path.resolve(__dirname, '../../../dbgate-workers/dist/index.js');
+    console.log('Create new worker container process:', workerPath)
     this.childProcess = fork(workerPath);
-    
+
     this.childProcess.on('message', (message: any) => {
       if (message.type === 'response' && this.pendingCalls.has(message.id)) {
         const { resolve, reject } = this.pendingCalls.get(message.id)!;
         this.pendingCalls.delete(message.id);
-        
+
         if (message.error) {
           reject(new Error(message.error));
         } else {
@@ -59,7 +60,7 @@ export class ProcessContainerProxy {
     // Get the module path and class name from the ProcessClass
     const processInstance = new ProcessClass();
     const modulePath = processInstance.moduleName || ProcessClass.name;
-    
+
     const result = await this.sendMessage({
       type: 'new',
       ProcessClass: {
@@ -69,16 +70,16 @@ export class ProcessContainerProxy {
     });
 
     const workerId = result.workerId;
-    
+
     // Create a proxy that forwards method calls to the worker
     const proxy = this.createWorkerProxy<Process>(workerId, ProcessClass);
     this.workerProxies.set(workerId, proxy);
-    
+
     return proxy as ProcessWorkerProxy<Process> & Process;
   }
 
   private createWorkerProxy<Process extends ProcessBase>(
-    workerId: string, 
+    workerId: string,
     ProcessClass: new () => Process
   ): ProcessWorkerProxy<Process> & Process {
     const processInstance = new ProcessClass();

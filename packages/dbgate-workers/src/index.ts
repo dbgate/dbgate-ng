@@ -1,5 +1,7 @@
 /// <reference types="node" />
 
+import { processClassRegistry } from "dbgate-core";
+
 // Import types directly from the source files
 interface ProcessBase {
   moduleName: string;
@@ -97,23 +99,7 @@ class WorkerContainer {
   }
 
   private getProcessClass(className: string): (new () => ProcessBase) | null {
-    // Registry of available process classes
-    // In a real implementation, this would be more sophisticated
-    const registry: { [key: string]: new () => ProcessBase } = {
-      'ServerConnectionProcess': class ServerConnectionProcess implements ProcessBase {
-        moduleName = './ServerConnectionProcess';
-        
-        async getDatabases() {
-          return ['database1', 'database2', 'database3'];
-        }
-
-        async getTableList(database: string) {
-          return [`${database}_table1`, `${database}_table2`];
-        }
-      }
-    };
-
-    return registry[className] || null;
+    return processClassRegistry[className] || null;
   }
 
   private async handleMethodCall(message: any) {
