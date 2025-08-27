@@ -27,8 +27,6 @@ function listInstanceMethods(obj: any, { includeSymbols = false } = {}): string[
 }
 
 function useController(app: any, electron: any, route: any, controller: any) {
-  const router = express.Router();
-
   if (controller._init) {
     logger.info(`DBGM-00096 Calling init controller for controller ${route}`);
     try {
@@ -85,13 +83,16 @@ function useController(app: any, electron: any, route: any, controller: any) {
       raw = meta.raw;
     }
 
+    const fullRoute = `${getExpressPath(route)}/${methodName}`
+
+    console.log(`Registering route: ${fullRoute}`)
+
     if (raw) {
       // @ts-ignore
-      router[method](methodName, (req, res) => controller[methodName](req, res));
+      app[method](fullRoute, (req, res) => controller[methodName](req, res));
     } else {
-      console.log(`Registering route: ${route}/${methodName}`)
       // @ts-ignore
-      router[method](methodName, async (req, res) => {
+      app[method](fullRoute, async (req, res) => {
         // if (controller._init && !controller._init_called) {
         //   await controller._init();
         //   controller._init_called = true;
@@ -100,7 +101,7 @@ function useController(app: any, electron: any, route: any, controller: any) {
           const data = await controller[methodName]({ ...req.body, ...req.query }, req);
           res.json(data);
         } catch (err) {
-          logger.error(extractErrorLogData(err), `DBGM-00176 Error when processing route ${route}/${methodName}`);
+          logger.error(extractErrorLogData(err), `DBGM-00176 Error when processing route ${fullRoute}`);
           if (err instanceof MissingCredentialsError) {
             res.json({
               missingCredentials: true,
@@ -115,10 +116,6 @@ function useController(app: any, electron: any, route: any, controller: any) {
         }
       });
     }
-  }
-
-  if (app) {
-    app.use(getExpressPath(route), router);
   }
 }
 
