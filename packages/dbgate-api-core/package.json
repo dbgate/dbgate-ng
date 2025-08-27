@@ -23,7 +23,6 @@
     "dbgate-core": "workspace:*",
     "dbgate-tools": "workspace:*",
     "dbgate-types": "workspace:*",
-    "express": "^4.21.2",
     "lodash": "^4.17.21"
   }
 }

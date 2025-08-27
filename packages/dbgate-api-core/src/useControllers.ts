@@ -1,5 +1,4 @@
 import { getConnectionsController } from './controllers/connections';
-import express from 'express';
 import _ from 'lodash';
 import { extractErrorLogData } from 'dbgate-tools';
 import { getExpressPath, getLogger } from 'dbgate-core';

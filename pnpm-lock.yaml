@@ -122,9 +122,6 @@ importers:
       dbgate-types:
         specifier: workspace:*
         version: link:../dbgate-types
-      express:
-        specifier: ^4.21.2
-        version: 4.21.2
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
