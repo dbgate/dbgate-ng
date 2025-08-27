@@ -34,6 +34,15 @@ export class ProcessWorker<Process extends ProcessBase> {
             }
         });
     }
+
+    // Method for direct method calls (used by the worker container)
+    async callMethod(methodName: string, args: any[]): Promise<any> {
+        const method = (this.processInstance as any)[methodName];
+        if (typeof method !== 'function') {
+            throw new Error(`Method ${methodName} not found`);
+        }
+        return await method.apply(this.processInstance, args);
+    }
 }
 
 // Helper function to create a worker for a specific process class
