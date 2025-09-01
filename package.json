@@ -8,14 +8,15 @@
     ]
   },
   "scripts": {
-    "dev:web": "concurrently \"pnpm ts:watch\"  \"pnpm -r --filter dbgate-web dev\" \"pnpm -r --filter dbgate-api dev\" \"pnpm -r --filter dbgate-workers dev\"",
-    "dev:app": "concurrently \"pnpm ts:watch\"  \"pnpm -r --filter dbgate dev\"",
+    "dev:web": "concurrently \"pnpm ts:watch | pino-pretty\"  \"pnpm -r --filter dbgate-web dev | pino-pretty\" \"pnpm -r --filter dbgate-api dev | pino-pretty\" \"pnpm -r --filter dbgate-workers dev | pino-pretty\"",
+    "dev:app": "concurrently \"pnpm ts:watch | pino-pretty\"  \"pnpm -r --filter dbgate dev | pino-pretty\"",
     "ts:watch": "tsc -b -w"
   },
   "devDependencies": {
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "concurrently": "^9.2.0"
+    "concurrently": "^9.2.0",
+    "pino-pretty": "^13.1.1"
   }
 }

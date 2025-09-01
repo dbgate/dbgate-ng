@@ -166,24 +166,24 @@ export function extractErrorMessage(error: unknown): string {
   return 'Unknown error occurred';
 }
 
-/**
- * Create a logger with different levels
- */
-export interface Logger {
-  debug: (message: any, ...args: any[]) => void;
-  info: (message: any, ...args: any[]) => void;
-  warn: (message: any, ...args: any[]) => void;
-  error: (message: any, ...args: any[]) => void;
-}
+// /**
+//  * Create a logger with different levels
+//  */
+// export interface Logger {
+//   debug: (message: any, ...args: any[]) => void;
+//   info: (message: any, ...args: any[]) => void;
+//   warn: (message: any, ...args: any[]) => void;
+//   error: (message: any, ...args: any[]) => void;
+// }
 
-export function getLogger(prefix: string = 'DBGate'): Logger {
-  return {
-    debug: (message: any, ...args: any[]) => console.debug(`[${prefix}] ${message}`, ...args),
-    info: (message: any, ...args: any[]) => console.info(`[${prefix}] ${message}`, ...args),
-    warn: (message: any, ...args: any[]) => console.warn(`[${prefix}] ${message}`, ...args),
-    error: (message: any, ...args: any[]) => console.error(`[${prefix}] ${message}`, ...args),
-  };
-}
+// export function getLogger(prefix: string = 'DBGate'): Logger {
+//   return {
+//     debug: (message: any, ...args: any[]) => console.debug(`[${prefix}] ${message}`, ...args),
+//     info: (message: any, ...args: any[]) => console.info(`[${prefix}] ${message}`, ...args),
+//     warn: (message: any, ...args: any[]) => console.warn(`[${prefix}] ${message}`, ...args),
+//     error: (message: any, ...args: any[]) => console.error(`[${prefix}] ${message}`, ...args),
+//   };
+// }
 
 export function getExpressPath(path: string) {
   path = path.replace(/\/*$/, '').replace(/^\/*/, '');

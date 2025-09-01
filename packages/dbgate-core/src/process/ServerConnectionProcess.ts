@@ -9,8 +9,8 @@ export class ServerConnectionProcess extends ProcessBase {
     this.moduleName = './ServerConnectionProcess';
   }
 
-  async getDatabases() {
-    return ['database1', 'database2', 'database3'];
+  async listDatabases() {
+    return [{ name: 'database1' }, { name: 'database2' }, { name: 'database3' }];
   }
 
   async getTableList(database: string) {

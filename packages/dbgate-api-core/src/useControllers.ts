@@ -1,7 +1,7 @@
 import { getConnectionsController } from './controllers/connections';
 import _ from 'lodash';
-import { extractErrorLogData } from 'dbgate-tools';
-import { getExpressPath, getLogger } from 'dbgate-core';
+import { extractErrorLogData, getLogger } from 'dbgate-tools';
+import { getExpressPath } from 'dbgate-core';
 import { MissingCredentialsError } from 'dbgate-core';
 import { getServerConnectionsController } from './controllers/serverConnections';
 
@@ -84,7 +84,7 @@ function useController(app: any, electron: any, route: any, controller: any) {
 
     const fullRoute = `${getExpressPath(route)}/${methodName}`
 
-    console.log(`Registering route: ${fullRoute}`)
+    logger.debug(`Registering route: ${fullRoute}`)
 
     if (raw) {
       // @ts-ignore
