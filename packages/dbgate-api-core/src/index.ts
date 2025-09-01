@@ -9,3 +9,4 @@ export {
   maskConnection,
   getSupportedEngines
 } from './controllers/connections';
+export { socketManager } from './utilities/socketManager';

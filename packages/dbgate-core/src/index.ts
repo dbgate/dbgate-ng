@@ -8,3 +8,5 @@ export * from './process/ProcessWorker';
 export * from './process/processClassRegistry';
 export * from './process/ProcessProxy';
 export * from './utility/ProcessContainerProxy';
+export * from './utility/SubprocessManager';
+export * from './process/ServerConnectionProcess';

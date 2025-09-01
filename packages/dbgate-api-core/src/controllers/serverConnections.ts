@@ -1,7 +1,7 @@
 import { ProcessContainerProxy, ProcessWorkerProxy } from 'dbgate-core';
 import { ServerConnectionsControllerContract, StoredConnection, AddMetaFields } from 'dbgate-types';
 import { getConnectionsController } from './connections';
-import { ServerConnectionProcess } from 'dbgate-core/src/process/ServerConnectionProcess';
+import { ServerConnectionProcess, subprocessManager } from 'dbgate-core';
 
 interface OpenedConnection {
   conid: string;
@@ -54,7 +54,7 @@ export class ServerConnectionsControllerImpl implements AddMetaFields<ServerConn
     // Get connection configuration
     const connectionsController = getConnectionsController();
     const connection = connectionsController.getById(conid);
-    
+
     if (!connection) {
       throw new Error(`Connection with conid="${conid}" not found`);
     }
@@ -72,14 +72,14 @@ export class ServerConnectionsControllerImpl implements AddMetaFields<ServerConn
     try {
       // Create new worker process
       const worker = await this.processContainer.createProcess(ServerConnectionProcess);
-      
+
       const newOpened: OpenedConnection = {
         conid,
         connection,
         worker,
         databases: [],
         status: { name: 'pending' },
-        disconnected: false
+        disconnected: false,
       };
 
       this.opened.push(newOpened);
@@ -94,9 +94,9 @@ export class ServerConnectionsControllerImpl implements AddMetaFields<ServerConn
           newOpened.databases = databases.map(name => ({ name }));
           newOpened.status = { name: 'ok' };
         } catch (error) {
-          newOpened.status = { 
-            name: 'error', 
-            message: error instanceof Error ? error.message : String(error) 
+          newOpened.status = {
+            name: 'error',
+            message: error instanceof Error ? error.message : String(error),
           };
         }
       }, 100);
@@ -111,7 +111,7 @@ export class ServerConnectionsControllerImpl implements AddMetaFields<ServerConn
     const existing = this.opened.find(x => x.conid === conid);
     if (existing) {
       existing.disconnected = true;
-      
+
       if (kill) {
         try {
           await existing.worker.destroy();
@@ -123,7 +123,7 @@ export class ServerConnectionsControllerImpl implements AddMetaFields<ServerConn
       this.opened = this.opened.filter(x => x.conid !== conid);
       this.closed[conid] = {
         name: 'error',
-        message: 'Connection closed'
+        message: 'Connection closed',
       };
     }
   }
@@ -140,13 +140,27 @@ export class ServerConnectionsControllerImpl implements AddMetaFields<ServerConn
     }
   }
 
-  async listDatabases(params: { conid: string }): Promise<{ name: string }[]> {
-    if (!params.conid || params.conid === '__model') {
-      return [];
-    }
+  async getProcessInstance(params: { conid: string }): Promise<ServerConnectionProcess> {
+    return await subprocessManager.getProcessInstance<ServerConnectionProcess>(
+      params.conid,
+      params.conid,
+      ServerConnectionProcess,
+      async process => {
+        const connection = getConnectionsController().getById(params.conid);
+        await process.connect(connection);
+      }
+    );
+  }
 
-    const opened = await this.ensureOpened(params.conid);
-    return opened?.databases ?? [];
+  async listDatabases(params: { conid: string }): Promise<{ name: string }[]> {
+    const process = await this.getProcessInstance(params);
+    return await process.listDatabases();
+    // if (!params.conid || params.conid === '__model') {
+    //   return [];
+    // }
+
+    // const opened = await this.ensureOpened(params.conid);
+    // return opened?.databases ?? [];
   }
 
   async version(params: { conid: string }): Promise<{ version: string; versionText?: string }> {
@@ -171,14 +185,14 @@ export class ServerConnectionsControllerImpl implements AddMetaFields<ServerConn
 
       const now = Date.now();
       const lastPing = opened.lastPinged || 0;
-      
+
       // Only ping if more than 30 seconds since last ping
       if (now - lastPing < 30000) {
         return true;
       }
 
       opened.lastPinged = now;
-      
+
       // Simulate ping by calling a simple method
       try {
         await opened.worker.getDatabases();
@@ -196,7 +210,7 @@ export class ServerConnectionsControllerImpl implements AddMetaFields<ServerConn
     try {
       // Close existing connection
       await this.closeConnection(params.conid);
-      
+
       // Reopen connection
       await this.ensureOpened(params.conid);
       return true;
@@ -262,7 +276,7 @@ export class ServerConnectionsControllerImpl implements AddMetaFields<ServerConn
         server: opened.connection.server,
         databaseCount: opened.databases.length,
         status: opened.status,
-        version: opened.version
+        version: opened.version,
       };
     } catch (error) {
       console.error('Error getting server summary:', error);
@@ -286,7 +300,7 @@ export class ServerConnectionsControllerImpl implements AddMetaFields<ServerConn
       return {
         command: params.command,
         result: 'Command executed successfully',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       console.error('Error executing summary command:', error);
@@ -306,17 +320,15 @@ export class ServerConnectionsControllerImpl implements AddMetaFields<ServerConn
         engine: con.connection.engine,
         server: con.connection.server,
         authType: con.connection.authType,
-        isReadOnly: con.connection.isReadOnly
-      }
+        isReadOnly: con.connection.isReadOnly,
+      },
     }));
   }
 
   async cleanup(): Promise<void> {
     // Close all connections
-    await Promise.all(
-      this.opened.map(conn => this.closeConnection(conn.conid, true))
-    );
-    
+    await Promise.all(this.opened.map(conn => this.closeConnection(conn.conid, true)));
+
     // Destroy process container
     this.processContainer.destroy();
   }

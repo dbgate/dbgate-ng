@@ -2,6 +2,9 @@ import express, { Express } from 'express';
 import cors from 'cors';
 import { useAllControllers } from 'dbgate-api-core';
 import dotenv from 'dotenv';
+import { getExpressPath } from 'dbgate-core';
+import { socketManager } from 'dbgate-api-core';
+import onFinished from 'on-finished';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -27,6 +30,24 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
+  });
+});
+
+app.get(getExpressPath('/stream'), async function (req, res) {
+  const strmid = req.query.strmid;
+  res.set({
+    'Cache-Control': 'no-cache',
+    'Content-Type': 'text/event-stream',
+    'X-Accel-Buffering': 'no',
+    Connection: 'keep-alive',
+  });
+  res.flushHeaders();
+
+  // Tell the client to retry every 10 seconds if connectivity is lost
+  res.write('retry: 10000\n\n');
+  socketManager.addSseResponse(res, strmid);
+  onFinished(req, () => {
+    socketManager.removeSseResponse(strmid);
   });
 });
 

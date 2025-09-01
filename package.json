@@ -8,7 +8,7 @@
     ]
   },
   "scripts": {
-    "dev:web": "concurrently \"pnpm ts:watch\"  \"pnpm -r --filter dbgate-web dev\" \"pnpm -r --filter dbgate-api dev\"",
+    "dev:web": "concurrently \"pnpm ts:watch\"  \"pnpm -r --filter dbgate-web dev\" \"pnpm -r --filter dbgate-api dev\" \"pnpm -r --filter dbgate-workers dev\"",
     "dev:app": "concurrently \"pnpm ts:watch\"  \"pnpm -r --filter dbgate dev\"",
     "ts:watch": "tsc -b -w"
   },

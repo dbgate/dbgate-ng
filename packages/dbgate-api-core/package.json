@@ -23,6 +23,7 @@
     "dbgate-core": "workspace:*",
     "dbgate-tools": "workspace:*",
     "dbgate-types": "workspace:*",
+    "json-stable-stringify": "^1.3.0",
     "lodash": "^4.17.21"
   }
 }
