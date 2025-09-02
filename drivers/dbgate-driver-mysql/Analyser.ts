@@ -128,8 +128,34 @@ export default class Analyser extends (DatabaseAnalyser as any) {
           .map((col: any) => getColumnInfo(col, this.driver)),
         primaryKey: DatabaseAnalyser.extractPrimaryKeys(table, pkColumns.rows),
         foreignKeys: DatabaseAnalyser.extractForeignKeys(table, fkColumns.rows),
-        indexes: DatabaseAnalyser.extractIndexes(table, indexes.rows),
-        uniques: DatabaseAnalyser.extractUniques(table, uniqueNames.rows),
+        indexes: _.uniqBy(
+          indexes.rows.filter(
+            (idx: any) =>
+              idx.tableName == table.pureName && !uniqueNames.rows.find((x: any) => x.constraintName == idx.constraintName)
+          ),
+          'constraintName'
+        ).map((idx: any) => ({
+          ..._.pick(idx, ['constraintName', 'indexType']),
+          isUnique: !idx.nonUnique,
+          columns: indexes.rows
+            .filter((col: any) => col.tableName == idx.tableName && col.constraintName == idx.constraintName)
+            .map((col: any) => ({
+              ..._.pick(col, ['columnName', 'isDescending']),
+            })),
+        })),
+        uniques: _.uniqBy(
+          indexes.rows.filter(
+            (idx: any) => idx.tableName == table.pureName && uniqueNames.rows.find((x: any) => x.constraintName == idx.constraintName)
+          ),
+          'constraintName'
+        ).map((idx: any) => ({
+          ..._.pick(idx, ['constraintName']),
+          columns: indexes.rows
+            .filter((col: any) => col.tableName == idx.tableName && col.constraintName == idx.constraintName)
+            .map((col: any) => ({
+              ..._.pick(col, ['columnName']),
+            })),
+        })),
         triggers: triggers.rows.filter((x: any) => x.tableName == table.pureName),
       })),
       views: views.rows.map((view: any) => ({
