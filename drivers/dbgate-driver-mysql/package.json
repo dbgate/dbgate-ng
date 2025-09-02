@@ -1,0 +1,35 @@
+{
+  "name": "dbgate-driver-mysql",
+  "version": "1.0.0",
+  "description": "MySQL and MariaDB driver for DbGate",
+  "type": "module",
+  "main": "dist/index.js",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "dbgate",
+    "mysql",
+    "mariadb",
+    "database",
+    "driver"
+  ],
+  "author": "DbGate Team",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "dbgate-tools": "workspace:*",
+    "dbgate-types": "workspace:*",
+    "lodash": "^4.17.21",
+    "mysql2": "^3.11.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.9",
+    "@types/lodash": "^4.17.20",
+    "typescript": "^5.7.2",
+    "rimraf": "^5.0.5"
+  }
+}

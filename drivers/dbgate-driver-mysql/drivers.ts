@@ -1,18 +1,20 @@
-const _ = require('lodash');
-const stream = require('stream');
-const driverBases = require('../frontend/drivers');
-const Analyser = require('./Analyser');
-const mysql2 = require('mysql2');
-const { getLogger, createBulkInsertStreamBase, makeUniqueColumnNames, extractErrorLogData } =
-  global.DBGATE_PACKAGES['dbgate-tools'];
+// @ts-ignore - dbgate-tools types not available
+import { getLogger, createBulkInsertStreamBase, makeUniqueColumnNames, extractErrorLogData } from 'dbgate-tools';
+import _ from 'lodash';
+import stream from 'stream';
+// @ts-ignore - frontend drivers types not available
+import driverBases from '../frontend/drivers';
+import Analyser from './Analyser.js';
+// @ts-ignore - mysql2 types
+import mysql2 from 'mysql2';
 
 const logger = getLogger('mysqlDriver');
 
-let authProxy;
+let authProxy: any;
 
-function extractColumns(fields) {
+function extractColumns(fields: any): any[] | null {
   if (fields) {
-    const res = fields.map(col => ({
+    const res = fields.map((col: any) => ({
       columnName: col.name,
     }));
     makeUniqueColumnNames(res);
@@ -21,19 +23,18 @@ function extractColumns(fields) {
   return null;
 }
 
-function zipDataRow(rowArray, columns) {
+function zipDataRow(rowArray: any[], columns: any[]): any {
   return _.zipObject(
-    columns.map(x => x.columnName),
+    columns.map((x: any) => x.columnName),
     rowArray
   );
 }
 
-/** @type {import('dbgate-types').EngineDriver} */
-const drivers = driverBases.map(driverBase => ({
+const drivers = driverBases.map((driverBase: any) => ({
   ...driverBase,
   analyserClass: Analyser,
 
-  async connect(props) {
+  async connect(props: any): Promise<any> {
     const { conid, server, port, user, password, database, ssl, isReadOnly, forceRowsAsObjects, socketPath, authType } =
       props;
     let awsIamToken = null;
@@ -68,17 +69,19 @@ const drivers = driverBases.map(driverBase => ({
     }
     return dbhan;
   },
-  close(dbhan) {
+
+  close(dbhan: any): Promise<void> {
     return new Promise(resolve => {
       dbhan.client.end(resolve);
     });
   },
-  query(dbhan, sql, options) {
+
+  query(dbhan: any, sql: string, options?: any): Promise<any> {
     if (sql == null) {
-      return {
+      return Promise.resolve({
         rows: [],
         columns: [],
-      };
+      });
     }
 
     if (
@@ -87,40 +90,30 @@ const drivers = driverBases.map(driverBase => ({
       (sql.includes('character_set_client') || sql.includes('NOTE_VERBOSITY'))
     ) {
       // skip this in SQL dumps
-      return {
+      return Promise.resolve({
         rows: [],
         columns: [],
-      };
+      });
     }
 
     return new Promise((resolve, reject) => {
-      dbhan.client.query(sql, function (error, results, fields) {
+      dbhan.client.query(sql, function (error: any, results: any, fields: any) {
         if (error) reject(error);
         const columns = extractColumns(fields);
-        resolve({ rows: results && columns && results.map && results.map(row => zipDataRow(row, columns)), columns });
+        resolve({ rows: results && columns && results.map && results.map((row: any) => zipDataRow(row, columns)), columns });
       });
     });
   },
-  async stream(dbhan, sql, options) {
-    const query = dbhan.client.query(sql);
-    let columns = [];
 
-    // const handleInfo = (info) => {
-    //   const { message, lineNumber, procName } = info;
-    //   options.info({
-    //     message,
-    //     line: lineNumber,
-    //     procedure: procName,
-    //     time: new Date(),
-    //     severity: 'info',
-    //   });
-    // };
+  async stream(dbhan: any, sql: string, options: any): Promise<void> {
+    const query = dbhan.client.query(sql);
+    let columns: any[] = [];
 
     const handleEnd = () => {
       options.done();
     };
 
-    const handleRow = row => {
+    const handleRow = (row: any) => {
       if (row && row.constructor && (row.constructor.name == 'OkPacket' || row.constructor.name == 'ResultSetHeader')) {
         options.info({
           message: `${row.affectedRows} rows affected`,
@@ -134,12 +127,12 @@ const drivers = driverBases.map(driverBase => ({
       }
     };
 
-    const handleFields = fields => {
+    const handleFields = (fields: any) => {
       columns = extractColumns(fields);
       if (columns) options.recordset(columns);
     };
 
-    const handleError = error => {
+    const handleError = (error: any) => {
       logger.error(extractErrorLogData(error, this.getLogDbInfo(dbhan)), 'DBGM-00200 Stream error');
       const { message } = error;
       options.info({
@@ -152,7 +145,8 @@ const drivers = driverBases.map(driverBase => ({
 
     query.on('error', handleError).on('fields', handleFields).on('result', handleRow).on('end', handleEnd);
   },
-  async readQuery(dbhan, sql, structure) {
+
+  async readQuery(dbhan: any, sql: string, structure?: any): Promise<any> {
     const query = dbhan.client.query(sql);
 
     const pass = new stream.PassThrough({
@@ -160,25 +154,26 @@ const drivers = driverBases.map(driverBase => ({
       highWaterMark: 100,
     });
 
-    let columns = [];
+    let columns: any[] = [];
     query
-      .on('error', err => {
+      .on('error', (err: any) => {
         console.error(err);
         pass.end();
       })
-      .on('fields', fields => {
+      .on('fields', (fields: any) => {
         columns = extractColumns(fields);
         pass.write({
           __isStreamHeader: true,
           ...(structure || { columns }),
         });
       })
-      .on('result', row => pass.write(zipDataRow(row, columns)))
+      .on('result', (row: any) => pass.write(zipDataRow(row, columns)))
       .on('end', () => pass.end());
 
     return pass;
   },
-  async getVersion(dbhan) {
+
+  async getVersion(dbhan: any): Promise<any> {
     const { rows } = await this.query(dbhan, "show variables like 'version'");
     const version = rows[0].Value;
     if (version) {
@@ -196,22 +191,23 @@ const drivers = driverBases.map(driverBase => ({
       versionText: `MySQL ${version}`,
     };
   },
-  async listDatabases(dbhan) {
+
+  async listDatabases(dbhan: any): Promise<any[]> {
     const { rows } = await this.query(dbhan, 'show databases');
-    return rows.map(x => ({ name: x.Database }));
+    return rows.map((x: any) => ({ name: x.Database }));
   },
 
-  async listVariables(dbhan) {
+  async listVariables(dbhan: any): Promise<any[]> {
     const { rows } = await this.query(dbhan, 'SHOW VARIABLES');
-    return rows.map(row => ({
+    return rows.map((row: any) => ({
       variable: row.Variable_name,
       value: row.Value,
     }));
   },
 
-  async listProcesses(dbhan) {
+  async listProcesses(dbhan: any): Promise<any[]> {
     const { rows } = await this.query(dbhan, 'SHOW FULL PROCESSLIST');
-    return rows.map(row => ({
+    return rows.map((row: any) => ({
       processId: row.Id,
       connectionId: null,
       client: row.Host,
@@ -223,11 +219,11 @@ const drivers = driverBases.map(driverBase => ({
     }));
   },
 
-  async killProcess(dbhan, processId) {
+  async killProcess(dbhan: any, processId: string): Promise<void> {
     await this.query(dbhan, `KILL ${processId}`);
   },
 
-  async serverSummary(dbhan) {
+  async serverSummary(dbhan: any): Promise<any> {
     const [variables, processes, databases] = await Promise.all([
       this.listVariables(dbhan),
       this.listProcesses(dbhan),
@@ -236,7 +232,7 @@ const drivers = driverBases.map(driverBase => ({
 
     return {
       variables,
-      processes: processes.map(p => ({
+      processes: processes.map((p: any) => ({
         processId: p.processId,
         connectionId: p.connectionId,
         client: p.client,
@@ -247,7 +243,7 @@ const drivers = driverBases.map(driverBase => ({
         waitingFor: p.waitingFor,
       })),
       databases: {
-        rows: databases.map(db => ({
+        rows: databases.map((db: any) => ({
           name: db.name,
         })),
         columns: [
@@ -263,11 +259,12 @@ const drivers = driverBases.map(driverBase => ({
     };
   },
 
-  async writeTable(dbhan, name, options) {
+  async writeTable(dbhan: any, name: any, options: any): Promise<any> {
     // @ts-ignore
     return createBulkInsertStreamBase(this, stream, dbhan, name, options);
   },
-  getAuthTypes() {
+
+  getAuthTypes(): any[] {
     const res = [
       {
         title: 'Host and port',
@@ -290,8 +287,8 @@ const drivers = driverBases.map(driverBase => ({
   },
 }));
 
-drivers.initialize = dbgateEnv => {
+(drivers as any).initialize = (dbgateEnv: any) => {
   authProxy = dbgateEnv.authProxy;
 };
 
-module.exports = drivers;
+export default drivers;
