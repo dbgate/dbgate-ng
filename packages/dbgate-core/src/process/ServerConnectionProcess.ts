@@ -1,8 +1,10 @@
-import { StoredConnection } from '../../../dbgate-types';
+import { DatabaseHandle, StoredConnection } from 'dbgate-types';
 import { ProcessBase } from './ProcessBase';
+import { connectUtility } from '../utility/connectUtility';
 
 export class ServerConnectionProcess extends ProcessBase {
   connection?: StoredConnection;
+  dbhan: DatabaseHandle;
 
   constructor() {
     super();
@@ -19,5 +21,6 @@ export class ServerConnectionProcess extends ProcessBase {
 
   async connect(connection: StoredConnection) {
     this.connection = connection;
+    this.dbhan = await connectUtility(driver, connection, 'app');
   }
 }
