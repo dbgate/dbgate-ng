@@ -1,6 +1,13 @@
-const { driverBase } = global.DBGATE_PACKAGES['dbgate-tools'];
-const { mysqlSplitterOptions } = require('dbgate-query-splitter/lib/options');
-const Dumper = require('./Dumper');
+// @ts-ignore - dbgate-tools types not available
+import { driverBase } from 'dbgate-tools';
+// @ts-ignore - dbgate-query-splitter types not available
+import { mysqlSplitterOptions } from 'dbgate-query-splitter/lib/options';
+import Dumper from './Dumper.js';
+
+// Type definitions
+type SqlDialect = any;
+type EngineDriver = any;
+type ConnectionInfo = any;
 
 const spatialTypes = [
   'POINT',
@@ -14,8 +21,7 @@ const spatialTypes = [
   'GEOMETRYCOLLECTION',
 ];
 
-/** @type {import('dbgate-types').SqlDialect} */
-const dialect = {
+const dialect: SqlDialect = {
   rangeSelect: true,
   stringEscapeChar: '\\',
   fallbackDataType: 'longtext',
@@ -23,7 +29,7 @@ const dialect = {
   anonymousPrimaryKey: true,
   explicitDropConstraint: true,
   allowMultipleValuesInsert: true,
-  quoteIdentifier(s) {
+  quoteIdentifier(s: string): string {
     return '`' + s + '`';
   },
 
@@ -84,7 +90,7 @@ const dialect = {
     'year',
   ],
 
-  createColumnViewExpression(columnName, dataType, source, alias) {
+  createColumnViewExpression(columnName: string, dataType?: string, source?: any, alias?: string) {
     if (dataType && spatialTypes.includes(dataType.toUpperCase())) {
       return {
         exprType: 'call',
@@ -101,11 +107,11 @@ const dialect = {
     }
   },
 
-  getSupportedEngines() {
+  getSupportedEngines(): string[] {
     return [];
   },
 
-  getTableFormOptions(intent) {
+  getTableFormOptions(intent?: string) {
     return [
       {
         type: 'dropdowntext',
@@ -125,9 +131,9 @@ const dialect = {
   },
 };
 
-const mysqlDialect = {
+const mysqlDialect: SqlDialect = {
   ...dialect,
-  getSupportedEngines() {
+  getSupportedEngines(): string[] {
     const mysqlEngines = [
       'InnoDB', // Default and most commonly used engine with ACID transaction support and referential integrity.
       'MyISAM', // Older engine without transaction or referential integrity support.
@@ -151,7 +157,7 @@ const mysqlDialect = {
 
 const mysqlDriverBase = {
   ...driverBase,
-  showConnectionField: (field, values) => {
+  showConnectionField: (field: string, values: any) => {
     if (['authType', 'user', 'defaultDatabase', 'singleDatabase', 'isReadOnly'].includes(field)) {
       return true;
     }
@@ -172,7 +178,7 @@ const mysqlDriverBase = {
   },
   dumperClass: Dumper,
   defaultPort: 3306,
-  getQuerySplitterOptions: usage =>
+  getQuerySplitterOptions: (usage?: string) =>
     usage == 'editor'
       ? { ...mysqlSplitterOptions, ignoreComments: true, preventSingleLineSplit: true }
       : mysqlSplitterOptions,
@@ -200,7 +206,7 @@ const mysqlDriverBase = {
       },
     ];
   },
-  getCliConnectionArgs(connection, externalTools) {
+  getCliConnectionArgs(connection: ConnectionInfo, externalTools: any): string[] {
     const args = [`--user=${connection.user}`, `--password=${connection.password}`, `--host=${connection.server}`];
     if (connection.port) {
       args.push(`--port=${connection.port}`);
@@ -213,7 +219,7 @@ const mysqlDriverBase = {
     }
     return args;
   },
-  backupDatabaseCommand(connection, settings, externalTools) {
+  backupDatabaseCommand(connection: ConnectionInfo, settings: any, externalTools: any) {
     const { outputFile, database, skippedTables, options } = settings;
     const command = externalTools.mysqldump || 'mysqldump';
     const args = this.getCliConnectionArgs(connection, externalTools);
@@ -250,7 +256,7 @@ const mysqlDriverBase = {
       args.push('--single-transaction');
     }
     if (options.customArgs?.trim()) {
-      const customArgs = options.customArgs.split(/\s+/).filter(arg => arg.trim() != '');
+      const customArgs = options.customArgs.split(/\s+/).filter((arg: string) => arg.trim() != '');
       args.push(...customArgs);
     }
     if (options.createDatabase) {
@@ -263,7 +269,7 @@ const mysqlDriverBase = {
     }
     return { command, args };
   },
-  restoreDatabaseCommand(connection, settings, externalTools) {
+  restoreDatabaseCommand(connection: ConnectionInfo, settings: any, externalTools: any) {
     const { inputFile, database } = settings;
     const command = externalTools.mysql || 'mysql';
     const args = this.getCliConnectionArgs(connection, externalTools);
@@ -272,7 +278,7 @@ const mysqlDriverBase = {
     }
     return { command, args, stdinFilePath: inputFile };
   },
-  transformNativeCommandMessage(message) {
+  transformNativeCommandMessage(message: any) {
     if (message.message?.startsWith('--')) {
       if (message.message.startsWith('-- Retrieving table structure for table')) {
         return {
@@ -290,7 +296,7 @@ const mysqlDriverBase = {
     }
     return message;
   },
-  getNativeOperationFormArgs(operation) {
+  getNativeOperationFormArgs(operation: string) {
     if (operation == 'backup') {
       return [
         {
@@ -316,42 +322,42 @@ const mysqlDriverBase = {
           label: 'Backup events',
           name: 'includeEvents',
           default: true,
-          disabledFn: values => values.noStructure,
+          disabledFn: (values: any) => values.noStructure,
         },
         {
           type: 'checkbox',
           label: 'Backup routines',
           name: 'includeRoutines',
           default: true,
-          disabledFn: values => values.noStructure,
+          disabledFn: (values: any) => values.noStructure,
         },
         {
           type: 'checkbox',
           label: 'Backup triggers',
           name: 'includeTriggers',
           default: true,
-          disabledFn: values => values.noStructure,
+          disabledFn: (values: any) => values.noStructure,
         },
         {
           type: 'checkbox',
           label: 'Lock tables',
           name: 'lockTables',
           default: false,
-          disabledFn: values => values.skipLockTables || values.singleTransaction,
+          disabledFn: (values: any) => values.skipLockTables || values.singleTransaction,
         },
         {
           type: 'checkbox',
           label: 'Skip lock tables',
           name: 'skipLockTables',
           default: false,
-          disabledFn: values => values.lockTables || values.singleTransaction,
+          disabledFn: (values: any) => values.lockTables || values.singleTransaction,
         },
         {
           type: 'checkbox',
           label: 'Single transaction',
           name: 'singleTransaction',
           default: false,
-          disabledFn: values => values.lockTables || values.skipLockTables,
+          disabledFn: (values: any) => values.lockTables || values.skipLockTables,
         },
         {
           type: 'checkbox',
@@ -364,7 +370,7 @@ const mysqlDriverBase = {
           label: 'Drop database before import',
           name: 'dropDatabase',
           default: false,
-          disabledFn: values => !values.createDatabase,
+          disabledFn: (values: any) => !values.createDatabase,
         },
         {
           type: 'text',
@@ -376,14 +382,13 @@ const mysqlDriverBase = {
     return null;
   },
 
-  adaptDataType(dataType) {
+  adaptDataType(dataType?: string): string | undefined {
     if (dataType?.toLowerCase() == 'money') return 'decimal(15,2)';
     return dataType;
   },
 };
 
-/** @type {import('dbgate-types').EngineDriver} */
-const mysqlDriver = {
+const mysqlDriver: EngineDriver = {
   ...mysqlDriverBase,
   supportsServerSummary: true,
   dialect: mysqlDialect,
@@ -394,9 +399,9 @@ const mysqlDriver = {
   },
 };
 
-const mariaDbDialect = {
+const mariaDbDialect: SqlDialect = {
   ...dialect,
-  getSupportedEngines() {
+  getSupportedEngines(): string[] {
     const mariaDBEngines = [
       'InnoDB', // Main transactional engine, similar to MySQL, supports ACID transactions and referential integrity.
       'Aria', // Replacement for MyISAM, supports crash recovery and optimized for high speed.
@@ -423,8 +428,7 @@ const mariaDbDialect = {
   },
 };
 
-/** @type {import('dbgate-types').EngineDriver} */
-const mariaDriver = {
+const mariaDriver: EngineDriver = {
   ...mysqlDriverBase,
   supportsServerSummary: true,
   dialect: mariaDbDialect,
@@ -435,4 +439,4 @@ const mariaDriver = {
   },
 };
 
-module.exports = [mysqlDriver, mariaDriver];
+export default [mysqlDriver, mariaDriver];

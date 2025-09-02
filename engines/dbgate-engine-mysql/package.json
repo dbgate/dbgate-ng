@@ -1,0 +1,54 @@
+{
+  "name": "dbgate-engine-mysql",
+  "version": "1.0.0",
+  "description": "MySQL and MariaDB engine for DbGate",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./Dumper": {
+      "types": "./dist/Dumper.d.ts",
+      "import": "./dist/Dumper.js"
+    },
+    "./drivers": {
+      "types": "./dist/drivers.d.ts",
+      "import": "./dist/drivers.js"
+    }
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "dbgate",
+    "mysql",
+    "mariadb",
+    "database",
+    "engine"
+  ],
+  "author": "DbGate Team",
+  "license": "MIT",
+  "dependencies": {
+    "dbgate-tools": "*",
+    "dbgate-query-splitter": "*",
+    "dbgate-types": "*",
+    "lodash": "*"
+  },
+  "devDependencies": {
+    "@types/node": "*",
+    "@types/lodash": "*",
+    "typescript": "*",
+    "rimraf": "*"
+  },
+  "peerDependencies": {
+    "dbgate-tools": "*",
+    "dbgate-query-splitter": "*"
+  }
+}

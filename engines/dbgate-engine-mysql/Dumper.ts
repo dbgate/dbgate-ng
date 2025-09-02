@@ -1,9 +1,16 @@
-const { SqlDumper, arrayToHexString } = global.DBGATE_PACKAGES['dbgate-tools'];
-const _isArray = require('lodash/isArray');
+// @ts-ignore - dbgate-tools types not available
+import { SqlDumper, arrayToHexString } from 'dbgate-tools';
+// @ts-ignore - lodash types
+import isArray from 'lodash/isArray';
 
-class Dumper extends SqlDumper {
-  /** @param type {import('dbgate-types').TransformType} */
-  transform(type, dumpExpr) {
+// Type definitions
+type TransformType = 'GROUP:YEAR' | 'YEAR' | 'MONTH' | 'DAY' | 'GROUP:MONTH' | 'GROUP:DAY' | string;
+type NamedObjectInfo = any;
+type ColumnInfo = any;
+type ConstraintInfo = any;
+
+export default class Dumper extends (SqlDumper as any) {
+  transform(type: TransformType, dumpExpr: () => void): void {
     switch (type) {
       case 'GROUP:YEAR':
       case 'YEAR':
@@ -27,11 +34,11 @@ class Dumper extends SqlDumper {
     }
   }
 
-  renameTable(obj, newName) {
+  renameTable(obj: NamedObjectInfo, newName: string): void {
     this.putCmd('^rename ^table %f ^to %i', obj, newName);
   }
 
-  changeColumn(oldcol, newcol, constraints) {
+  changeColumn(oldcol: ColumnInfo, newcol: ColumnInfo, constraints: ConstraintInfo[]): void {
     if (!oldcol.notNull) {
       this.fillNewNotNullDefaults({
         ...newcol,
@@ -44,9 +51,9 @@ class Dumper extends SqlDumper {
     this.endCommand();
   }
 
-  autoIncrement() {}
+  autoIncrement(): void {}
 
-  specialColumnOptions(column) {
+  specialColumnOptions(column: ColumnInfo): void {
     if (column.isUnsigned) {
       this.put('^unsigned ');
     }
@@ -58,14 +65,14 @@ class Dumper extends SqlDumper {
     }
   }
 
-  columnDefinition(col, options) {
+  columnDefinition(col: ColumnInfo, options?: any): void {
     super.columnDefinition(col, options);
     if (col.columnComment) {
       this.put(' ^comment %v ', col.columnComment);
     }
   }
 
-  renameColumn(column, newcol) {
+  renameColumn(column: ColumnInfo, newcol: string): void {
     this.changeColumn(
       column,
       {
@@ -76,35 +83,35 @@ class Dumper extends SqlDumper {
     );
   }
 
-  enableConstraints(table, enabled) {
+  enableConstraints(table: NamedObjectInfo, enabled: boolean): void {
     this.putCmd('^set FOREIGN_KEY_CHECKS = %s', enabled ? '1' : '0');
   }
 
-  comment(value) {
+  comment(value: string): void {
     this.put('/* %s */', value);
   }
 
-  beginTransaction() {
+  beginTransaction(): void {
     this.putCmd('^start ^transaction');
   }
 
-  selectTableIntoNewTable(sourceName, targetName) {
+  selectTableIntoNewTable(sourceName: NamedObjectInfo, targetName: NamedObjectInfo): void {
     this.putCmd('^create ^table %f (^select * ^from %f)', targetName, sourceName);
   }
 
-  putByteArrayValue(value) {
+  putByteArrayValue(value: Uint8Array): void {
     this.putRaw(`unhex('${arrayToHexString(value)}')`);
   }
 
-  selectScopeIdentity() {
+  selectScopeIdentity(): void {
     this.put('^select ^last_insert_id()');
   }
 
-  callableTemplate(func) {
-    const parameters = (func.parameters || []).filter(x => x.parameterMode != 'RETURN');
+  callableTemplate(func: any): void {
+    const parameters = (func.parameters || []).filter((x: any) => x.parameterMode != 'RETURN');
 
-    const putParameters = (parameters, delimiter) => {
-      this.putCollection(delimiter, parameters || [], param => {
+    const putParameters = (parameters: any[], delimiter: string) => {
+      this.putCollection(delimiter, parameters || [], (param: any) => {
         if (param.parameterMode == 'IN') {
           this.putRaw('@' + param.parameterName);
         } else {
@@ -113,7 +120,7 @@ class Dumper extends SqlDumper {
       });
     };
 
-    const putSetParamters = parameters => {
+    const putSetParamters = (parameters: any[]) => {
       for (const param of parameters || []) {
         if (param.parameterMode == 'IN') {
           this.put('SET @%s = :%s', param.parameterName, param.parameterName);
@@ -140,7 +147,7 @@ class Dumper extends SqlDumper {
     }
   }
 
-  putValue(value, dataType) {
+  putValue(value: any, dataType?: string): void {
     const dataLower = dataType?.toLowerCase();
     if (dataLower?.includes('date')) {
       if (typeof value == 'string') {
@@ -153,5 +160,3 @@ class Dumper extends SqlDumper {
     super.putValue(value, dataType);
   }
 }
-
-module.exports = Dumper;
