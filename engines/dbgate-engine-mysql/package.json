@@ -4,21 +4,6 @@
   "description": "MySQL and MariaDB engine for DbGate",
   "type": "module",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./Dumper": {
-      "types": "./dist/Dumper.d.ts",
-      "import": "./dist/Dumper.js"
-    },
-    "./drivers": {
-      "types": "./dist/drivers.d.ts",
-      "import": "./dist/drivers.js"
-    }
-  },
   "files": [
     "dist/**/*"
   ],
@@ -34,21 +19,17 @@
     "engine"
   ],
   "author": "DbGate Team",
-  "license": "MIT",
+  "license": "GPL-3.0",
   "dependencies": {
-    "dbgate-tools": "*",
-    "dbgate-query-splitter": "*",
-    "dbgate-types": "*",
-    "lodash": "*"
+    "dbgate-tools": "workspace:*",
+    "dbgate-query-splitter": "^4.11.5",
+    "dbgate-types": "workspace:*",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "@types/node": "*",
-    "@types/lodash": "*",
-    "typescript": "*",
-    "rimraf": "*"
-  },
-  "peerDependencies": {
-    "dbgate-tools": "*",
-    "dbgate-query-splitter": "*"
+    "@types/node": "^20.19.9",
+    "@types/lodash": "^4.17.20",
+    "typescript": "^5.7.2",
+    "rimraf": "^5.0.5"
   }
 }
