@@ -1,0 +1,30 @@
+{
+  "name": "dbgate-drivers",
+  "version": "1.0.0",
+  "description": "Database drivers collection for DbGate",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "dbgate",
+    "database",
+    "drivers"
+  ],
+  "author": "DbGate Team",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "dbgate-driver-mysql": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.9",
+    "typescript": "^5.7.2",
+    "rimraf": "^5.0.5"
+  }
+}
