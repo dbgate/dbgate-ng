@@ -70,7 +70,7 @@ export interface WriteTableOptions {
 export interface EngineAuthType {
   title: string;
   name: string;
-  disabledFields: string[];
+  disabledFields?: string[];
 }
 
 export interface ReadCollectionOptions {

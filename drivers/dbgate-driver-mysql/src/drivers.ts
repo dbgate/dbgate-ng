@@ -1,12 +1,13 @@
 // @ts-ignore - dbgate-tools types not available
 import { getLogger, createBulkInsertStreamBase, makeUniqueColumnNames, extractErrorLogData } from 'dbgate-tools';
 import _ from 'lodash';
-import stream from 'stream';
+import stream from 'node:stream';
 // @ts-ignore - frontend drivers types not available
 import driverBases from '../frontend/drivers';
 import Analyser from './Analyser.js';
 // @ts-ignore - mysql2 types
 import mysql2 from 'mysql2';
+import { EngineAuthType } from 'dbgate-types';
 
 const logger = getLogger('mysqlDriver');
 
@@ -100,7 +101,10 @@ const drivers = driverBases.map((driverBase: any) => ({
       dbhan.client.query(sql, function (error: any, results: any, fields: any) {
         if (error) reject(error);
         const columns = extractColumns(fields);
-        resolve({ rows: results && columns && results.map && results.map((row: any) => zipDataRow(row, columns)), columns });
+        resolve({
+          rows: results && columns && results.map && results.map((row: any) => zipDataRow(row, columns)),
+          columns,
+        });
       });
     });
   },
@@ -128,7 +132,7 @@ const drivers = driverBases.map((driverBase: any) => ({
     };
 
     const handleFields = (fields: any) => {
-      columns = extractColumns(fields);
+      columns = extractColumns(fields)!;
       if (columns) options.recordset(columns);
     };
 
@@ -161,7 +165,7 @@ const drivers = driverBases.map((driverBase: any) => ({
         pass.end();
       })
       .on('fields', (fields: any) => {
-        columns = extractColumns(fields);
+        columns = extractColumns(fields)!;
         pass.write({
           __isStreamHeader: true,
           ...(structure || { columns }),
@@ -264,8 +268,8 @@ const drivers = driverBases.map((driverBase: any) => ({
     return createBulkInsertStreamBase(this, stream, dbhan, name, options);
   },
 
-  getAuthTypes(): any[] {
-    const res = [
+  getAuthTypes(): EngineAuthType[] {
+    const res: EngineAuthType[] = [
       {
         title: 'Host and port',
         name: 'hostPort',
