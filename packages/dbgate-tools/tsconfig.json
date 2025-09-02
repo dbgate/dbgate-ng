@@ -1,19 +1,5 @@
 {
-  "compilerOptions": {
-    "target": "ES2018",
-    "declaration": true,
-    "skipLibCheck": true,
-    "outDir": "lib",
-    "preserveWatchOutput": true,
-    "esModuleInterop": true,
-    "composite": true,
-    "incremental": true,
-    "moduleResolution": "node",
-    "rootDir": "src"
-   },
-  "include": [
-    "src/**/*"
-  ],
+  "extends": "../../tsconfig.base.json",
   "references": [
     { "path": "../dbgate-sqltree" }
   ]    

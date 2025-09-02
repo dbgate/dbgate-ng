@@ -1,19 +1,7 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "jsx": "preserve",
-    "jsxImportSource": "solid-js",
-    "types": ["vite/client"],
-    "noEmit": true,
-    "isolatedModules": true,
-    "composite": true,
-    "incremental": true
+    "moduleResolution": "bundler"
   },
-  "references": [
-    { "path": "../dbgate-tools" }
-  ] 
+  "references": [{ "path": "../dbgate-tools" }]
 }
